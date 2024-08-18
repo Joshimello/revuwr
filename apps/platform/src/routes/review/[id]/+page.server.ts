@@ -2,14 +2,14 @@ import { fail, isRedirect, redirect } from '@sveltejs/kit'
 import Pocketbase from 'pocketbase'
 import type { TypedPocketBase } from '$lib/pocketbase/pocketbase-types.js'
 import { PUBLIC_PB_URL } from '$env/static/public'
-import { PB_EMAIL, PB_PASSWORD } from '$env/static/private'
+import { env } from '$env/dynamic/private'
 
 export const load = async ({ params }) => {
   
   const apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
   
   try {
-    await apb.admins.authWithPassword(PB_EMAIL, PB_PASSWORD)
+    await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
     const review = await apb.collection('reviews').getOne(params.id)
 
     if (review.status != 'draft') {

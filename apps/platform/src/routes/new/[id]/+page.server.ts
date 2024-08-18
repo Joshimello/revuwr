@@ -1,6 +1,6 @@
 import { fail, redirect, isRedirect } from "@sveltejs/kit"
 import { PUBLIC_PB_URL } from "$env/static/public"
-import { PB_EMAIL, PB_PASSWORD } from "$env/static/private"
+import { env } from "$env/dynamic/private"
 import Pocketbase from "pocketbase"
 import type { EventsResponse, QuestionsResponse, TypedPocketBase } from "$lib/pocketbase/pocketbase-types.js"
 
@@ -23,7 +23,7 @@ export const actions = {
       const userId = data.get("userId") as string
 
       apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
-      await apb.admins.authWithPassword(PB_EMAIL, PB_PASSWORD)
+      await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
 
       const event = await apb.collection("events").getOne<ExpandedEventsResponse>(eventId, {
         expand: "questions"
