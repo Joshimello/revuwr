@@ -249,7 +249,7 @@
     </div>
     
     <div class="flex justify-end mt-6">
-      <Button variant="outline">
+      <Button variant="outline" href={`/export/${$page.params.id}`} target="_blank">
         Download all as PDF
       </Button>
     </div>
