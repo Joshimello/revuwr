@@ -6,13 +6,16 @@
   import { user } from "$lib/stores";
   import { Button } from "$lib/components/ui/button";
 	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
-	import { ArrowLeft, ArrowRight, ChevronLeft, FilePen, Send } from "lucide-svelte";
+	import { ArrowLeft, ArrowRight, ChevronLeft, EllipsisVertical, FilePen, Menu, Send, Trash } from "lucide-svelte";
   import * as Card from "$lib/components/ui/card"
 	import { Progress } from "$lib/components/ui/progress";
 	import { Badge } from "$lib/components/ui/badge";
   import Question from "./question.svelte"
   import { browser } from "$app/environment";
 	import Status from "$lib/components/status.svelte";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu"
+  import * as Dialog from "$lib/components/ui/dialog"
+  
 
   type ExpandedResponse = AnswersResponse<any, {
     question: QuestionsResponse
@@ -98,6 +101,9 @@
     })
   }
 
+  let deleteOpen = false
+  let withdrawOpen = false
+
 </script>
 
 <div class="flex items-center gap-4">
@@ -105,13 +111,33 @@
     <ChevronLeft class="h-4 w-4" />
     <span class="sr-only">Back</span>
   </Button>
-  <h1 class="text-lg font-semibold md:text-2xl">
+  <h1 class="text-lg font-semibold md:text-2xl mr-auto">
     {#if event}
       {event.name}
     {:else}
       Application not found
     {/if}
   </h1>
+  <DropdownMenu.Root>
+    <DropdownMenu.Trigger asChild let:builder>
+      <Button variant="ghost" builders={[builder]}>
+        <Menu size="16" />
+      </Button>
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content>
+      <DropdownMenu.Group>
+        {#if application?.status == 'draft'}
+        <DropdownMenu.Item on:click={() => deleteOpen = true}>
+          Delete draft
+        </DropdownMenu.Item>
+        {:else if application?.status != 'withdrawn'}
+        <DropdownMenu.Item on:click={() => withdrawOpen = true}>
+          Withdraw
+        </DropdownMenu.Item>
+        {/if}
+      </DropdownMenu.Group>
+    </DropdownMenu.Content>
+  </DropdownMenu.Root>
 </div>
 
 {#if event && application && response && response.length > 0 && $user}
@@ -148,7 +174,7 @@
         {/if}
         {#if isLastPage}
           {#if application.status == 'draft'}
-            <form method="post" class="flex-1 md:flex-none" on:submit={handleSubmit}>
+            <form method="post" action="?/submit" class="flex-1 md:flex-none" on:submit={handleSubmit}>
               <input type="hidden" name="userId" value={$user.model.id}/>
               <Button
                 class="flex items-center gap-2 w-full" 
@@ -159,7 +185,7 @@
               </Button>
             </form>
           {:else if application.status == 'editsRequested'}
-            <form method="post" class="flex-1 md:flex-none" on:submit={handleSubmit}>
+            <form method="post" action="?/submit" class="flex-1 md:flex-none" on:submit={handleSubmit}>
               <input type="hidden" name="userId" value={$user.model.id}/>
               <Button
                 class="flex items-center gap-2 w-full" 
@@ -188,3 +214,65 @@
 
   </div>
 {/if}
+
+<Dialog.Root bind:open={deleteOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title class="text-red-500">Deleting draft</Dialog.Title>
+      <Dialog.Description>
+        Are you sure you want to delete this draft? This will remove the application and all answers. You will not be able to recover them.
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <form method="post" action="?/delete" class="flex-1 md:flex-none" on:submit={() => {
+        isCreating = true
+        toast.loading("Deleting draft...", {
+          duration: Number.POSITIVE_INFINITY
+        })
+      }}>
+        <input type="hidden" name="userId" value={$user?.model.id}/>
+        <Button
+          class="flex items-center gap-2 w-full" 
+          disabled={isCreating}
+          type="submit"
+          variant="destructive"
+        >
+          <Trash size="16" /> Delete draft
+        </Button>
+      </form>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={withdrawOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title class="text-red-500">
+        Withdrawing application
+      </Dialog.Title>
+      <Dialog.Description>
+        Are you sure you want to withdraw this application?
+        Your application will be archived but you will not be able to edit or resubmit it.
+        Your application will be marked as withdrawn and will no longer participate in the event.
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <form method="post" action="?/withdraw" class="flex-1 md:flex-none" on:submit={() => {
+        isCreating = true
+        toast.loading("Withdrawing...", {
+          duration: Number.POSITIVE_INFINITY
+        })
+      }}>
+        <input type="hidden" name="userId" value={$user?.model.id}/>
+        <Button
+          class="flex items-center gap-2 w-full" 
+          disabled={isCreating}
+          type="submit"
+          variant="destructive"
+        >
+          <Trash size="16" /> Withdraw application
+        </Button>
+      </form>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

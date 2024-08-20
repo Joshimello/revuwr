@@ -5,7 +5,7 @@
   import * as Card from "$lib/components/ui/card";
   import { user } from "$lib/stores";
   import * as Alert from "$lib/components/ui/alert";
-	import { NotepadTextDashed, Settings, Eye, Pencil, Trash, RefreshCcw } from "lucide-svelte";
+	import { NotepadTextDashed, Settings, Eye, Pencil, Trash, RefreshCcw, Bell } from "lucide-svelte";
 	import { Description } from "$lib/components/ui/alert-dialog";
   import { Progress } from "$lib/components/ui/progress";
   import { Badge } from "$lib/components/ui/badge";
@@ -18,7 +18,9 @@
   import { format } from "timeago.js"
 	import { toast } from "svelte-sonner";
   import Status from "$lib/components/status.svelte";
-
+  import * as Dialog from "$lib/components/ui/dialog"
+  
+  
   type ExpandedApplications = ApplicationsResponse<{ 
     response: AnswersResponse[],
     event: EventsResponse
@@ -83,7 +85,7 @@
 
 {#if $user && $user.isValid && $user.model}
 
-<div class="flex flex-row gap-2">
+<div class="flex md:flex-row flex-col-reverse gap-2">
   <div class="flex flex-col flex-1 gap-6">
 
     {#if applications.filter(a => editableStatus.includes(a.status)).length == 0}
@@ -202,25 +204,60 @@
     </Tabs.Root>    
 
   </div>
-  <div class="flex flex-col w-72 gap-2">
+  <div class="flex md:flex-col flex-row md:w-72 gap-2">
     
-    <Card.Root>
+    <Card.Root class="w-full md:w-auto">
       <Card.Header class="pb-4">
         <Card.Title>{$user.model.username}</Card.Title>
         <Card.Description>{$user.model.email}</Card.Description>
       </Card.Header>
-      <Card.Content>
+      <Card.Content class="grid grid-cols-2 gap-1 md:block">
         <Button class="w-full flex items-center gap-2 justify-start" href="/settings">
           <Settings size="16" />
           User Settings
         </Button>
+
+        <Dialog.Root>
+          <Dialog.Trigger class="md:hidden block">
+            <Button class="w-full flex items-center gap-2 justify-start">
+              <Bell size="16" />
+              Notifications
+            </Button>
+          </Dialog.Trigger>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title class="flex items-center gap-2">
+                notifications
+                <Button variant="ghost" size="icon" class="h-7" href="/settings#notifications">
+                  <Settings size="16" />
+                </Button>
+              </Dialog.Title>
+            </Dialog.Header>
+
+            <ScrollArea class="h-96">
+              {#each notifications as notification}
+                <div class="border-t px-6 py-2 text-xs flex flex-col">
+                  <span>{notification.message}</span>
+                  <span class="text-muted-foreground">{format(notification.created)}</span>
+                  {#if notification.link}
+                    <Button size="sm" class="h-5 w-max mt-1" href={notification.link}>
+                      View
+                    </Button>
+                  {/if}
+                </div>
+              {/each}
+            </ScrollArea>
+
+          </Dialog.Content>
+        </Dialog.Root>
+
       </Card.Content>
     </Card.Root>
 
-    <Card.Root>
+    <Card.Root class="md:block hidden">
       <Card.Header class="pb-4">
         <Card.Title class="flex items-center justify-between">
-          Notificaitons
+          Notifications
           <Button variant="ghost" size="icon" class="w-7 h-4" href="/settings#notifications">
             <Settings size="16" />
           </Button>

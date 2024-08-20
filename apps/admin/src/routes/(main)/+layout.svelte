@@ -15,9 +15,9 @@
   const user = pb.authStore.model;
 
   let nav = [
-    { icon: PanelsTopLeft, text: 'Overview', href: '/' },
-    { icon: CalendarFold, text: 'Events', href: '/events', badge: 3 },
-    { icon: CircleUser, text: 'Users', href: '/users' }
+    { icon: PanelsTopLeft, text: 'Overview', href: '/', badge: 0 },
+    { icon: CalendarFold, text: 'Events', href: '/events', badge: 0 },
+    { icon: CircleUser, text: 'Users', href: '/users', badge: 0 }
   ]
   
   $: breadcrumbs = (() => {

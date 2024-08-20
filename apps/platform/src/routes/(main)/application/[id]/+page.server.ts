@@ -11,7 +11,7 @@ type ExpandedApplicationsResponse = ApplicationsResponse<{
 }>
 
 export const actions = {
-  async default({ params, request }) {
+  async submit({ params, request }) {
 
     let apb: TypedPocketBase | null = null
 
@@ -69,7 +69,101 @@ export const actions = {
         })
       }
     }
+  },
+  async delete({ params, request }) {
+    try {
+      const data = await request.formData();
+      const applicationId = params.id
+      const userId = data.get("userId") as string
 
+      const apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
+      await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
 
+      const application = await apb.collection("applications").getOne<ExpandedApplicationsResponse>(applicationId, {
+        expand: "response,response.question"
+      })
+
+      if (application.responder !== userId) {
+        return fail(400, { message: "Invalid user" })
+      }
+
+      if (!application.expand?.response) {
+        return fail(400, { message: "Responses could not be fetched" })
+      }
+
+      if (!['draft'].includes(application.status)) {
+        return fail(400, { message: "Invalid application status" })
+      }
+
+      await apb.collection("applications").delete(params.id)
+      
+      for (const response of application.expand.response) {
+        await apb.collection("answers").delete(response.id, {
+          requestKey: response.id
+        })
+      }
+      
+      return redirect(303, `/`)
+    }
+    catch (err) {
+      if (isRedirect(err)) {
+        return redirect(err.status, err.location)
+      }
+
+      if (err instanceof Error) {
+        console.log(err)
+        return fail(400, {
+          message: err.message
+        })
+      }
+      else {
+        return fail(400, {
+          message: "An unknown error occurred"
+        })
+      }
+    }
+  },
+  async withdraw({ params, request }) {
+    try {
+      const data = await request.formData();
+      const applicationId = params.id
+      const userId = data.get("userId") as string
+
+      const apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
+      await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
+
+      const application = await apb.collection("applications").getOne(applicationId)
+
+      if (application.responder !== userId) {
+        return fail(400, { message: "Invalid user" })
+      }
+
+      if (['draft', 'withdrawn'].includes(application.status)) {
+        return fail(400, { message: "Invalid application status" })
+      }
+
+      await apb.collection("applications").update(params.id, {
+        status: "withdrawn"
+      })
+
+      return redirect(303, `/`)
+    }
+    catch (err) {
+      if (isRedirect(err)) {
+        return redirect(err.status, err.location)
+      }
+  
+      if (err instanceof Error) {
+        console.log(err)
+        return fail(400, {
+          message: err.message
+        })
+      }
+      else {
+        return fail(400, {
+          message: "An unknown error occurred"
+        })
+      }
+    }
   }
 }
