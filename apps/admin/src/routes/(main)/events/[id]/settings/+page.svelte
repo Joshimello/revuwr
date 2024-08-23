@@ -15,6 +15,7 @@
 	import { ChevronLeft } from "lucide-svelte";
   import DatePicker from "$lib/components/date-picker.svelte";
   import { fromDate } from "@internationalized/date"
+  import * as m from '$lib/paraglide/messages.js'
 
   let collectionId = ""
 
@@ -157,18 +158,24 @@
 <div class="flex items-center gap-4">
   <Button variant="outline" size="icon" class="h-7 w-7" href="/events/{$page.params.id}">
     <ChevronLeft class="h-4 w-4" />
-    <span class="sr-only">Back</span>
+    <span class="sr-only">
+      {m.back()}
+    </span>
   </Button>
   <h1 class="text-lg font-semibold md:text-2xl">
-    Editing event settings
+    {m.editing_event_settings()}
   </h1>
 </div>
 
-<span class="text-sm text-gray-400">Changes will be auto-saved.</span>
+<span class="text-sm text-gray-400">
+  {m.changes_will_be_autosaved()}
+</span>
 
 <Card.Root class="max-w-3xl">
   <Card.Header>
-    <Card.Title>Event details</Card.Title>
+    <Card.Title>
+      {m.event_details()}
+    </Card.Title>
     <Card.Description>
 
     </Card.Description>
@@ -176,7 +183,9 @@
   <Card.Content>
     <div class="grid gap-6">
       <div class="grid gap-3">
-        <Label for="name">Name</Label>
+        <Label for="name">
+          {m.name()}
+        </Label>
         <Input
           id="name"
           type="text"
@@ -186,7 +195,9 @@
         />
       </div>
       <div class="grid gap-3">
-        <Label for="description">Description</Label>
+        <Label for="description">
+          {m.description()}
+        </Label>
         <Textarea
           id="description"
           class="min-h-16"
@@ -195,14 +206,16 @@
         />
       </div>
       <div class="grid gap-3">
-        <Label for="targetAudience">Target audience</Label>
+        <Label for="targetAudience">
+          {m.target_audience()}
+        </Label>
         <Select.Root 
           selected={
             [
-              { label: 'All', value: 'all' },
-              { label: 'Students', value: 'students' },
-              { label: 'Teachers', value: 'teachers' }
-            ].find(v => v.value === settings.targetAudience) || { label: 'All', value: 'all' }
+              { label: m.all(), value: 'all' },
+              { label: m.students(), value: 'students' },
+              { label: m.faculty(), value: 'teachers' }
+            ].find(v => v.value === settings.targetAudience) || { label: m.all(), value: 'all' }
           }
           onSelectedChange={v => {
             settings.targetAudience = v?.value || 'all'
@@ -213,14 +226,22 @@
             <Select.Value />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="all">All</Select.Item>
-            <Select.Item value="students">Students</Select.Item>
-            <Select.Item value="teachers">Teachers</Select.Item>
+            <Select.Item value="all">
+              {m.all()}
+            </Select.Item>
+            <Select.Item value="students">
+              {m.students()}
+            </Select.Item>
+            <Select.Item value="teachers">
+              {m.faculty()}
+            </Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
       <div class="grid gap-3">
-        <Label for="posterImage">Poster image</Label>
+        <Label for="posterImage">
+          {m.poster_image()}
+        </Label>
         <div class="flex gap-4">
           {#if settings.image && collectionId}
             <img 
@@ -233,12 +254,16 @@
           {/if}
           <div class="flex flex-col max-w-72 gap-2">
             <Input type="file" on:input={handleFileInput} />
-            <Button variant="outline" on:click={handleImageRemove}>Remove Image</Button>
+            <Button variant="outline" on:click={handleImageRemove}>
+              {m.remove_image()}
+            </Button>
           </div>
         </div>
       </div>
       <div class="grid gap-3">
-        <Label for="moreInfoUrl">More info URL</Label>
+        <Label for="moreInfoUrl">
+          {m.more_info_url()}
+        </Label>
         <Input
           id="moreInfoUrl"
           type="url"
@@ -252,7 +277,9 @@
 
 <Card.Root class="max-w-3xl">
   <Card.Header>
-    <Card.Title>Event visibility</Card.Title>
+    <Card.Title>
+      {m.event_visibility()}
+    </Card.Title>
     <Card.Description>
 
     </Card.Description>
@@ -260,27 +287,33 @@
   <Card.Content>
     <div class="grid gap-6">
       <div class="grid gap-3">
-        <Label for="name">Start date</Label>
+        <Label for="name">
+          {m.start_date()}
+        </Label>
         <DatePicker value={settings.startDate ? fromDate(settings.startDate, "Asia/Singapore") : undefined} onValueChange={v => {
           settings.startDate = v?.toDate("Asia/Singapore") || null
           handleChange()
         }} />
       </div>
       <div class="grid gap-3">
-        <Label for="name">End date</Label>
+        <Label for="name">
+          {m.end_date()}
+        </Label>
         <DatePicker value={settings.endDate ? fromDate(settings.endDate, "Asia/Singapore") : undefined} onValueChange={v => {
           settings.endDate = v?.toDate("Asia/Singapore") || null
           handleChange()
         }} />
       </div>
       <div class="grid gap-3">
-        <Label for="description">Before start date...</Label>
+        <Label for="description">
+          {m.before_start_date()}
+        </Label>
         <Select.Root 
           selected={
             [
-              { label: 'Disallow new responses', value: 'disallow' },
-              { label: 'Allow new responses', value: 'allow' }
-            ].find(v => v.value === settings.beforeStartDate) || { label: 'Disallow new responses', value: 'disallow' }
+              { label: m.disallow_new_responses(), value: 'disallow' },
+              { label: m.allow_new_responses(), value: 'allow' }
+            ].find(v => v.value === settings.beforeStartDate) || { label: m.disallow_new_responses(), value: 'disallow' }
           }
           onSelectedChange={v => {
             settings.beforeStartDate = v?.value || 'disallow'
@@ -291,19 +324,25 @@
             <Select.Value />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="disallow">Disallow new responses</Select.Item>
-            <Select.Item value="allow">Allow new responses</Select.Item>
+            <Select.Item value="disallow">
+              {m.disallow_new_responses()}
+            </Select.Item>
+            <Select.Item value="allow">
+              {m.allow_new_responses()}
+            </Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
       <div class="grid gap-3">
-        <Label for="description">After start date...</Label>
+        <Label for="description">
+          {m.after_end_date()}
+        </Label>
         <Select.Root 
           selected={
             [
-              { label: 'Disallow new responses', value: 'disallow' },
-              { label: 'Allow new responses', value: 'allow' }
-            ].find(v => v.value === settings.afterStartDate) || { label: 'Disallow new responses', value: 'disallow' }
+              { label: m.disallow_new_responses(), value: 'disallow' },
+              { label: m.allow_new_responses(), value: 'allow' }
+            ].find(v => v.value === settings.afterStartDate) || { label: m.disallow_new_responses(), value: 'disallow' }
           }
           onSelectedChange={v => {
             settings.afterStartDate = v?.value || 'disallow'
@@ -314,8 +353,12 @@
             <Select.Value />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="disallow">Disallow new responses</Select.Item>
-            <Select.Item value="allow">Allow new responses</Select.Item>
+            <Select.Item value="disallow">
+              {m.disallow_new_responses()}
+            </Select.Item>
+            <Select.Item value="allow">
+              {m.allow_new_responses()}
+            </Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
@@ -325,7 +368,9 @@
 
 <Card.Root class="max-w-3xl">
   <Card.Header>
-    <Card.Title>Event responses</Card.Title>
+    <Card.Title>
+      {m.new_event_responses()}
+    </Card.Title>
     <Card.Description>
 
     </Card.Description>
@@ -333,7 +378,9 @@
   <Card.Content>
     <div class="grid gap-6">
       <div class="grid gap-3">
-        <Label for="name">Response limit per user</Label>
+        <Label for="name">
+          {m.response_limit_per_user()}
+        </Label>
         <Input
           id="name"
           type="number"
@@ -345,7 +392,9 @@
         />
       </div>
       <div class="grid gap-3">
-        <Label for="name">Response serial ID prefix</Label>
+        <Label for="name">
+          {m.response_serial_id_prefix()}
+        </Label>
         <Input
           id="name"
           type="text"
@@ -360,7 +409,9 @@
 
 <Card.Root class="max-w-3xl border-destructive" >
   <Card.Header>
-    <Card.Title>Danger zone</Card.Title>
+    <Card.Title>
+      {m.danger_zone()}
+    </Card.Title>
     <Card.Description>
 
     </Card.Description>
@@ -368,13 +419,15 @@
   <Card.Content>
     <div class="grid gap-6">
       <div class="grid gap-3">
-        <Label for="name">Change event status (active / archived)</Label>
+        <Label for="name">
+          {m.change_event_status()}
+        </Label>
         <Select.Root 
           selected={
             [
-              { label: 'Active', value: 'active' },
-              { label: 'Archived', value: 'archived' }
-            ].find(v => v.value === settings.status) || { label: 'Active', value: 'active' }
+              { label: m.active(), value: 'active' },
+              { label: m.archived(), value: 'archived' }
+            ].find(v => v.value === settings.status) || { label: m.active(), value: 'active' }
           }
           onSelectedChange={v => {
             settings.status = v?.value || 'active'
@@ -385,13 +438,19 @@
             <Select.Value />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="active">Active</Select.Item>
-            <Select.Item value="archived">Archived</Select.Item>
+            <Select.Item value="active">
+              {m.active()}
+            </Select.Item>
+            <Select.Item value="archived">
+              {m.archived()}
+            </Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
       <div class="grid gap-3">
-        <Label for="name">Delete this event forever</Label>
+        <Label for="name">
+          {m.delete_this_event_forever()}
+        </Label>
 
         <Dialog.Root>
           <Dialog.Trigger asChild let:builder>
@@ -400,19 +459,21 @@
               class="w-72"
               variant="destructive"
             >
-              Delete event
+              {m.delete_event()}
             </Button>
           </Dialog.Trigger>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+              <Dialog.Title>
+                {m.delete_event_title()}
+              </Dialog.Title>
               <Dialog.Description>
-                This action cannot be undone. This will permanently delete the event and all associated data.
+                {m.delete_event_desc()}
               </Dialog.Description>
             </Dialog.Header>
             <Dialog.Footer>
               <Button on:click={handleDeleteEvent} variant="destructive">
-                Delete event
+                {m.delete_event()}
               </Button>
             </Dialog.Footer>
           </Dialog.Content>

@@ -13,6 +13,7 @@
   import * as Table from "$lib/components/ui/table";
   import { PUBLIC_PLATFORM_URL } from "$env/static/public"
 	import Status from "$lib/components/status.svelte";
+  import * as m from '$lib/paraglide/messages.js'
 
   type ExpandedApplications = ApplicationsResponse<{
     responder: UsersResponse
@@ -77,11 +78,15 @@
     <Card.Root class="xl:col-span-2">
       <Card.Header class="flex flex-row items-center">
         <div class="grid gap-2">
-          <Card.Title>Event responses</Card.Title>
-          <Card.Description>Recent responses of this event.</Card.Description>
+          <Card.Title>
+            {m.event_responses()}
+          </Card.Title>
+          <Card.Description>
+            {m.event_responses_desc()}
+          </Card.Description>
         </div>
         <Button href={event ? `/events/${event.id}/responses` : ''} size="sm" class="ml-auto gap-1">
-          View All
+          {m.view_all()}
           <ArrowUpRight class="h-4 w-4" />
         </Button>
       </Card.Header>
@@ -89,10 +94,18 @@
         <Table.Root>
           <Table.Header>
             <Table.Row>
-              <Table.Head>Serial ID</Table.Head>
-              <Table.Head class="">User</Table.Head>
-              <Table.Head class="">Status</Table.Head>
-              <Table.Head class="text-right">Updated</Table.Head>
+              <Table.Head>
+                {m.serial_id()}
+              </Table.Head>
+              <Table.Head class="">
+                {m.user()}
+              </Table.Head>
+              <Table.Head class="">
+                {m.status()}
+              </Table.Head>
+              <Table.Head class="text-right">
+                {m.updated()}
+              </Table.Head>
               <Table.Head class="w-0"></Table.Head>
             </Table.Row>
           </Table.Header>
@@ -138,19 +151,23 @@
     <Card.Root class="xl:col-span-2">
       <Card.Header class="flex flex-row items-center">
         <div class="grid gap-2">
-          <Card.Title>Review requests</Card.Title>
-          <Card.Description>Recent reviews of this event.</Card.Description>
+          <Card.Title>
+            {m.review_requests()}
+          </Card.Title>
+          <Card.Description>
+            {m.review_requests_desc()}
+          </Card.Description>
         </div>
         <Button href={event ? `/events/${event.id}/overview` : ''} size="sm" class="ml-auto gap-1">
           <Grid2x2Check size="16" />
-          Overview
+          {m.review_overview()}
         </Button>
         <Button href={event ? `/events/${event.id}/reviews/new` : ''} size="sm" class="ml-1 gap-1">
           <CirclePlus size="16" />
-          New Review
+          {m.new_review()}
         </Button>
         <Button href={event ? `/events/${event.id}/reviews` : ''} size="sm" class="ml-1 gap-1">
-          View All
+          {m.view_all()}
           <ArrowUpRight size="16" />
         </Button>
       </Card.Header>
@@ -159,10 +176,18 @@
           <Table.Header>
             
             <Table.Row>
-              <Table.Head>Reviewer</Table.Head>
-              <Table.Head>Status</Table.Head>
-              <Table.Head>Stats</Table.Head>
-              <Table.Head class="text-right">Created</Table.Head>
+              <Table.Head>
+                {m.reviewer()}
+              </Table.Head>
+              <Table.Head>
+                {m.status()}
+              </Table.Head>
+              <Table.Head>
+                {m.stats()}
+              </Table.Head>
+              <Table.Head class="text-right">
+                {m.created()}
+              </Table.Head>
               <Table.Head class="w-0"></Table.Head>
             </Table.Row>
           </Table.Header>
@@ -219,14 +244,14 @@
           href={event ? `/events/${event.id}/settings` : ''}
         >
           <Settings size="18" />
-          Settings
+          {m.settings()}
         </Button>
         <Button 
           class="w-full flex items-center gap-2 justify-start"
           href={event ? `/events/${event.id}/questions` : ''}  
         >
           <ListPlus size="18" />
-          Questions
+          {m.questions()}
           <Badge variant="secondary" class="ml-3">
             {event ? event.questions.length : 0}
           </Badge>
@@ -237,7 +262,7 @@
           on:click={handleCopyFormURL}
         >
           <Link2 size="18" />
-          Copy form URL
+          {m.copy_form_url()}
         </Button>
       </Card.Content>
     </Card.Root>

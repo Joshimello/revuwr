@@ -9,6 +9,7 @@
   import { pb } from "$lib/pocketbase/client"
   import { toast } from "svelte-sonner"
 	import { goto } from "$app/navigation";
+  import * as m from '$lib/paraglide/messages.js'
 
   let settings = {
     status: "active",
@@ -49,20 +50,26 @@
 </script>
 
 <div class="flex items-center">
-  <h1 class="text-lg font-semibold md:text-2xl">Create a new event</h1>
+  <h1 class="text-lg font-semibold md:text-2xl">
+    {m.create_a_new_event()}
+  </h1>
 </div>
 
 <Card.Root class="max-w-3xl">
   <Card.Header>
-    <Card.Title>Event details</Card.Title>
+    <Card.Title>
+      {m.event_details()}
+    </Card.Title>
     <Card.Description>
-      You may change these details later in the event settings.
+      {m.event_details_desc()}
     </Card.Description>
   </Card.Header>
   <Card.Content>
     <div class="grid gap-6">
       <div class="grid gap-3">
-        <Label for="name">Name</Label>
+        <Label for="name">
+          {m.name()}
+        </Label>
         <Input
           id="name"
           type="text"
@@ -71,7 +78,9 @@
         />
       </div>
       <div class="grid gap-3">
-        <Label for="description">Description</Label>
+        <Label for="description">
+          {m.description()}
+        </Label>
         <Textarea
           id="description"
           class="min-h-16"
@@ -79,18 +88,26 @@
         />
       </div>
       <div class="grid gap-3">
-        <Label for="description">Target audience</Label>
+        <Label for="description">
+          {m.target_audience()}
+        </Label>
         <Select.Root 
-          selected={{ label: 'All', value: 'all' }} 
+          selected={{ label: m.all(), value: 'all' }} 
           onSelectedChange={v => settings.targetAudience = v?.value || 'all'}
         >
           <Select.Trigger class="w-72">
             <Select.Value />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="all">All</Select.Item>
-            <Select.Item value="students">Students</Select.Item>
-            <Select.Item value="teachers">Teachers</Select.Item>
+            <Select.Item value="all">
+              {m.all()}
+            </Select.Item>
+            <Select.Item value="students">
+              {m.students()}
+            </Select.Item>
+            <Select.Item value="teachers">
+              {m.faculty()}
+            </Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
@@ -100,47 +117,63 @@
 
 <Card.Root class="max-w-3xl">
   <Card.Header>
-    <Card.Title>Event visibility</Card.Title>
+    <Card.Title>
+      {m.event_visibility()}
+    </Card.Title>
     <Card.Description>
-      You may change these details later in the event settings.
+      {m.event_visibility_desc()}
     </Card.Description>
   </Card.Header>
   <Card.Content>
     <div class="grid gap-6">
       <div class="grid gap-3">
-        <Label for="name">Start and end date</Label>
+        <Label for="name">
+          {m.start_and_end_date()}
+        </Label>
         <DateRangePicker
           bind:sValue={settings.startDate}
           bind:eValue={settings.endDate}
         />
       </div>
       <div class="grid gap-3">
-        <Label for="description">Before start date...</Label>
+        <Label for="description">
+          {m.before_start_date()}
+        </Label>
         <Select.Root 
-          selected={{ label: 'Disallow new responses', value: 'disallow' }}
+          selected={{ label: m.disallow_new_responses(), value: 'disallow' }}
           onSelectedChange={v => settings.beforeStartDate = v?.value || 'disallow'}
         >
           <Select.Trigger class="w-72">
             <Select.Value />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="disallow">Disallow new responses</Select.Item>
-            <Select.Item value="allow">Allow new responses</Select.Item>
+            <Select.Item value="disallow">
+              {m.disallow_new_responses()}
+            </Select.Item>
+            <Select.Item value="allow">
+              {m.allow_new_responses()}
+            </Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
       <div class="grid gap-3">
-        <Label for="description">After start date...</Label>
+        <Label for="description">
+          {m.after_end_date()}
+        </Label>
         <Select.Root 
-          selected={{ label: 'Disallow new responses', value: 'disallow' }}
+          selected={{ label: m.disallow_new_responses(), value: 'disallow' }}
           onSelectedChange={v => settings.afterStartDate = v?.value || 'disallow'}  
         >
           <Select.Trigger class="w-72">
             <Select.Value />
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="disallow">Disallow new responses</Select.Item>
-            <Select.Item value="allow">Allow new responses</Select.Item>
+            <Select.Item value="disallow">
+              {m.disallow_new_responses()}
+            </Select.Item>
+            <Select.Item value="allow">
+              {m.allow_new_responses()}
+            </Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
@@ -150,15 +183,19 @@
 
 <Card.Root class="max-w-3xl">
   <Card.Header>
-    <Card.Title>Event responses</Card.Title>
+    <Card.Title>
+      {m.new_event_responses()}
+    </Card.Title>
     <Card.Description>
-      You may change these details later in the event settings.
+      {m.new_event_responses_desc()}
     </Card.Description>
   </Card.Header>
   <Card.Content>
     <div class="grid gap-6">
       <div class="grid gap-3">
-        <Label for="name">Response limit per user</Label>
+        <Label for="name">
+          {m.response_limit_per_user()}
+        </Label>
         <Input
           id="name"
           type="number"
@@ -168,7 +205,9 @@
         />
       </div>
       <div class="grid gap-3">
-        <Label for="name">Response serial ID prefix</Label>
+        <Label for="name">
+          {m.response_serial_id_prefix()}
+        </Label>
         <Input
           id="name"
           type="text"
@@ -180,6 +219,10 @@
   </Card.Content>
 </Card.Root>
 
-<span>You will be able to customize the event more after this creation.</span>
+<span>
+  {m.new_event_footnote()}
+</span>
 
-<Button class="max-w-3xl py-8" on:click={handleCreateEvent}>Create event</Button>
+<Button class="max-w-3xl py-8" on:click={handleCreateEvent}>
+  {m.create_event()}
+</Button>

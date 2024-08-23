@@ -12,6 +12,7 @@
   import { pb, pbImage } from "$lib/pocketbase/client";
   import { toast } from "svelte-sonner";
   import type { EventsResponse } from "$lib/pocketbase/pocketbase-types";
+  import * as m from '$lib/paraglide/messages.js'
 
   let events: EventsResponse[] = []
   let isLoading: boolean = true
@@ -35,14 +36,20 @@
 </script>
 
 <div class="flex items-center">
-  <h1 class="text-lg font-semibold md:text-2xl">Events</h1>
+  <h1 class="text-lg font-semibold md:text-2xl">
+    {m.events()}
+  </h1>
 </div>
 
 <Tabs.Root value="active">
   <div class="flex items-center">
     <Tabs.List>
-      <Tabs.Trigger value="active">Active</Tabs.Trigger>
-      <Tabs.Trigger value="archived">Archived</Tabs.Trigger>
+      <Tabs.Trigger value="active">
+        {m.active()}
+      </Tabs.Trigger>
+      <Tabs.Trigger value="archived">
+        {m.archived()}
+      </Tabs.Trigger>
     </Tabs.List>
     <div class="ml-auto flex items-center gap-2">
       <!-- <DropdownMenu.Root>
@@ -78,7 +85,7 @@
       <Button size="sm" class="h-7 gap-1" href="/events/new">
         <CirclePlus class="h-3.5 w-3.5" />
         <span class="sr-only sm:not-sr-only sm:whitespace-nowrap">
-          New Event
+          {m.new_event()}
         </span>
       </Button>
     </div>
@@ -95,9 +102,15 @@
               <Table.Head class="hidden w-[100px] sm:table-cell">
                 <span class="sr-only">Image</span>
               </Table.Head>
-              <Table.Head>Event name</Table.Head>
-              <Table.Head>Event period</Table.Head>
-              <Table.Head>Last updated</Table.Head>
+              <Table.Head>
+                {m.event_name()}
+              </Table.Head>
+              <Table.Head>
+                {m.event_period()}
+              </Table.Head>
+              <Table.Head>
+                {m.last_updated()}
+              </Table.Head>
               <Table.Head>
                 <span class="sr-only">Actions</span>
               </Table.Head>
@@ -181,22 +194,24 @@
                       </Button>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
-                      <DropdownMenu.Label>Actions</DropdownMenu.Label>
+                      <DropdownMenu.Label>
+                        {m.actions()}
+                      </DropdownMenu.Label>
                       <DropdownMenu.Item href={`/events/${event.id}/settings`}>
                         <Settings2 size="16" class="mr-2" />
-                        Modify settings
+                        {m.modify_settings()}
                       </DropdownMenu.Item>
                       <DropdownMenu.Item href={`/events/${event.id}/questions`}>
                         <ListPlus size="16" class="mr-2" />
-                        Edit questions
+                        {m.edit_questions()}
                       </DropdownMenu.Item>
                       <DropdownMenu.Item href={`/events/${event.id}/responses`}>
                         <MessageSquareReply size="16" class="mr-2" />
-                        View responses
+                        {m.view_responses()}
                       </DropdownMenu.Item>
                       <DropdownMenu.Item href={`/events/${event.id}/reviews`}>
                         <ClipboardCheck size="16" class="mr-2" />
-                        Manage reviews
+                        {m.manage_reviews()}
                       </DropdownMenu.Item>
                     </DropdownMenu.Content>
                   </DropdownMenu.Root>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CircleUser, Bell, Menu, Search, PanelsTopLeft, CalendarFold } from 'lucide-svelte';
+  import { CircleUser, Bell, Menu, Search, PanelsTopLeft, CalendarFold, Languages } from 'lucide-svelte';
   import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
   import * as Card from '$lib/components/ui/card';
@@ -11,13 +11,16 @@
   import { pb } from '$lib/pocketbase/client';
   import { page } from '$app/stores';
   import { ScrollArea } from "$lib/components/ui/scroll-area";
+  import * as m from '$lib/paraglide/messages.js'
+  import { availableLanguageTags, languageTag } from '$lib/paraglide/runtime.js'
+  import { i18n } from '$lib/i18n.js'
 
   const user = pb.authStore.model;
 
   let nav = [
-    { icon: PanelsTopLeft, text: 'Overview', href: '/', badge: 0 },
-    { icon: CalendarFold, text: 'Events', href: '/events', badge: 0 },
-    { icon: CircleUser, text: 'Users', href: '/users', badge: 0 }
+    { icon: PanelsTopLeft, text: m.overview(), href: '/', badge: 0 },
+    { icon: CalendarFold, text: m.events(), href: '/events', badge: 0 },
+    { icon: CircleUser, text: m.users(), href: '/users', badge: 0 }
   ]
   
   $: breadcrumbs = (() => {
@@ -39,7 +42,7 @@
       <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <a href="/" class="flex items-center gap-2 font-semibold">
           <span>
-            Admin
+            {m.admin()}
           </span>
         </a>
       </div>
@@ -116,6 +119,33 @@
       {#if user}
         {user.email}
       {/if}
+
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild let:builder>
+          <Button size="icon" variant="ghost" builders={[builder]}>
+            <Languages size="16" />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+          <DropdownMenu.Group>
+            {#each availableLanguageTags as lang}
+              <DropdownMenu.Item 
+                href={i18n.route($page.url.pathname)} 
+                hreflang={lang}
+                disabled={lang === languageTag()}
+              >
+                {#if lang === languageTag()}
+                  <span class="font-bold">{lang}</span>
+                {:else}
+                  {lang}
+                {/if}
+              </DropdownMenu.Item>
+            {/each}
+          </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+
+      
 
     </header>
   
