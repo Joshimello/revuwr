@@ -1,4 +1,6 @@
 <script lang="ts" context="module">
+  import * as m from '$lib/paraglide/messages.js'
+
   export const statuses: {
     [key: string]: {
       label: string,
@@ -6,35 +8,35 @@
     }
   } = {
     "draft": {
-      label: "Draft",
+      label: m.draft(),
       classes: "bg-white text-black",
     },
     "approved": {
-      label: "Approved",
+      label: m.approved(),
       classes: "bg-green-500 text-white",
     },
     "submitted": {
-      label: "Submitted",
+      label: m.submitted(),
       classes: "bg-blue-500 text-white",
     },
     "resubmitted": {
-      label: "Resubmitted",
+      label: m.resubmitted(),
       classes: "bg-indigo-500 text-white",
     },
     "editsRequested": {
-      label: "Edits requested",
+      label: m.edits_requested(),
       classes: "bg-amber-500 text-white",
     },
     "followUpRequested": {
-      label: "Follow-up requested",
+      label: m.follow_up_requested(),
       classes: "bg-orange-500 text-white",
     },
     "rejected": {
-      label: "Rejected",
+      label: m.rejected(),
       classes: "bg-red-500 text-white",
     },
     "withdrawn": {
-      label: "Withdrawn",
+      label: m.withdrawn(),
       classes: "bg-gray-500 text-white",
     }
   }
@@ -52,6 +54,6 @@
 </Badge>
 {:else}
 <Badge class="bg-gray-500 text-white">
-  Unknown
+  {m.unknown()}
 </Badge>
 {/if}

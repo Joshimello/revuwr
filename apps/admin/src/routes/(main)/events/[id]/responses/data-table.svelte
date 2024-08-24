@@ -28,6 +28,7 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import Status, { statuses } from '$lib/components/status.svelte';
 	import * as Select from '$lib/components/ui/select';
+	import * as m from '$lib/paraglide/messages.js'
 
 	type ExpandedApplications = ApplicationsResponse<{
 		responder: UsersResponse;
@@ -89,7 +90,7 @@
 		table.column({
 			id: 'id',
 			accessor: (value) => value,
-			header: 'Serial ID',
+			header: m.serial_id(),
 			cell: ({ value }) =>
 				createRender(DataTableCell, {
 					a: value.serial
@@ -108,9 +109,9 @@
 			}
 		}),
 		table.column({
-			id: 'responder',
+			id: m.responder(),
 			accessor: ({ expand }) => expand?.responder,
-			header: 'User',
+			header: m.user(),
 			cell: ({ value }) => createRender(DataTableCell, { a: value?.name, b: value?.username }),
 			plugins: {
 				sort: {
@@ -124,7 +125,7 @@
 		table.column({
 			id: 'status',
 			accessor: 'status',
-			header: 'Status',
+			header: m.status(),
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
         colFilter: {
@@ -135,7 +136,7 @@
 		table.column({
 			id: 'updated',
 			accessor: 'updated',
-			header: 'Updated',
+			header: m.updated(),
 			cell: ({ value }) => {
 				return createRender(DataTableCell, {
 					b: new Date(value).toLocaleString('en-US', {
@@ -167,7 +168,7 @@
 		table.column({
 			id: 'adminNote',
 			accessor: 'adminNote',
-			header: 'Notes'
+			header: m.notes()
 		})
 	]);
 
@@ -262,7 +263,7 @@
 	<div class="sticky left-0 flex w-fit items-center gap-2">
 		<Input
 			class="max-w-sm"
-			placeholder="Search..."
+			placeholder={m.search()}
 			spellcheck="false"
 			autocomplete="off"
 			aria-autocomplete="none"
@@ -274,10 +275,12 @@
 			else $filterValues.status = selected?.value
 		}}>
 			<Select.Trigger class="w-[180px]">
-				<Select.Value placeholder="status" />
+				<Select.Value placeholder={m.status()} />
 			</Select.Trigger>
 			<Select.Content sameWidth={false}>
-				<Select.Item value="all">All</Select.Item>
+				<Select.Item value="all">
+					{m.all()}
+				</Select.Item>
 				{#each Object.entries(statuses) as [status, _]}
 					<Select.Item value={status} class="w-full">
 						<Status type={status} />
@@ -288,7 +291,7 @@
 		<DropdownMenu.Root closeOnItemClick={false}>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="outline" builders={[builder]}>
-					Columns <ChevronDown class="ml-2 h-4 w-4" />
+					{m.columns()} <ChevronDown class="ml-2 h-4 w-4" />
 				</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="max-w-64">

@@ -11,6 +11,7 @@
   import Question from "./question.svelte"
   import AddQuestion from "./add-question.svelte"
   import * as Tabs from "$lib/components/ui/tabs"
+  import * as m from '$lib/paraglide/messages.js'
 
   let questions: QuestionsResponse[] = []
   let editingId: string | null = null
@@ -117,7 +118,7 @@
     <span class="sr-only">Back</span>
   </Button>
   <h1 class="text-lg font-semibold md:text-2xl">
-    Editing event questions
+    {m.editing_event_questions()}
   </h1>
 </div>
 
@@ -125,12 +126,12 @@
   <div class="flex items-center gap-2">
     <Tabs.List>
       {#each [...new Set(questions.map(i=>i.page))] as page, index}
-        <Tabs.Trigger value={page.toString()}>Page {page}</Tabs.Trigger>
+        <Tabs.Trigger value={page.toString()}>{m.page()} {page}</Tabs.Trigger>
       {/each}
     </Tabs.List>
     <Button variant="outline" size="sm" class="flex gap-2 h-7" on:click={handleNewPage}>
       <CirclePlus size="16" />
-      <span>New Page</span>
+      <span>{m.new_page()}</span>
     </Button>
   </div>
   {#each [...new Set(questions.map(i=>i.page))] as page}
@@ -151,9 +152,11 @@
   {#if questions.length <= 0}
     <div class="mt-2 flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-16">
       <div class="flex flex-col items-center gap-1 text-center">
-        <h3 class="text-2xl font-bold tracking-tight">This event has no questions yet</h3>
+        <h3 class="text-2xl font-bold tracking-tight">
+          {m.no_questions()}
+        </h3>
         <p class="text-muted-foreground text-sm mb-4">
-          Start by adding your first question.
+          {m.no_questions_desc()}
         </p>
         <AddQuestion bind:currentPage bind:editingId />
       </div>

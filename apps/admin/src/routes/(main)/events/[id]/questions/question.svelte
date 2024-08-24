@@ -9,6 +9,7 @@
   import questionTypes from "./question-types";
   import { toast } from "svelte-sonner";
   import { page } from "$app/stores";
+  import * as m from '$lib/paraglide/messages.js'
 
   export let question: QuestionsResponse;
   export let refresh: () => void;
@@ -288,7 +289,9 @@
         {#if isEditing && question.type != 'info'}
           <div class="flex items-center gap-2">
             <Checkbox bind:checked={question.required} />
-            <span>Required</span>
+            <span>
+              {m.required()}
+            </span>
           </div>
         {/if}
 

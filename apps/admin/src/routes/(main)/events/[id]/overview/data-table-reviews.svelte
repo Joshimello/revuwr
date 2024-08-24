@@ -3,6 +3,7 @@
 	import { Eye } from "lucide-svelte";
   import * as Dialog from "$lib/components/ui/dialog"
   import Status from "$lib/components/status.svelte"
+  import * as m from '$lib/paraglide/messages.js'
   
   type Review = {
     reviewId: string;
@@ -24,7 +25,7 @@
       <span>{reviews.filter(i=>!i.status).length}</span>
     </div>
     <div class="text-muted-foreground text-xs">
-      {reviews.length} reviews
+      {reviews.length} {m.reviews()}
     </div>
   </div>
   <Button variant="ghost" size="icon" on:click={() => open = true}>
@@ -35,7 +36,9 @@
 <Dialog.Root bind:open={open}>
   <Dialog.Content class="max-h-screen overflow-auto">
     <Dialog.Header>
-      <Dialog.Title>Comments by reviewers</Dialog.Title>
+      <Dialog.Title>
+        {m.comments_by_reviewers()}
+      </Dialog.Title>
     </Dialog.Header>
     <div class="space-y-1">
       {#each reviews as review}

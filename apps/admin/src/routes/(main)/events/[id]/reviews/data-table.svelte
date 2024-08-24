@@ -21,6 +21,7 @@
 	import Status, { statuses } from '$lib/components/status.svelte';
 	import * as Select from '$lib/components/ui/select';
 	import DataTableStats from './data-table-stats.svelte';
+	import * as m from '$lib/paraglide/messages.js'
 
 	export let data: Writable<ReviewsResponse[]>;
 
@@ -46,17 +47,17 @@
 		table.column({
 			id: 'id',
 			accessor: 'id',
-			header: 'Internal ID'
+			header: m.internal_id()
 		}),
 		table.column({
 			id: 'email',
 			accessor: 'reviewerEmail',
-			header: 'Reviewer email',
+			header: m.reviewer_email()
 		}),
 		table.column({
 			id: 'status',
 			accessor: 'status',
-			header: 'Status',
+			header: m.status(),
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
         colFilter: {
@@ -67,13 +68,13 @@
 		table.column({
 			id: 'stats',
 			accessor: value => value,
-			header: 'Stats',
+			header: m.stats(),
 			cell: ({ value }) => createRender(DataTableStats, { value: value }),
 		}),
 		table.column({
 			id: 'endDate',
 			accessor: 'endDate',
-			header: 'End date',
+			header: m.end_date(),
 			cell: ({ value }) => new Date(value).toLocaleDateString('en-US', {
 				year: 'numeric',
 				month: 'short',
@@ -93,7 +94,7 @@
 		table.column({
 			id: 'updated',
 			accessor: 'updated',
-			header: 'Updated',
+			header: m.updated(),
 			cell: ({ value }) => new Date(value).toLocaleDateString('en-US', {
 				year: 'numeric',
 				month: 'short',
@@ -116,7 +117,7 @@
 		table.column({
 			id: 'created',
 			accessor: 'created',
-			header: 'Created',
+			header: m.created(),
 			cell: ({ value }) => new Date(value).toLocaleDateString('en-US', {
 				year: 'numeric',
 				month: 'short',
@@ -178,7 +179,9 @@
 				<Select.Value placeholder="status" />
 			</Select.Trigger>
 			<Select.Content sameWidth={false}>
-				<Select.Item value="all">All</Select.Item>
+				<Select.Item value="all">
+					{m.all()}
+				</Select.Item>
 				{#each Object.entries(statuses) as [status, _]}
 					<Select.Item value={status} class="w-full">
 						<Status type={status} />
@@ -189,7 +192,7 @@
 		<DropdownMenu.Root closeOnItemClick={false}>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="outline" builders={[builder]}>
-					Columns <ChevronDown class="ml-2 h-4 w-4" />
+					{m.columns()} <ChevronDown class="ml-2 h-4 w-4" />
 				</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="max-w-64">

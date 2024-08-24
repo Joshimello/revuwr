@@ -5,7 +5,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
   import * as Card from "$lib/components/ui/card"
-  
+  import * as m from '$lib/paraglide/messages.js'
   
   let users: UsersResponse[] = []
 
@@ -26,7 +26,9 @@
 </script>
 
 <div class="flex items-center">
-  <h1 class="text-lg font-semibold md:text-2xl">Users</h1>
+  <h1 class="text-lg font-semibold md:text-2xl">
+    {m.users()}
+  </h1>
 </div>
 
 <Card.Root>
@@ -35,14 +37,30 @@
     <Table.Root>
       <Table.Header>
         <Table.Row>
-          <Table.Head>Internal ID</Table.Head>
-          <Table.Head>Name</Table.Head>
-          <Table.Head>ID</Table.Head>
-          <Table.Head>Email</Table.Head>
-          <Table.Head>Phone</Table.Head>
-          <Table.Head>Occupation</Table.Head>
-          <Table.Head>Department</Table.Head>
-          <Table.Head>Year</Table.Head>
+          <Table.Head>
+            {m.internal_id()}
+          </Table.Head>
+          <Table.Head>
+            {m.name()}
+          </Table.Head>
+          <Table.Head>
+            {m.serial_id()}
+          </Table.Head>
+          <Table.Head>
+            {m.email()}
+          </Table.Head>
+          <Table.Head>
+            {m.phone()}
+          </Table.Head>
+          <Table.Head>
+            {m.occupation()}
+          </Table.Head>
+          <Table.Head>
+            {m.department()}
+          </Table.Head>
+          <Table.Head>
+            {m.year()}
+          </Table.Head>
         </Table.Row>
       </Table.Header>
       <Table.Body>

@@ -10,6 +10,7 @@
 	import { toast } from "svelte-sonner";
 	import { PUBLIC_PLATFORM_URL } from "$env/static/public";
 	import { pb } from "$lib/pocketbase/client";
+  import * as m from '$lib/paraglide/messages.js'
 
   type Tresponse = string | number | string[] | number[] | Record<string, any> | null;
   type Toptions = Record<string, any>;
@@ -135,26 +136,32 @@
   <Dialog.Content>
     <Dialog.Header>
       <Dialog.Title>
-        Approving application
+        {m.approving_application()}
         <span class="font-mono font-normal">{record.id}</span>
       </Dialog.Title>
     </Dialog.Header>
     <div class="flex flex-col">
-      <Label class="text-muted-foreground">New given ID will be</Label>
+      <Label class="text-muted-foreground">
+        {m.new_given_id_will_be()}
+      </Label>
       <span>{event.responsePrefix}{(event.approvedCount + 1).toString().padStart(3, '0')}</span>
     </div>
     <div class="flex flex-col gap-2">
-      <Label class="text-muted-foreground">Mail the responder?</Label>
+      <Label class="text-muted-foreground">
+        {m.mail_the_responder()}
+      </Label>
       <div class="flex items-center space-x-2">
-        <Switch bind:checked={isMailResponder} /><Label>Mail responder</Label>
+        <Switch bind:checked={isMailResponder} /><Label>
+          {m.mail_responder()}
+        </Label>
       </div>
       {#if isMailResponder}
-        <Textarea class="h-32" placeholder="Extra mail content" />
+        <Textarea class="h-32" placeholder={m.extra_mail_content()} />
       {/if}
     </div>
     <Dialog.Footer>
       <Button class="bg-green-500 text-white" variant="outline" on:click={handleApprove}>
-        Approve
+        {m.approve()}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
@@ -164,25 +171,29 @@
   <Dialog.Content>
     <Dialog.Header>
       <Dialog.Title>
-        Requesting edits for application
+        {m.requesting_edits_for_application()}
         <span class="font-mono font-normal">{record.id}</span>
       </Dialog.Title>
       <Dialog.Description>
-        Below are the comments for the fields that need to be edited.
+        {m.requesting_edits_desc()}
       </Dialog.Description>
     </Dialog.Header>
     <div class="flex flex-col gap-2">
-      <Label class="text-muted-foreground">Mail the responder?</Label>
+      <Label class="text-muted-foreground">
+        {m.mail_the_responder()}
+      </Label>
       <div class="flex items-center space-x-2">
-        <Switch bind:checked={isMailResponder} /><Label>Mail responder</Label>
+        <Switch bind:checked={isMailResponder} /><Label>
+          {m.mail_responder()}
+        </Label>
       </div>
       {#if isMailResponder}
-        <Textarea class="h-32" placeholder="Extra mail content" />
+        <Textarea class="h-32" placeholder={m.extra_mail_content()} />
       {/if}
     </div>
     <Dialog.Footer>
       <Button class="bg-amber-500 text-white" variant="outline" on:click={handleRequestEdit}>
-        Return for edits
+        {m.return_for_edits()}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
@@ -192,22 +203,26 @@
   <Dialog.Content>
     <Dialog.Header>
       <Dialog.Title>
-        Rejecting application
+        {m.rejecting_application()}
         <span class="font-mono font-normal">{record.id}</span>
       </Dialog.Title>
     </Dialog.Header>
     <div class="flex flex-col gap-2">
-      <Label class="text-muted-foreground">Mail the responder?</Label>
+      <Label class="text-muted-foreground">
+        {m.mail_the_responder()}
+      </Label>
       <div class="flex items-center space-x-2">
-        <Switch bind:checked={isMailResponder} /><Label>Mail responder</Label>
+        <Switch bind:checked={isMailResponder} /><Label>
+          {m.mail_responder()}
+        </Label>
       </div>
       {#if isMailResponder}
-        <Textarea class="h-32" placeholder="Extra mail content" />
+        <Textarea class="h-32" placeholder={m.extra_mail_content()} />
       {/if}
     </div>
     <Dialog.Footer>
       <Button class="bg-red-500 text-white" variant="outline" on:click={handleReject}>
-        Reject
+        {m.reject()}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

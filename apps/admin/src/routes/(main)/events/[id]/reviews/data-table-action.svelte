@@ -18,6 +18,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { fromDate } from '@internationalized/date';
+	import * as m from '$lib/paraglide/messages.js'
 
 	export let record: ReviewsResponse;
 
@@ -81,17 +82,21 @@
 				<DropdownMenu.Item 
           href={`${PUBLIC_PLATFORM_URL}/review/${record.id}`} 
           target="_blank">
-          View review
+          {m.view_review()}
         </DropdownMenu.Item>
 				<DropdownMenu.Item
 					on:click={() => {
 						editDetailsOpen = true;
 						newReviewerEmail = record.reviewerEmail;
 						newReviewEndDate = new Date(record.endDate);
-					}}>Edit details</DropdownMenu.Item
+					}}>
+						{m.edit_details()}
+					</DropdownMenu.Item
 				>
 				<DropdownMenu.Sub>
-					<DropdownMenu.SubTrigger>Edit status</DropdownMenu.SubTrigger>
+					<DropdownMenu.SubTrigger>
+						{m.edit_status()}
+					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent class="w-max">
 						{#each Object.entries(statuses) as [key, value]}
 							<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
@@ -101,7 +106,9 @@
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
 				<DropdownMenu.Sub>
-					<DropdownMenu.SubTrigger>Download</DropdownMenu.SubTrigger>
+					<DropdownMenu.SubTrigger>
+						{m.download()}
+					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent>
 						<DropdownMenu.Item disabled href={`/export/pdf/${record.id}`} target="_blank"
 							>PDF</DropdownMenu.Item
@@ -121,14 +128,20 @@
 <Dialog.Root bind:open={editDetailsOpen}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Editing details</Dialog.Title>
+			<Dialog.Title>
+				{m.editing_details()}
+			</Dialog.Title>
 		</Dialog.Header>
 		<div>
-			<Label>Reviewer email</Label>
+			<Label>
+				{m.reviewer_email()}
+			</Label>
 			<Input bind:value={newReviewerEmail} />
 		</div>
 		<div class="flex flex-col gap-1">
-			<Label>Review end date</Label>
+			<Label>
+				{m.end_date()}
+			</Label>
 			<DatePicker
 				value={newReviewEndDate ? fromDate(newReviewEndDate, 'Asia/Singapore') : undefined}
 				onValueChange={(v) => {
@@ -137,7 +150,9 @@
 			/>
 		</div>
 		<Dialog.Footer>
-			<Button on:click={saveEditDetails}>Save</Button>
+			<Button on:click={saveEditDetails}>
+				{m.save()}
+			</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>

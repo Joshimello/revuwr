@@ -6,6 +6,7 @@
   import { toast } from "svelte-sonner";
   import type { EventsResponse, QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
   import { page } from "$app/stores";
+  import * as m from '$lib/paraglide/messages.js'
 
   export let currentPage: string
   export let editingId: string | null
@@ -97,11 +98,11 @@
   <Popover.Trigger asChild let:builder>
     {#if long}
       <Button builders={[builder]} class="w-full h-2 text-muted-foreground text-xs hover:opacity-100 opacity-0 transition-opacity duration-75" variant="ghost">
-        Add New Question
+        {m.add_a_new_question()}
       </Button>
     {:else}
       <Button builders={[builder]}>
-        Add a new question
+        {m.add_a_new_question()}
       </Button>
     {/if}
   </Popover.Trigger>

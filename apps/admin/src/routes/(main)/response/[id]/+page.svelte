@@ -34,6 +34,7 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import * as m from '$lib/paraglide/messages.js'
 
 	type ExpandedApplication = ApplicationsResponse<{
 		event: EventsResponse;
@@ -354,7 +355,7 @@
 										<Button size="sm" variant="secondary" on:click={() => {
 											handleEditSave(answer.id);
 										}}>
-											Edit response
+											{m.edit_response()}
 										</Button>
 									</Popover.Content>
 								</Popover.Root>
@@ -400,14 +401,18 @@
 			<Card.Root>
 				<Card.Content class="flex flex-col gap-3 pt-6">
 					<div class="flex flex-col">
-						<Label class="text-muted-foreground">Responder</Label>
+						<Label class="text-muted-foreground">
+							{m.responder()}
+						</Label>
 						<span class="break-all text-sm leading-4">{responder.name}</span>
 						<span class="break-all text-sm leading-4">{responder.username}</span>
 					</div>
 
 					<div class="flex items-center justify-between gap-2">
 						<div class="flex flex-col">
-							<Label class="text-muted-foreground">Contact</Label>
+							<Label class="text-muted-foreground">
+								{m.contact()}
+							</Label>
 							<span class="break-all text-sm leading-4">{responder.email}</span>
 							<span class="break-all text-sm leading-4">{responder.phone}</span>
 						</div>
@@ -423,13 +428,17 @@
 					</div>
 
 					<div class="flex flex-col">
-						<Label class="text-muted-foreground">Event</Label>
+						<Label class="text-muted-foreground">
+							{m.event()}
+						</Label>
 						<span class="text-sm leading-4">{event.name}</span>
 					</div>
 
 					<div class="flex items-center justify-between gap-2">
 						<div class="flex flex-col">
-							<Label class="text-muted-foreground">Status</Label>
+							<Label class="text-muted-foreground">
+								{m.status()}
+							</Label>
 							<div><Status type={record.status} /></div>
 						</div>
 						<DropdownMenu.Root>
@@ -451,13 +460,17 @@
 					</div>
 
 					<div class="flex flex-col">
-						<Label class="text-muted-foreground">Internal ID</Label>
+						<Label class="text-muted-foreground">
+							{m.internal_id()}
+						</Label>
 						<span class="font-mono text-sm">{record.id}</span>
 					</div>
 
 					<div class="flex items-center justify-between gap-2">
 						<div class="flex flex-col">
-							<Label class="text-muted-foreground">Serial ID</Label>
+							<Label class="text-muted-foreground">
+								{m.serial_id()}
+							</Label>
 							{#if record.serial}
 								<span class="font-mono text-sm"
 									>{event.responsePrefix}{record.serial.toString().padStart(3, '0')}</span
@@ -474,7 +487,9 @@
 							</Popover.Trigger>
 							<Popover.Content>
 								<div class="grid grid-cols-3 items-center gap-4">
-									<Label>Serial</Label>
+									<Label>
+										{m.serial()}
+									</Label>
 									<Input
 										class="col-span-2"
 										type="number"
@@ -491,7 +506,9 @@
 
 					<div class="flex items-center justify-between gap-2">
 						<div class="flex flex-col">
-							<Label class="text-muted-foreground">Admin note</Label>
+							<Label class="text-muted-foreground">
+								{m.admin_note()}
+							</Label>
 							<span class="break-all text-sm">{record.adminNote}</span>
 						</div>
 						<Button
@@ -505,7 +522,9 @@
 					</div>
 
 					<div class="flex flex-col gap-1">
-						<Label class="text-muted-foreground">Export response</Label>
+						<Label class="text-muted-foreground">
+							{m.export_response()}
+						</Label>
 						<div class="grid grid-cols-2 gap-1">
 							<Button
 								variant="secondary"
@@ -531,7 +550,7 @@
 	<Dialog.Root bind:open={addNotesOpen}>
 		<Dialog.Content>
 			<Dialog.Header>
-				<Dialog.Title>Notes for <span class="font-mono font-normal">{record.id}</span></Dialog.Title
+				<Dialog.Title>{m.note_for()} <span class="font-mono font-normal">{record.id}</span></Dialog.Title
 				>
 				<Textarea class="h-64" bind:value={record.adminNote} on:blur={handleSaveNotes} />
 			</Dialog.Header>
@@ -548,7 +567,7 @@
 					on:click={() => (approveOpen = true)}
 				>
 					<FileCheck size="14" strokeWidth="3" />
-					Approve
+					{m.approve()}
 				</Button>
 				<Button
 					class="flex items-center gap-1 bg-amber-500 text-white"
@@ -558,7 +577,7 @@
 					on:click={() => (requestEditOpen = true)}
 				>
 					<FileOutput size="14" strokeWidth="3" />
-					Request edits
+					{m.request_edits()}
 				</Button>
 				<Button
 					class="flex items-center gap-1 bg-red-500 text-white"
@@ -567,7 +586,7 @@
 					on:click={() => (rejectOpen = true)}
 				>
 					<FileX size="14" strokeWidth="3" />
-					Reject
+					{m.reject()}
 				</Button>
 			</Card.Content>
 		</Card.Root>
@@ -577,26 +596,32 @@
 		<Dialog.Content>
 			<Dialog.Header>
 				<Dialog.Title>
-					Approving application
+					{m.approving_application()}
 					<span class="font-mono font-normal">{record.id}</span>
 				</Dialog.Title>
 			</Dialog.Header>
 			<div class="flex flex-col">
-				<Label class="text-muted-foreground">New given ID will be</Label>
+				<Label class="text-muted-foreground">
+					{m.new_given_id_will_be()}
+				</Label>
 				<span>{event.responsePrefix}{(event.approvedCount + 1).toString().padStart(3, '0')}</span>
 			</div>
 			<div class="flex flex-col gap-2">
-				<Label class="text-muted-foreground">Mail the responder?</Label>
+				<Label class="text-muted-foreground">
+					{m.mail_the_responder()}
+				</Label>
 				<div class="flex items-center space-x-2">
-					<Switch bind:checked={isMailResponder} /><Label>Mail responder</Label>
+					<Switch bind:checked={isMailResponder} /><Label>
+						{m.mail_responder()}
+					</Label>
 				</div>
 				{#if isMailResponder}
-					<Textarea class="h-32" placeholder="Extra mail content" />
+					<Textarea class="h-32" placeholder={m.extra_mail_content()} />
 				{/if}
 			</div>
 			<Dialog.Footer>
 				<Button class="bg-green-500 text-white" variant="outline" on:click={handleApprove}>
-					Approve
+					{m.approve()}
 				</Button>
 			</Dialog.Footer>
 		</Dialog.Content>
@@ -606,11 +631,11 @@
 		<Dialog.Content>
 			<Dialog.Header>
 				<Dialog.Title>
-					Requesting edits for application
+					{m.requesting_edits_for_application()}
 					<span class="font-mono font-normal">{record.id}</span>
 				</Dialog.Title>
 				<Dialog.Description>
-					Below are the comments for the fields that need to be edited.
+					{m.requesting_edits_desc()}
 				</Dialog.Description>
 			</Dialog.Header>
 			<ScrollArea class="h-64">
@@ -624,17 +649,21 @@
 				{/each}
 			</ScrollArea>
 			<div class="flex flex-col gap-2">
-				<Label class="text-muted-foreground">Mail the responder?</Label>
+				<Label class="text-muted-foreground">
+					{m.mail_the_responder()}
+				</Label>
 				<div class="flex items-center space-x-2">
-					<Switch bind:checked={isMailResponder} /><Label>Mail responder</Label>
+					<Switch bind:checked={isMailResponder} /><Label>
+						{m.mail_responder()}
+					</Label>
 				</div>
 				{#if isMailResponder}
-					<Textarea class="h-32" placeholder="Extra mail content" />
+					<Textarea class="h-32" placeholder={m.extra_mail_content()} />
 				{/if}
 			</div>
 			<Dialog.Footer>
 				<Button class="bg-amber-500 text-white" variant="outline" on:click={handleRequestEdit}>
-					Return for edits
+					{m.return_for_edits()}
 				</Button>
 			</Dialog.Footer>
 		</Dialog.Content>
@@ -644,22 +673,26 @@
 		<Dialog.Content>
 			<Dialog.Header>
 				<Dialog.Title>
-					Rejecting application
+					{m.rejecting_application()}
 					<span class="font-mono font-normal">{record.id}</span>
 				</Dialog.Title>
 			</Dialog.Header>
 			<div class="flex flex-col gap-2">
-				<Label class="text-muted-foreground">Mail the responder?</Label>
+				<Label class="text-muted-foreground">
+					{m.mail_the_responder()}
+				</Label>
 				<div class="flex items-center space-x-2">
-					<Switch bind:checked={isMailResponder} /><Label>Mail responder</Label>
+					<Switch bind:checked={isMailResponder} /><Label>
+						{m.mail_responder()}
+					</Label>
 				</div>
 				{#if isMailResponder}
-					<Textarea class="h-32" placeholder="Extra mail content" />
+					<Textarea class="h-32" placeholder={m.extra_mail_content()} />
 				{/if}
 			</div>
 			<Dialog.Footer>
 				<Button class="bg-red-500 text-white" variant="outline" on:click={handleReject}>
-					Reject
+					{m.reject()}
 				</Button>
 			</Dialog.Footer>
 		</Dialog.Content>

@@ -11,6 +11,7 @@ import Table from "./fields/table.svelte";
 import Activity from "./fields/activity.svelte";
 import Budget from "./fields/budget.svelte";
 import Info from "./fields/info.svelte";
+import * as m from '$lib/paraglide/messages.js'
 
 import { 
   Minus, Text, CheckCircle, CopyCheck, 
@@ -26,57 +27,57 @@ import { type ComponentType } from "svelte"
 export default {
   info: {
     icon: InfoIcon,
-    label: "Info",
+    label: m.info(),
     component: Info
   },
   shortText: {
     icon: Minus,
-    label: "Short Text",
+    label: m.short_text(),
     component: ShortText
   },
   longText: {
     icon: Text,
-    label: "Long Text",
+    label: m.long_text(),
     component: LongText
   },
   email: {
     icon: Mail,
-    label: "Email",
+    label: m.email(),
     component: Email
   },
   phone: {
     icon: PhoneIcon,
-    label: "Phone",
+    label: m.phone(),
     component: Phone
   },
   image: {
     icon: ImageIcon,
-    label: "Image",
+    label: m.image(),
     component: Image
   },
   file: {
     icon: FileUp,
-    label: "File",
+    label: m.file(),
     component: File
   },
   checkbox: {
     icon: CopyCheck,
-    label: "Multiple Choice",
+    label: m.multiple_choice(),
     component: Checkbox
   },
   radio: {
     icon: CheckCircle,
-    label: "Single Choice",
+    label: m.single_choice(),
     component: Radio
   },
   member: {
     icon: UsersRound,
-    label: "Team Members",
+    label: m.team_members(),
     component: Member
   },
   activity: {
     icon: CalendarRange,
-    label: "Activity",
+    label: m.activity(),
     component: Activity
   },
   // budget: {

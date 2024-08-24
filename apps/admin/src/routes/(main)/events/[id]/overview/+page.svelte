@@ -8,6 +8,7 @@
   import { writable, readable } from 'svelte/store'
   import { toast } from 'svelte-sonner'
 	import DataTable from './data-table.svelte';
+  import * as m from '$lib/paraglide/messages.js'
 
   type ExpandedApplication = ApplicationsResponse<{
 		event: EventsResponse;
@@ -101,7 +102,7 @@
     <span class="sr-only">Back</span>
   </Button>
   <h1 class="text-lg font-semibold md:text-2xl">
-    Review applications overview
+    {m.review_applications_overview()}
   </h1>
 </div>
 
@@ -112,5 +113,5 @@
     </div>
   </div>
 {:else}
-  No responses yet
+  {m.no_review_requests_yet()}
 {/if}

@@ -20,6 +20,7 @@
 	import { fly } from 'svelte/transition';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
+	import * as m from '$lib/paraglide/messages.js'
 
 	export let applications: ExpandedApplication[];
 	export let selectedRecords: Record<string, boolean>;
@@ -67,9 +68,11 @@
 	<div transition:fly={{ duration: 200, y: -10 }} class="fixed bottom-6">
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Batch actions</Card.Title>
+				<Card.Title>
+					{m.batch_actions()}
+				</Card.Title>
 				<Card.Description
-					>{Object.keys(selectedRecords || {}).length} of {applications.length} row(s) selected.</Card.Description
+					>{Object.keys(selectedRecords || {}).length} {m.of()} {applications.length} {m.rows()} {m.selected()}</Card.Description
 				>
 			</Card.Header>
 			<Card.Content class="grid grid-cols-2 gap-2 md:flex">
@@ -77,7 +80,7 @@
 					<DropdownMenu.Trigger asChild let:builder>
 						<Button class="flex items-center gap-2" builders={[builder]}>
 							<SquarePen size="16" />
-							Edit status
+							{m.edit_status()}
 						</Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
@@ -99,7 +102,7 @@
 					<DropdownMenu.Trigger asChild let:builder>
 						<Button class="flex items-center gap-2" builders={[builder]}>
 							<Download size="16" />
-							Download
+							{m.download()}
 						</Button>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
@@ -110,7 +113,7 @@
 								href={`/export/csv?ids=${selectedIds.join(',')}`}
 							>
 								<FileSpreadsheet size="16" />
-								Export as CSV
+								{m.export_as()} CSV
 							</DropdownMenu.Item>
 							<DropdownMenu.Item
 								class="flex items-center gap-2"
@@ -118,7 +121,7 @@
 								href={`/export/pdfs?ids=${selectedIds.join(',')}`}
 							>
 								<FileText size="16" />
-								Export as PDF
+								{m.export_as()} as PDF
 							</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>
@@ -130,12 +133,12 @@
 					target="_blank"
 				>
 					<Mails size="16" />
-					Send mail
+					{m.send_mail()}
 				</Button>
 
 				<Button class="flex items-center gap-2" href={`/events/${$page.params.id}/reviews/new?ids=${selectedIds.join(',')}`}>
 					<UserRoundSearch size="16" />
-					Send for review
+					{m.send_for_review()}
 				</Button>
 			</Card.Content>
 		</Card.Root>

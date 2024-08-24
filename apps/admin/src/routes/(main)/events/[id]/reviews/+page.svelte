@@ -11,6 +11,7 @@
   import { writable } from 'svelte/store';
 	import { ChevronLeft } from 'lucide-svelte';
 	import DataTable from './data-table.svelte';
+  import * as m from '$lib/paraglide/messages.js'
   
   const reviewRequests = writable<ReviewsResponse[]>([]);
 
@@ -48,7 +49,7 @@
     <span class="sr-only">Back</span>
   </Button>
   <h1 class="text-lg font-semibold md:text-2xl">
-    Review requests
+    {m.review_requests()}
   </h1>
 </div>
 
@@ -59,5 +60,5 @@
     </div>
   </div>
 {:else}
-  No responses yet
+  {m.no_review_requests_yet()}
 {/if}

@@ -9,6 +9,7 @@
   import DataTable from "./data-table.svelte"
 	import DataTableBatch from "./data-table-batch.svelte";
   import { writable } from "svelte/store";
+  import * as m from '$lib/paraglide/messages.js'
   
   type ExpandedApplication = ApplicationsResponse<{
     responder: UsersResponse,
@@ -58,10 +59,12 @@
 <div class="flex items-center gap-4">
   <Button variant="outline" size="icon" class="h-7 w-7" href={`/events/${$page.params.id}`}>
     <ChevronLeft class="h-4 w-4" />
-    <span class="sr-only">Back</span>
+    <span class="sr-only">
+      {m.back()}
+    </span>
   </Button>
   <h1 class="text-lg font-semibold md:text-2xl">
-    Event responses
+    {m.event_responses()}
   </h1>
 </div>
 
@@ -72,7 +75,7 @@
     </div>
   </div>
 {:else}
-  No responses yet
+  {m.no_responses_yet()}
 {/if}
 
 <DataTableBatch bind:applications={$applications} selectedRecords={selectedRecords} />

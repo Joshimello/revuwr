@@ -8,6 +8,7 @@
   import * as Dialog from "$lib/components/ui/dialog";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { toast } from "svelte-sonner";
+  import * as m from '$lib/paraglide/messages.js'
 
   type ExpandedApplication = ApplicationsResponse<{
     responder: UsersResponse,
@@ -68,9 +69,13 @@
     </DropdownMenu.Trigger>
     <DropdownMenu.Content>
       <DropdownMenu.Group>
-        <DropdownMenu.Item href={`/response/${record.id}`}>View response</DropdownMenu.Item>
+        <DropdownMenu.Item href={`/response/${record.id}`}>
+          {m.view_response()}
+        </DropdownMenu.Item>
         <DropdownMenu.Sub>
-          <DropdownMenu.SubTrigger>Edit status</DropdownMenu.SubTrigger>
+          <DropdownMenu.SubTrigger>
+            {m.edit_status()}
+          </DropdownMenu.SubTrigger>
           <DropdownMenu.SubContent class="w-max">
             {#each Object.entries(statuses) as [key, value]}
               <DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
@@ -80,14 +85,20 @@
           </DropdownMenu.SubContent>
         </DropdownMenu.Sub>
         <DropdownMenu.Sub>
-          <DropdownMenu.SubTrigger>Download</DropdownMenu.SubTrigger>
+          <DropdownMenu.SubTrigger>
+            {m.download()}
+          </DropdownMenu.SubTrigger>
           <DropdownMenu.SubContent>
             <DropdownMenu.Item href={`/export/pdf/${record.id}`} target="_blank">PDF</DropdownMenu.Item>
             <DropdownMenu.Item disabled>CSV</DropdownMenu.Item>
           </DropdownMenu.SubContent>
         </DropdownMenu.Sub>
-        <DropdownMenu.Item href={`mailto:${record.expand?.responder.email}`} target="_blank">Mail user</DropdownMenu.Item>
-        <DropdownMenu.Item on:click={() => addNotesOpen = true}>Add notes</DropdownMenu.Item>
+        <DropdownMenu.Item href={`mailto:${record.expand?.responder.email}`} target="_blank">
+          {m.mail_user()}
+        </DropdownMenu.Item>
+        <DropdownMenu.Item on:click={() => addNotesOpen = true}>
+          {m.add_note()}
+        </DropdownMenu.Item>
       </DropdownMenu.Group>
       <DropdownMenu.Separator />
       <DropdownMenu.Label class="text-xs font-normal font-mono text-muted-foreground p-0 px-2">{record.id}</DropdownMenu.Label>
@@ -98,7 +109,7 @@
 <Dialog.Root bind:open={addNotesOpen}>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Notes for <span class="font-mono font-normal">{record.id}</span></Dialog.Title>
+      <Dialog.Title>{m.note_for()} <span class="font-mono font-normal">{record.id}</span></Dialog.Title>
       <Textarea class="h-64" bind:value={record.adminNote} on:blur={handleSaveNotes} />
     </Dialog.Header>
   </Dialog.Content>
