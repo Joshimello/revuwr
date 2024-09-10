@@ -3,46 +3,43 @@ name: Split Monorepo
 on:
   push:
     branches:
-      - main  # Change to your default branch
+      - main  # Trigger when there's a push to the main branch
 
 jobs:
-  split_monorepo:
+  split_apps:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Set up Git
+      - name: Set up Git user
         run: |
-          git config user.name "GitHub Actions"
+          git config user.name "github-actions"
           git config user.email "actions@github.com"
-
-      - name: Authenticate with GitHub using PAT
-        env:
-          TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          git remote set-url origin https://x-access-token:${TOKEN}@github.com/joshimello/revuwr.git
 
       - name: Create and push platform branch
         run: |
+          # Create a new branch for platform
           git checkout --orphan platform
+          # Remove all files
           git rm -rf .
-          git checkout main -- apps/platform
-          mv apps/platform/* .
-          rm -rf apps
+          # Copy /apps/platform to root
+          cp -r apps/platform/* .
+          # Add, commit, and push changes to the platform branch
           git add .
-          git commit -m "Extracted platform app to platform branch"
-          git push origin platform --force
+          git commit -m "Move platform to root"
+          git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/joshimello/revuwr.git" platform
 
       - name: Create and push admin branch
         run: |
-          git checkout main
+          # Create a new branch for admin
           git checkout --orphan admin
+          # Remove all files
           git rm -rf .
-          git checkout main -- apps/admin
-          mv apps/admin/* .
-          rm -rf apps
+          # Copy /apps/admin to root
+          cp -r apps/admin/* .
+          # Add, commit, and push changes to the admin branch
           git add .
-          git commit -m "Extracted admin app to admin branch"
-          git push origin admin --force
+          git commit -m "Move admin to root"
+          git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/joshimello/revuwr.git" admin
