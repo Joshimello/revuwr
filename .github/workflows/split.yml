@@ -21,7 +21,9 @@ jobs:
       - name: Create and push platform branch
         run: |
           git switch --orphan platform
-          git checkout main -- apps/platform/*
+          git checkout main -- apps/platform
+          mv apps/platform/* .
+          rm -rf apps/platform/
           git add .
           git commit -m "Move platform to root"
           git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/joshimello/revuwr.git" platform
@@ -30,6 +32,8 @@ jobs:
         run: |
           git switch --orphan admin
           git checkout main -- apps/admin/*
+          mv apps/admin/* .
+          rm -rf apps/admin/
           git add .
           git commit -m "Move admin to root"
           git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/joshimello/revuwr.git" admin
