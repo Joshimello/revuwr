@@ -20,16 +20,16 @@ jobs:
 
       - name: Create and push platform branch
         run: |
-          git checkout --orphan platform
-          git rm -rf . --ignore-unmatch
+          git switch --orphan platform
+          git checkout main -- README.md
           git add .
           git commit -m "Move platform to root"
           git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/owner/repo.git" platform
 
       - name: Create and push admin branch
         run: |
-          git checkout --orphan admin
-          git rm -rf . --ignore-unmatch
+          git switch --orphan admin
+          git checkout main -- README.md
           git add .
           git commit -m "Move admin to root"
           git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/joshimello/revuwr.git" admin
