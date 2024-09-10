@@ -24,7 +24,7 @@ jobs:
           git checkout main -- README.md
           git add .
           git commit -m "Move platform to root"
-          git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/owner/repo.git" platform
+          git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/joshimello/revuwr.git" platform
 
       - name: Create and push admin branch
         run: |
