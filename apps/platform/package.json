@@ -17,7 +17,6 @@
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.5.5",
-		"@repo/ui": "*",
 		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",
 		"mode-watcher": "^0.4.1",
@@ -29,7 +28,6 @@
 	"devDependencies": {
 		"@fontsource/geist-sans": "^5.0.3",
 		"@playwright/test": "^1.42.1",
-		"@repo/eslint-config": "*",
 		"@sveltejs/adapter-auto": "^3.1.1",
 		"@sveltejs/kit": "^2.5.2",
 		"@sveltejs/vite-plugin-svelte": "^3.0.2",
