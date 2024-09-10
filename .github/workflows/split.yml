@@ -18,6 +18,12 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
+      - name: Authenticate with GitHub using PAT
+        env:
+          TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git remote set-url origin https://x-access-token:${TOKEN}@github.com/joshimello/revuwr.git
+
       - name: Create and push platform branch
         run: |
           git checkout --orphan platform
