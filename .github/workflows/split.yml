@@ -1,0 +1,42 @@
+name: Split Monorepo
+
+on:
+  push:
+    branches:
+      - main  # Change to your default branch
+
+jobs:
+  split_monorepo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Create and push platform branch
+        run: |
+          git checkout --orphan platform
+          git rm -rf .
+          git checkout main -- apps/platform
+          mv apps/platform/* .
+          rm -rf apps
+          git add .
+          git commit -m "Extracted platform app to platform branch"
+          git push origin platform --force
+
+      - name: Create and push admin branch
+        run: |
+          git checkout main
+          git checkout --orphan admin
+          git rm -rf .
+          git checkout main -- apps/admin
+          mv apps/admin/* .
+          rm -rf apps
+          git add .
+          git commit -m "Extracted admin app to admin branch"
+          git push origin admin --force
