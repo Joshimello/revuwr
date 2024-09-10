@@ -22,7 +22,6 @@ jobs:
         run: |
           git checkout --orphan platform
           git rm -rf . --ignore-unmatch
-          mkdir -p apps/platform && cp -r apps/platform/* .
           git add .
           git commit -m "Move platform to root"
           git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/owner/repo.git" platform
@@ -31,7 +30,6 @@ jobs:
         run: |
           git checkout --orphan admin
           git rm -rf . --ignore-unmatch
-          mkdir -p apps/platform && cp -r apps/platform/* .
           git add .
           git commit -m "Move admin to root"
           git push -f "https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/joshimello/revuwr.git" admin
