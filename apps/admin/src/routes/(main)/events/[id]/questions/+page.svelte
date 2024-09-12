@@ -12,6 +12,7 @@
   import AddQuestion from "./add-question.svelte"
   import * as Tabs from "$lib/components/ui/tabs"
   import * as m from '$lib/paraglide/messages.js'
+	import { PUBLIC_BASE_PATH } from "$env/static/public";
 
   let questions: QuestionsResponse[] = []
   let editingId: string | null = null
@@ -113,7 +114,7 @@
 </script>
 
 <div class="flex items-center gap-4">
-  <Button variant="outline" size="icon" class="h-7 w-7" href="/events/{$page.params.id}">
+  <Button variant="outline" size="icon" class="h-7 w-7" href="{PUBLIC_BASE_PATH}/events/{$page.params.id}">
     <ChevronLeft class="h-4 w-4" />
     <span class="sr-only">Back</span>
   </Button>

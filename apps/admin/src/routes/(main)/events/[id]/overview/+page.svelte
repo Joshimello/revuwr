@@ -9,6 +9,7 @@
   import { toast } from 'svelte-sonner'
 	import DataTable from './data-table.svelte';
   import * as m from '$lib/paraglide/messages.js'
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
 
   type ExpandedApplication = ApplicationsResponse<{
 		event: EventsResponse;
@@ -97,7 +98,7 @@
 </script>
 
 <div class="flex items-center gap-4">
-  <Button variant="outline" size="icon" class="h-7 w-7" href={`/events/${$page.params.id}`}>
+  <Button variant="outline" size="icon" class="h-7 w-7" href={`${PUBLIC_BASE_PATH}/events/${$page.params.id}`}>
     <ChevronLeft class="h-4 w-4" />
     <span class="sr-only">Back</span>
   </Button>

@@ -6,6 +6,7 @@
   import { pb } from "$lib/pocketbase/client";
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
+	import { PUBLIC_BASE_PATH } from "$env/static/public";
 
   async function login() {
     const email = (document.getElementById("email") as HTMLInputElement).value;
@@ -14,7 +15,7 @@
     try {
       await pb.admins.authWithPassword(email, password);
       document.cookie = pb.authStore.exportToCookie({ httpOnly: false, secure: false });
-      goto("/", { invalidateAll: true });
+      goto(`${PUBLIC_BASE_PATH}/`, { invalidateAll: true });
     } catch (err) {
       if (err instanceof Error) {
         toast.error(err.message);

@@ -13,7 +13,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { toast } from 'svelte-sonner';
-	import { PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import DatePicker from '$lib/components/date-picker.svelte';
@@ -110,7 +110,7 @@
 						{m.download()}
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent>
-						<DropdownMenu.Item disabled href={`/export/pdf/${record.id}`} target="_blank"
+						<DropdownMenu.Item disabled href={`${PUBLIC_BASE_PATH}/export/pdf/${record.id}`} target="_blank"
 							>PDF</DropdownMenu.Item
 						>
 						<DropdownMenu.Item disabled>CSV</DropdownMenu.Item>

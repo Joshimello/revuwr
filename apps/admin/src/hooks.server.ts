@@ -1,4 +1,4 @@
-import { PUBLIC_PB_URL } from "$env/static/public"
+import { PUBLIC_BASE_PATH, PUBLIC_PB_URL } from "$env/static/public"
 import Pocketbase from "pocketbase"
 import { type TypedPocketBase } from "$lib/pocketbase/pocketbase-types"
 import { error } from "@sveltejs/kit"
@@ -7,7 +7,7 @@ export const handle = async ({ event, resolve }) => {
   const pb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
   pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '')
 
-  if (event.url.pathname.startsWith('/auth')) {
+  if (event.url.pathname.startsWith(`${PUBLIC_BASE_PATH}/auth`)) {
     return await resolve(event)
   }
 

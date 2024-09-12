@@ -33,7 +33,7 @@
 	import ActivityTable from './activity-table.svelte';
 	import { Switch } from '$lib/components/ui/switch';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import { PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
 	import * as m from '$lib/paraglide/messages.js'
 
 	type ExpandedApplication = ApplicationsResponse<{
@@ -530,7 +530,7 @@
 								variant="secondary"
 								size="sm"
 								class="h-7"
-								href={`/export/pdf/${record.id}`}
+								href={`${PUBLIC_BASE_PATH}/export/pdf/${record.id}`}
 								target="_blank"
 							>
 								<Download size="14" class="mr-1" />

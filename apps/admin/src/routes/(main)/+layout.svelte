@@ -14,13 +14,14 @@
   import * as m from '$lib/paraglide/messages.js'
   import { availableLanguageTags, languageTag } from '$lib/paraglide/runtime.js'
   import { i18n } from '$lib/i18n.js'
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
 
   const user = pb.authStore.model;
 
   let nav = [
-    { icon: PanelsTopLeft, text: m.overview(), href: '/', badge: 0 },
-    { icon: CalendarFold, text: m.events(), href: '/events', badge: 0 },
-    { icon: CircleUser, text: m.users(), href: '/users', badge: 0 }
+    { icon: PanelsTopLeft, text: m.overview(), href: `${PUBLIC_BASE_PATH}/`, badge: 0 },
+    { icon: CalendarFold, text: m.events(), href: `${PUBLIC_BASE_PATH}/events`, badge: 0 },
+    { icon: CircleUser, text: m.users(), href: `${PUBLIC_BASE_PATH}/users`, badge: 0 }
   ]
   
   $: breadcrumbs = (() => {
@@ -29,8 +30,8 @@
     for (let param in $page.params) {
       parts[parts.indexOf(`[${param}]`)] = $page.params[param];
     }
-    const paths = parts.map((text, i) => ({ text, href: '/' + parts.slice(1, i + 1).join('/') }));
-    paths[0] = { text: 'admin', href: '/' };
+    const paths = parts.map((text, i) => ({ text, href: `${PUBLIC_BASE_PATH}/` + parts.slice(1, i + 1).join('/') }));
+    paths[0] = { text: 'admin', href: `${PUBLIC_BASE_PATH}/` };
     return paths;
   })()
 
@@ -40,7 +41,7 @@
   <div class="bg-muted/40 hidden border-r md:block">
     <div class="flex h-full max-h-screen flex-col gap-2">
       <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <a href="/" class="flex items-center gap-2 font-semibold">
+        <a href="{PUBLIC_BASE_PATH}/" class="flex items-center gap-2 font-semibold">
           <span>
             {m.admin()}
           </span>
@@ -77,7 +78,7 @@
         </Sheet.Trigger>
         <Sheet.Content side="left" class="flex flex-col">
           <nav class="grid gap-2 text-lg font-medium">
-            <a href="/" class="flex items-center gap-2 text-lg font-semibold">
+            <a href="{PUBLIC_BASE_PATH}/" class="flex items-center gap-2 text-lg font-semibold">
               <span>Admin</span>
             </a>
 

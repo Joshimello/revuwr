@@ -21,6 +21,7 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 	import * as m from '$lib/paraglide/messages.js'
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
 
 	export let applications: ExpandedApplication[];
 	export let selectedRecords: Record<string, boolean>;
@@ -110,7 +111,7 @@
 							<DropdownMenu.Item
 								class="flex items-center gap-2"
 								target="_blank"
-								href={`/export/csv?ids=${selectedIds.join(',')}`}
+								href={`${PUBLIC_BASE_PATH}/export/csv?ids=${selectedIds.join(',')}`}
 							>
 								<FileSpreadsheet size="16" />
 								{m.export_as()} CSV
@@ -118,7 +119,7 @@
 							<DropdownMenu.Item
 								class="flex items-center gap-2"
 								target="_blank"
-								href={`/export/pdfs?ids=${selectedIds.join(',')}`}
+								href={`${PUBLIC_BASE_PATH}/export/pdfs?ids=${selectedIds.join(',')}`}
 							>
 								<FileText size="16" />
 								{m.export_as()} as PDF
@@ -136,7 +137,7 @@
 					{m.send_mail()}
 				</Button>
 
-				<Button class="flex items-center gap-2" href={`/events/${$page.params.id}/reviews/new?ids=${selectedIds.join(',')}`}>
+				<Button class="flex items-center gap-2" href={`${PUBLIC_BASE_PATH}/events/${$page.params.id}/reviews/new?ids=${selectedIds.join(',')}`}>
 					<UserRoundSearch size="16" />
 					{m.send_for_review()}
 				</Button>

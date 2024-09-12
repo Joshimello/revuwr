@@ -9,6 +9,7 @@
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { toast } from "svelte-sonner";
   import * as m from '$lib/paraglide/messages.js'
+	import { PUBLIC_BASE_PATH } from "$env/static/public";
 
   type ExpandedApplication = ApplicationsResponse<{
     responder: UsersResponse,
@@ -58,7 +59,7 @@
 </script>
 
 <div class="flex">
-  <Button variant="ghost" size="icon" href={`/response/${record.id}`}>
+  <Button variant="ghost" size="icon" href={`${PUBLIC_BASE_PATH}/response/${record.id}`}>
     <SquareArrowOutUpRight size="20" class="text-muted-foreground" />
   </Button>
   <DropdownMenu.Root>
@@ -69,7 +70,7 @@
     </DropdownMenu.Trigger>
     <DropdownMenu.Content>
       <DropdownMenu.Group>
-        <DropdownMenu.Item href={`/response/${record.id}`}>
+        <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/response/${record.id}`}>
           {m.view_response()}
         </DropdownMenu.Item>
         <DropdownMenu.Sub>
@@ -89,7 +90,7 @@
             {m.download()}
           </DropdownMenu.SubTrigger>
           <DropdownMenu.SubContent>
-            <DropdownMenu.Item href={`/export/pdf/${record.id}`} target="_blank">PDF</DropdownMenu.Item>
+            <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/export/pdf/${record.id}`} target="_blank">PDF</DropdownMenu.Item>
             <DropdownMenu.Item disabled>CSV</DropdownMenu.Item>
           </DropdownMenu.SubContent>
         </DropdownMenu.Sub>

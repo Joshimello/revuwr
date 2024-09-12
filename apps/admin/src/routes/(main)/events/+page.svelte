@@ -13,6 +13,7 @@
   import { toast } from "svelte-sonner";
   import type { EventsResponse } from "$lib/pocketbase/pocketbase-types";
   import * as m from '$lib/paraglide/messages.js'
+	import { PUBLIC_BASE_PATH } from "$env/static/public";
 
   let events: EventsResponse[] = []
   let isLoading: boolean = true
@@ -82,7 +83,7 @@
           Export
         </span>
       </Button> -->
-      <Button size="sm" class="h-7 gap-1" href="/events/new">
+      <Button size="sm" class="h-7 gap-1" href="{PUBLIC_BASE_PATH}/events/new">
         <CirclePlus class="h-3.5 w-3.5" />
         <span class="sr-only sm:not-sr-only sm:whitespace-nowrap">
           {m.new_event()}
@@ -164,7 +165,7 @@
                   {/if}
                 </Table.Cell>
                 <Table.Cell class="font-medium underline">
-                  <a href={`/events/${event.id}`}>
+                  <a href={`${PUBLIC_BASE_PATH}/events/${event.id}`}>
                     {event.name}
                   </a>
                 </Table.Cell>
@@ -197,19 +198,19 @@
                       <DropdownMenu.Label>
                         {m.actions()}
                       </DropdownMenu.Label>
-                      <DropdownMenu.Item href={`/events/${event.id}/settings`}>
+                      <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/events/${event.id}/settings`}>
                         <Settings2 size="16" class="mr-2" />
                         {m.modify_settings()}
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item href={`/events/${event.id}/questions`}>
+                      <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/events/${event.id}/questions`}>
                         <ListPlus size="16" class="mr-2" />
                         {m.edit_questions()}
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item href={`/events/${event.id}/responses`}>
+                      <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/events/${event.id}/responses`}>
                         <MessageSquareReply size="16" class="mr-2" />
                         {m.view_responses()}
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item href={`/events/${event.id}/reviews`}>
+                      <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/events/${event.id}/reviews`}>
                         <ClipboardCheck size="16" class="mr-2" />
                         {m.manage_reviews()}
                       </DropdownMenu.Item>

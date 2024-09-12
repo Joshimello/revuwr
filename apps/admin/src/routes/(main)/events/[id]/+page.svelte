@@ -11,7 +11,7 @@
 	import { Label } from "$lib/components/ui/label";
 	import { Badge } from "$lib/components/ui/badge";
   import * as Table from "$lib/components/ui/table";
-  import { PUBLIC_PLATFORM_URL } from "$env/static/public"
+  import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from "$env/static/public"
 	import Status from "$lib/components/status.svelte";
   import * as m from '$lib/paraglide/messages.js'
 
@@ -59,7 +59,7 @@
 </script>
 
 <div class="flex items-center gap-4">
-  <Button variant="outline" size="icon" class="h-7 w-7" href="/events">
+  <Button variant="outline" size="icon" class="h-7 w-7" href="{PUBLIC_BASE_PATH}/events">
     <ChevronLeft class="h-4 w-4" />
     <span class="sr-only">Back</span>
   </Button>
@@ -85,7 +85,7 @@
             {m.event_responses_desc()}
           </Card.Description>
         </div>
-        <Button href={event ? `/events/${event.id}/responses` : ''} size="sm" class="ml-auto gap-1">
+        <Button href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/responses` : ''} size="sm" class="ml-auto gap-1">
           {m.view_all()}
           <ArrowUpRight class="h-4 w-4" />
         </Button>
@@ -137,7 +137,7 @@
                   {new Date(application.updated).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}
                 </Table.Cell>
                 <Table.Cell class="text-right">
-                  <Button size="icon" variant="ghost" href={`/response/${application.id}`}>
+                  <Button size="icon" variant="ghost" href={`${PUBLIC_BASE_PATH}/response/${application.id}`}>
                     <SquareArrowOutUpRight size="16" />
                   </Button>
                 </Table.Cell>
@@ -158,15 +158,15 @@
             {m.review_requests_desc()}
           </Card.Description>
         </div>
-        <Button href={event ? `/events/${event.id}/overview` : ''} size="sm" class="ml-auto gap-1">
+        <Button href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/overview` : ''} size="sm" class="ml-auto gap-1">
           <Grid2x2Check size="16" />
           {m.review_overview()}
         </Button>
-        <Button href={event ? `/events/${event.id}/reviews/new` : ''} size="sm" class="ml-1 gap-1">
+        <Button href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/reviews/new` : ''} size="sm" class="ml-1 gap-1">
           <CirclePlus size="16" />
           {m.new_review()}
         </Button>
-        <Button href={event ? `/events/${event.id}/reviews` : ''} size="sm" class="ml-1 gap-1">
+        <Button href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/reviews` : ''} size="sm" class="ml-1 gap-1">
           {m.view_all()}
           <ArrowUpRight size="16" />
         </Button>
@@ -241,14 +241,14 @@
       <Card.Content class="pt-6 flex lg:flex-col flex-row gap-2">
         <Button 
           class="w-full flex items-center gap-2 justify-start" 
-          href={event ? `/events/${event.id}/settings` : ''}
+          href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/settings` : ''}
         >
           <Settings size="18" />
           {m.settings()}
         </Button>
         <Button 
           class="w-full flex items-center gap-2 justify-start"
-          href={event ? `/events/${event.id}/questions` : ''}  
+          href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/questions` : ''}  
         >
           <ListPlus size="18" />
           {m.questions()}
