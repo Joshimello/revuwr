@@ -21,6 +21,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Switch } from '$lib/components/ui/switch';
   import * as Table from "$lib/components/ui/table"
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
 
 	type ExpandedEvent = EventsResponse<{
 		questions: QuestionsResponse[];
@@ -79,7 +80,7 @@
 		try {
 			await Promise.all(promises);
 			toast.success('Review requests created');
-			goto(`/events/${$page.params.id}/reviews`);
+			goto(`${PUBLIC_BASE_PATH}/events/${$page.params.id}/reviews`);
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);
