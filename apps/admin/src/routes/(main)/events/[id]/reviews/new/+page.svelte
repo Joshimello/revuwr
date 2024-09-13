@@ -22,6 +22,7 @@
 	import { Switch } from '$lib/components/ui/switch';
   import * as Table from "$lib/components/ui/table"
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import * as m from '$lib/paraglide/messages.js';
 
 	type ExpandedEvent = EventsResponse<{
 		questions: QuestionsResponse[];
@@ -93,13 +94,19 @@
 </script>
 
 <div class="flex items-center">
-	<h1 class="text-lg font-semibold md:text-2xl">New review request</h1>
+	<h1 class="text-lg font-semibold md:text-2xl">
+		{m.new_review_request()}
+	</h1>
 </div>
 
 <Card.Root class="max-w-3xl">
 	<Card.Header>
-		<Card.Title>Targeted applications</Card.Title>
-		<Card.Description>The reviewer will only be able to see these applications.</Card.Description>
+		<Card.Title>
+			{m.targeted_applications()}
+		</Card.Title>
+		<Card.Description>
+			{m.targeted_applications_desc()}
+		</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<div class="mb-2 flex flex-wrap gap-2">
@@ -126,7 +133,9 @@
 		</div>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger let:builder asChild>
-				<Button size="sm" builders={[builder]}>Add application</Button>
+				<Button size="sm" builders={[builder]}>
+					{m.add_application()}
+				</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content>
 				<DropdownMenu.Group>
@@ -151,10 +160,11 @@
 
 <Card.Root class="max-w-3xl">
 	<Card.Header>
-		<Card.Title>Reviewable fields</Card.Title>
+		<Card.Title>
+			{m.reviewable_fields()}
+		</Card.Title>
 		<Card.Description>
-      The reviewer will be able to see and review these fields.
-      Click on a field to toggle it's visibility for the reviewer.
+			{m.reviewable_fields_desc()}
     </Card.Description>
 	</Card.Header>
 	<Card.Content>
@@ -176,15 +186,21 @@
 		</div>
     <div class="flex items-center gap-2 mt-6">
       <Switch bind:checked={shareResponder} />
-      <Label>Share responder details with reviewer</Label>
+      <Label>
+				{m.share_responder_details_with_reviewer()}
+			</Label>
     </div>
 	</Card.Content>
 </Card.Root>
 
 <Card.Root class="max-w-3xl">
 	<Card.Header>
-		<Card.Title>Reviewers</Card.Title>
-		<Card.Description>Add reviewers to this review request. They will be able to see and review the applications.</Card.Description>
+		<Card.Title>
+			{m.reviewers()}
+		</Card.Title>
+		<Card.Description>
+			{m.reviewers_desc()}
+		</Card.Description>
 	</Card.Header>
 	<Card.Content>
 
@@ -192,8 +208,12 @@
       <Table.Root class="border mb-6">
         <Table.Header>
           <Table.Row>
-            <Table.Head>Reviewer email</Table.Head>
-            <Table.Head>End date</Table.Head>
+            <Table.Head>
+							{m.reviewer_email()}
+						</Table.Head>
+            <Table.Head>
+							{m.end_date()}
+						</Table.Head>
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -219,11 +239,15 @@
 
     <div class="flex gap-2 items-end">
       <div class="flex flex-col gap-2 w-full">
-        <Label>Reviewer email</Label>
+        <Label>
+					{m.reviewer_email()}
+				</Label>
         <Input bind:value={newReviewer.email} class="w-full"/>
       </div>
       <div class="flex flex-col gap-2">
-        <Label>End date</Label>
+        <Label>
+					{m.end_date()}
+				</Label>
         <DatePicker onValueChange={v => {
           newReviewer.endDate = v?.toDate("Asia/Singapore") || null;
         }} />
@@ -242,4 +266,6 @@
 	</Card.Content>
 </Card.Root>
 
-<Button class="max-w-3xl py-8" on:click={handleCreateReviews}>Create review requests</Button>
+<Button class="max-w-3xl py-8" on:click={handleCreateReviews}>
+	{m.create_review_requests()}
+</Button>

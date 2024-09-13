@@ -150,6 +150,7 @@
 
     "new_review_request": "新的評審請求",
     "targeted_applications": "目標申請",
+    "add_application": "新增",
     "targeted_applications_desc": "選擇您希望發送此評審請求的申請，評審人只能查看這些申請。",
     "reviewable_fields": "可評審欄位",
     "reviewable_fields_desc": "評審人將能夠查看並審查這些欄位。點擊欄位以切換其對評審人的可見性。",

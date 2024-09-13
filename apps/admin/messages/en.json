@@ -150,6 +150,7 @@
 
     "new_review_request": "New Review Request",
     "targeted_applications": "Targeted applications",
+    "add_application": "Add application",
     "targeted_applications_desc": "Select the applications you want to send this review request to, the reviewer will only be able to see these applications.",
     "reviewable_fields": "Reviewable fields",
     "reviewable_fields_desc": "The reviewer will be able to see and review these fields. Click on a field to toggle it's visibility for the reviewer.",
