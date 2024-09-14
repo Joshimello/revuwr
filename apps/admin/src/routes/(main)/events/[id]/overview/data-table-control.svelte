@@ -11,6 +11,7 @@
 	import { PUBLIC_PLATFORM_URL } from "$env/static/public";
 	import { pb } from "$lib/pocketbase/client";
   import * as m from '$lib/paraglide/messages.js'
+  import { reviewRequests } from "./stores";
 
   type Tresponse = string | number | string[] | number[] | Record<string, any> | null;
   type Toptions = Record<string, any>;
@@ -47,6 +48,7 @@
 			record.status = 'approved';
 			record.serial = updatedEvent.approvedCount;
 			approveOpen = false;
+      $reviewRequests = $reviewRequests
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);
@@ -71,6 +73,7 @@
 			toast.success('Edits requested');
 			record.status = 'editsRequested';
 			requestEditOpen = false;
+      $reviewRequests = $reviewRequests
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);
@@ -94,6 +97,7 @@
 			toast.success('Application rejected');
 			record.status = 'rejected';
 			rejectOpen = false;
+      $reviewRequests = $reviewRequests
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);

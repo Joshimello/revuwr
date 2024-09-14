@@ -13,16 +13,10 @@
 	import DataTable from './data-table.svelte';
   import * as m from '$lib/paraglide/messages.js'
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
-  
-  const reviewRequests = writable<ReviewsResponse[]>([]);
+  import { reviewRequests } from './stores';
 
   onMount(async () => {
     try {
-      pb.collection('reviews').subscribe("*", e => {
-        const index = $reviewRequests.findIndex(r => r.id === e.record.id);
-        if (index < 0) return;
-        $reviewRequests[index] = e.record;
-      })
       $reviewRequests = await pb.collection('reviews').getFullList({
         filter: `applications.event?~"${$page.params.id}"`,
         sort: '-created',
@@ -36,10 +30,6 @@
         toast.error('An error occurred');
       }
     }
-  })
-
-  onDestroy(() => {
-    pb.collection('reviews').unsubscribe();
   })
 
 </script>

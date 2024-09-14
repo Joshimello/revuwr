@@ -10,6 +10,7 @@
 	import { toast } from "svelte-sonner";
   import * as m from '$lib/paraglide/messages.js'
 	import { PUBLIC_BASE_PATH } from "$env/static/public";
+  import { applications } from './stores'
 
   type ExpandedApplication = ApplicationsResponse<{
     responder: UsersResponse,
@@ -27,6 +28,11 @@
         status: status
       })
       toast.success("Status updated")
+      let recordRef = $applications.find(a => a.id === record.id)
+      if (recordRef) {
+        recordRef.status = status
+        $applications = $applications
+      }
     }
     catch (err) {
       if (err instanceof Error) {
@@ -46,6 +52,11 @@
       })
       toast.success("Notes saved")
       prevNote = record.adminNote
+      let recordRef = $applications.find(a => a.id === record.id)
+      if (recordRef) {
+        recordRef.adminNote = record.adminNote
+        $applications = $applications
+      }
     }
     catch (err) {
       if (err instanceof Error) {

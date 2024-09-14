@@ -3,12 +3,11 @@
 	import { ChevronLeft } from "lucide-svelte";
   import { page } from "$app/stores"
   import { pb } from "$lib/pocketbase/client";
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
 	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse, UsersResponse } from "$lib/pocketbase/pocketbase-types";
 	import { toast } from "svelte-sonner";
   import DataTable from "./data-table.svelte"
 	import DataTableBatch from "./data-table-batch.svelte";
-  import { writable } from "svelte/store";
   import * as m from '$lib/paraglide/messages.js'
 	import { PUBLIC_BASE_PATH } from "$env/static/public";
   import { applications } from './stores'
@@ -43,10 +42,6 @@
         toast.error("An error occurred")
       }
     }
-  })
-
-  onDestroy(() => {
-    pb.collection("applications").unsubscribe()
   })
 
   let selectedRecords: Record<string, boolean>

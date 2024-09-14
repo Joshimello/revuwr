@@ -10,11 +10,8 @@
 	import { toast } from "svelte-sonner";
   import * as m from '$lib/paraglide/messages.js'
 	import { PUBLIC_BASE_PATH } from "$env/static/public";
-
-  type ExpandedApplication = ApplicationsResponse<{
-    responder: UsersResponse,
-    response: AnswersResponse[]
-  }>
+  import { reviewRequests } from './stores'
+	import type { ExpandedApplication } from "./types";
 
   export let record: ExpandedApplication
   let prevNote = record.adminNote
@@ -27,6 +24,7 @@
         status: status
       })
       toast.success("Status updated")
+      $reviewRequests = $reviewRequests
     }
     catch (err) {
       if (err instanceof Error) {

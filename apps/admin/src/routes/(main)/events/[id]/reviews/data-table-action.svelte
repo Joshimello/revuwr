@@ -1,17 +1,11 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import type {
-		AnswersResponse,
-		ApplicationsResponse,
-		ReviewsResponse,
-		UsersResponse
-	} from '$lib/pocketbase/pocketbase-types';
-	import { Link2, SquareArrowOutUpRight, SquareMenu } from 'lucide-svelte';
+	import type { ReviewsResponse } from '$lib/pocketbase/pocketbase-types';
+	import { Link2, SquareMenu } from 'lucide-svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { statuses, default as Status } from '$lib/components/status.svelte';
 	import { pb } from '$lib/pocketbase/client';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { Textarea } from '$lib/components/ui/textarea';
 	import { toast } from 'svelte-sonner';
 	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
 	import { Label } from '$lib/components/ui/label';
@@ -19,6 +13,7 @@
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { fromDate } from '@internationalized/date';
 	import * as m from '$lib/paraglide/messages.js'
+	import { reviewRequests } from './stores';
 
 	export let record: ReviewsResponse;
 
@@ -29,6 +24,7 @@
 				status: status
 			});
 			toast.success('Status updated');
+			$reviewRequests = $reviewRequests;
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);
@@ -50,6 +46,9 @@
 			});
 			toast.success('Details updated');
 			editDetailsOpen = false;
+			record.reviewerEmail = newReviewerEmail;
+			record.endDate = newReviewEndDate?.toISOString() ?? '';
+			$reviewRequests = $reviewRequests;
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);

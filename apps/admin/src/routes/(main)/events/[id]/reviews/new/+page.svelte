@@ -65,6 +65,21 @@
 	});
 
   const handleCreateReviews = async () => {
+		if (selectedApplications.length === 0) {
+			toast.error('Please select at least one application');
+			return;
+		}
+
+		if (selectedQuestions.length === 0) {
+			toast.error('Please select at least one question');
+			return;
+		}
+
+		if (reviewers.length === 0) {
+			toast.error('Please add at least one reviewer');
+			return;
+		}
+
 		const promises = reviewers.map(async (reviewer) => 
 			pb.collection('reviews').create({
 				applications: selectedApplications,

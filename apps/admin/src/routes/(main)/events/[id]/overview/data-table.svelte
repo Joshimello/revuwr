@@ -30,11 +30,7 @@
 	import DataTableReviews from './data-table-reviews.svelte';
 	import DataTableControl from './data-table-control.svelte';
 	import * as m from '$lib/paraglide/messages.js'
-
-	type ExpandedApplication = ApplicationsResponse<{
-    responder: UsersResponse,
-    response: AnswersResponse[]
-  }>
+	import type { ExpandedApplication } from './types';
 
 	type ReviewApplications = {
     application: ExpandedApplication;
