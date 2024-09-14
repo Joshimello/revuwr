@@ -30,6 +30,24 @@ export const GET = async ({ url }) => {
   
   let tokenData = await tokenResponse.json()
 
-  return json(tokenData)
+  if (!tokenData.access_token) {
+    return error(400, 'Invalid code')
+  }
+
+  let resourceBase = 'https://oauth.ccxp.nthu.edu.tw/v1.1/resource.php'
+  let access_token = tokenData.access_token
+
+  let resourceResponse = await fetch(resourceBase, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      access_token
+    })
+  })
+
+  let resourceData = await resourceResponse.json()
+  return json(resourceData)
 
 }
