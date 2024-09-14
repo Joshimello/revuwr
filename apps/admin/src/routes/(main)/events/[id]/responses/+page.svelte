@@ -11,6 +11,7 @@
   import { writable } from "svelte/store";
   import * as m from '$lib/paraglide/messages.js'
 	import { PUBLIC_BASE_PATH } from "$env/static/public";
+  import { applications } from './stores'
   
   type ExpandedApplication = ApplicationsResponse<{
     responder: UsersResponse,
@@ -21,15 +22,10 @@
     questions: QuestionsResponse[]
   }>
 
-  const applications = writable<ExpandedApplication[]>([])
   let event: ExpandedEvents | null = null
 
   onMount(async () => {
     try {
-      pb.collection("applications").subscribe<ExpandedApplication>("*", e => {
-        if (e.record.event != $page.params.id) return
-        $applications = $applications
-      })
       $applications = await pb.collection("applications").getFullList<ExpandedApplication>({
         filter: `event="${$page.params.id}"`,
         sort: "-created",

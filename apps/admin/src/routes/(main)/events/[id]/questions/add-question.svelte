@@ -7,6 +7,7 @@
   import type { EventsResponse, QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
   import { page } from "$app/stores";
   import * as m from '$lib/paraglide/messages.js'
+	import { refreshQuestions } from "./methods";
 
   export let currentPage: string
   export let editingId: string | null
@@ -76,6 +77,7 @@
           )
       }
 
+      refreshQuestions()
       editingId = question.id
     }
     catch (err) {

@@ -10,9 +10,9 @@
   import { toast } from "svelte-sonner";
   import { page } from "$app/stores";
   import * as m from '$lib/paraglide/messages.js'
+  import { refreshQuestions } from './methods'
 
   export let question: QuestionsResponse;
-  export let refresh: () => void;
   export let editingId: string | null;
   export let index: number;
 
@@ -20,13 +20,14 @@
 
   const handleEdit = async () => {
     editingId = question.id;
-    refresh();
+    refreshQuestions();
   }
 
   const handleDelete = async () => {
     try {
       await pb.collection('questions').delete(question.id)
       toast.success("Question deleted successfully")
+      refreshQuestions();
     }
     catch (err) {
       if (err instanceof Error) {
@@ -93,6 +94,7 @@
           { "questions": questionsIds }
         )
 
+      refreshQuestions();
       editingId = copied.id
     }
     catch (err) {
@@ -109,7 +111,7 @@
 
   const handleCancel = async () => {
     editingId = null;
-    refresh();
+    refreshQuestions();
   }
 
   const handleSave = async () => {
@@ -122,7 +124,7 @@
       })
       toast.success("Question saved successfully")
       editingId = null;
-      refresh();
+      refreshQuestions();
     }
     catch (err) {
       if (err instanceof Error) {
@@ -175,6 +177,7 @@
             { "questions+": question.id }
           )
       }
+      refreshQuestions();
     }
     catch (err) {
       if (err instanceof Error) {
@@ -228,6 +231,7 @@
             { "questions+": question.id }
           )
       }
+      refreshQuestions();
     }
     catch (err) {
       if (err instanceof Error) {
