@@ -25,11 +25,11 @@
 				Platform
 			</span>
 			{#if $user && $user.isValid && $user.model}
-				<Button href="/auth/logout" class="flex items-center gap-2 ">
+				<Button class="flex items-center gap-2 ">
 					Logout <LogOut size="16"/>
 				</Button>
 			{:else}
-				<Button href="/auth" class="flex items-center gap-2">
+				<Button href="/api/auth/signin" class="flex items-center gap-2">
 					Login <LogIn size="16"/>
 				</Button>
 			{/if}
