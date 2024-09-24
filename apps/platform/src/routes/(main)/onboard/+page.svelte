@@ -2,13 +2,15 @@
   import { Label } from "$lib/components/ui/label";
   import { Input } from "$lib/components/ui/input";
   import { ArrowRight, ArrowLeft, Bird, UserPen, BriefcaseBusiness } from "lucide-svelte";
-  import { user } from "$lib/stores";
   import * as Card from "$lib/components/ui/card"
 	import { Button } from "$lib/components/ui/button";
   import * as ToggleGroup from "$lib/components/ui/toggle-group";
   import { pb } from "$lib/pocketbase/client";
   import { toast } from "svelte-sonner"
   import { goto } from "$app/navigation";
+
+  export let data
+  const { user } = data
 
   const stages = [
     { 
@@ -32,43 +34,21 @@
 
   let values = {
     language: '',
-    name: '',
-    username: '',
-    email: '',
+    name: user?.name,
+    username: user?.username,
+    email: user?.email,
     phone: '',
     occupation: '',
     department: '',
     year: '',
-    init: true,
   }
 
   let isLoading = false
 
-  const handleFinish = async () => {
-    if (!$user || !$user.isValid || !$user.model) {
-      toast.error("Session expired, please login again.")
-      return
-    }
-
-    try {
-      isLoading = true
-      await pb.collection('users').update($user.model.id, values)
-      goto('/')
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      }
-      else {
-        toast.error("An error occurred, try refreshing the page.")
-      }
-      isLoading = false
-    }
-  }
+  const phoneRegex = /^(?:\+8869\d{8}|09\d{8})$/
+  $: isPhoneValid = phoneRegex.test(values.phone)
   
 </script>
-
-{#if $user && $user.isValid && $user.model}
 
 <Card.Root>
   <Card.Header>
@@ -97,18 +77,23 @@
       <div class="grid grid-cols-2 gap-6">
         <div class="flex-1">
           <Label>Full Name</Label>
-          <Input type="text" bind:value={values.name} />
+          <Input type="text" bind:value={values.name} disabled />
         </div>
         <div class="flex-1">
           <Label>Student or Staff ID</Label>
-          <Input type="text" bind:value={values.username} />
+          <Input type="text" bind:value={values.username} disabled />
         </div>
         <div class="flex-1">
           <Label>Email</Label>
-          <Input type="text" bind:value={values.email} />
+          <Input type="text" bind:value={values.email} disabled />
         </div>
         <div class="flex-1">
-          <Label>Phone Number</Label>
+          <Label>
+            Phone number
+            {#if values.phone && !isPhoneValid}
+              <span class:text-destructive={true} >(Invalid mobile number)</span>  
+            {/if}
+          </Label>
           <Input type="text" bind:value={values.phone} />
         </div>
       </div>
@@ -154,7 +139,7 @@
       </Button>
       <Button 
         class="flex items-center gap-2 w-full md:w-auto" 
-        disabled={!(values.name && values.username && values.phone && values.email)} 
+        disabled={!(values.name && values.username && isPhoneValid && values.email)} 
         on:click={() => page = 2}
       >
         Next <ArrowRight size="16" />
@@ -163,16 +148,25 @@
       <Button class="flex items-center gap-2" on:click={() => page = 1}>
         <ArrowLeft size="16" /> Back
       </Button>
-      <Button 
-        class="flex items-center gap-2 w-full md:w-auto" 
-        disabled={isLoading || !(values.occupation && (values.occupation == 'student' ? values.department && values.year : true))}
-        on:click={handleFinish}
-      >
-        Finish <ArrowRight size="16" />
-      </Button>
+      <form action="" method="post" on:submit={() => {
+        isLoading = true
+        toast.loading("Updating profile...")
+      }}>
+        <input type="hidden" value={values.language} name="language" />
+        <input type="hidden" value={values.phone} name="phone" />
+        <input type="hidden" value={values.occupation} name="occupation" />
+        <input type="hidden" value={values.department} name="department" />
+        <input type="hidden" value={values.year} name="year" />
+        <Button 
+          type="submit"
+          class="flex items-center gap-2 w-full md:w-auto" 
+          disabled={isLoading || !(values.occupation && (values.occupation == 'student' ? values.department && values.year : true))}
+        >
+          Finish <ArrowRight size="16" />
+        </Button>
+      </form>
+      
     {/if}
 
   </Card.Footer>
 </Card.Root>
-
-{/if}

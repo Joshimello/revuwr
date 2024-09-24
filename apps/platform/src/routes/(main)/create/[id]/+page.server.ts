@@ -1,39 +1,39 @@
-import { fail, redirect, isRedirect } from "@sveltejs/kit"
-import { PUBLIC_PB_URL } from "$env/static/public"
-import { env } from "$env/dynamic/private"
-import Pocketbase from "pocketbase"
-import type { EventsResponse, QuestionsResponse, TypedPocketBase } from "$lib/pocketbase/pocketbase-types.js"
+import type { EventsResponse, QuestionsResponse, TypedPocketBase } from '$lib/pocketbase/pocketbase-types.js'
+import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
+
+export const load = async ({ locals, params }) => {
+  try {
+    const event = await locals.pb.collection('events').getOne(params.id)
+    return {
+      event: event
+    }
+  }
+  catch (err) {
+    if (err instanceof Error) {
+      return error(500, err.message)
+    }
+    else {
+      return error(500, 'An error occurred')
+    }
+  }
+}
 
 type ExpandedEventsResponse = EventsResponse<{
   questions: QuestionsResponse[]
 }>
 
 export const actions = {
-  async default ({ params, request }) {
-
-    let apb: TypedPocketBase | null = null
+  async default ({ params, request, locals }) {
     const createdRecords = {
       applicationId: null as string | null,
       answersIds: [] as string[]
     }
-
     try {
-      const data = await request.formData();
-      const eventId = params.id
-      const userId = data.get("userId") as string
+      const event = await locals.apb.collection("events").getOne<ExpandedEventsResponse>(params.id, { expand: "questions" })
 
-      apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
-      await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
+      if (!locals.user) return fail(400, { message: "User not logged in" })
 
-      const event = await apb.collection("events").getOne<ExpandedEventsResponse>(eventId, {
-        expand: "questions"
-      })
-      const user = await apb.collection("users").getOne(userId)
-
-      if (!event.expand?.questions) {
-        return fail(400, { message: "Questions could not be fetched" })
-      }
-
+      if (!event.expand?.questions) return fail(400, { message: "Questions could not be fetched" })
       const questions = event.expand.questions
 
       if (new Date() < new Date(event.startDate)) {
@@ -44,25 +44,25 @@ export const actions = {
         return fail(400, { message: "Event has already passed"})
       }
 
-      const userResponses = await apb.collection("applications").getFullList({
-        filter: `responder = "${user.id}" && event = "${event.id}"`
+      const userResponses = await locals.apb.collection("applications").getFullList({
+        filter: `responder = "${locals.user.id}" && event = "${event.id}"`
       })
 
       if (userResponses.length >= event.responseLimit) {
         return fail(400, { message: "Application limit reached"})
       }
 
-      const application = await apb.collection("applications").create({
+      const application = await locals.apb.collection("applications").create({
         event: event.id,
         status: "draft",
-        responder: user.id
+        responder: locals.user.id
       })
 
       createdRecords.applicationId = application.id
 
       let answersIds: string[] = []
       for (const question of questions) {
-        const answer = await apb.collection("answers").create({
+        const answer = await locals.apb.collection("answers").create({
           application: application.id,
           question: question.id,
           valid: question.type == "info" ? true : false
@@ -72,7 +72,7 @@ export const actions = {
 
       createdRecords.answersIds = [...answersIds]
 
-      await apb.collection("applications").update(application.id, {
+      await locals.apb.collection("applications").update(application.id, {
         response: answersIds
       })
 
@@ -85,12 +85,12 @@ export const actions = {
         return redirect(err.status, err.location)
       }
 
-      if (apb && createdRecords.applicationId) {
+      if (createdRecords.applicationId) {
         try {
           for (const answerId of createdRecords.answersIds) {
-            await apb.collection("answers").delete(answerId)
+            await locals.apb.collection("answers").delete(answerId)
           }
-          await apb.collection("applications").delete(createdRecords.applicationId)
+          await locals.apb.collection("applications").delete(createdRecords.applicationId)
         }
         catch (rollbackErr) {
           console.error(rollbackErr)

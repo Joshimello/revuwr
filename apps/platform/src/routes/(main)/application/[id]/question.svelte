@@ -5,9 +5,10 @@
 	import { Badge } from "$lib/components/ui/badge";
   import { pb } from "$lib/pocketbase/client";
 	import { toast } from "svelte-sonner";
+  import { application } from "./stores";
+  import { type ExpandedResponse } from "./types";
 
-  export let application: ApplicationsResponse;
-  export let answer: AnswersResponse<any, { question: QuestionsResponse }>;
+  export let answer: ExpandedResponse;
   let question = answer.expand?.question;
   let newResponse = answer.response;
   let isValid: boolean;
@@ -21,11 +22,16 @@
     }
 
     try {
-      await pb.collection("answers").update(answer.id, {
+      const newAnswer =  await pb.collection("answers").update<ExpandedResponse>(answer.id, {
         response: newResponse,
         valid: isValid,
+      }, {
+        expand: "question"
       });
-      toast.success("Saved");
+      const responseIndex = $application?.expand?.response.findIndex(i => i.id == newAnswer.id);
+      if (responseIndex !== undefined && responseIndex !== -1 && $application && $application.expand) {
+        $application.expand.response[responseIndex] = newAnswer;
+      }
     }
     catch (err) {
       if (err instanceof Error) {
@@ -36,7 +42,7 @@
     }
   }
 
-  $: disabled = !((answer.status == 'edit' && application.status == 'editsRequested') || application.status == 'draft');
+  $: disabled = !((answer.status == 'edit' && $application?.status == 'editsRequested') || $application?.status == 'draft');
 
 </script>
 

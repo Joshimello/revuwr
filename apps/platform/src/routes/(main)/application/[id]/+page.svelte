@@ -1,47 +1,37 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { pb, pbImage } from "$lib/pocketbase/client";
   import { toast } from "svelte-sonner";
-  import { user } from "$lib/stores";
   import { Button } from "$lib/components/ui/button";
-	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
-	import { ArrowLeft, ArrowRight, ChevronLeft, EllipsisVertical, FilePen, Menu, Send, Trash } from "lucide-svelte";
+	import type { AnswersResponse, EventsResponse, QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
+	import { ArrowLeft, ArrowRight, ChevronLeft, Menu, Send, Trash } from "lucide-svelte";
   import * as Card from "$lib/components/ui/card"
 	import { Progress } from "$lib/components/ui/progress";
-	import { Badge } from "$lib/components/ui/badge";
   import Question from "./question.svelte"
-  import { browser } from "$app/environment";
 	import Status from "$lib/components/status.svelte";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu"
   import * as Dialog from "$lib/components/ui/dialog"
-  
-
-  type ExpandedResponse = AnswersResponse<any, {
-    question: QuestionsResponse
-  }>
-
-  type ExpandedApplication = ApplicationsResponse<{
-    event: EventsResponse,
-    response: ExpandedResponse[],
-  }>
+	import type { ExpandedApplication } from "./types";
+  import { application } from "./stores";
 
   let event: EventsResponse | null = null;
-  let application: ExpandedApplication | null = null;
   let response: AnswersResponse<any, { question: QuestionsResponse }>[] = [];
-  export let form
+  
+  export let form, data
+  const { user } = data
 
   onMount(async () => {
+    pb.authStore.loadFromCookie(document.cookie)
     if (form) {
       toast.error(form.message)
     }
-
     try {
-      application = await pb.collection("applications").getOne<ExpandedApplication>($page.params.id, { 
+      $application = await pb.collection("applications").getOne<ExpandedApplication>($page.params.id, { 
         expand: "event,response,response.question"
       })
-      event = application.expand?.event ?? null;
-      response = application.expand?.response ?? [];
+      event = $application.expand?.event ?? null;
+      response = $application.expand?.response ?? [];
     }
     catch (err) {
       if (err instanceof Error) {
@@ -52,10 +42,12 @@
     }
   });
 
+  $: response = $application?.expand?.response ?? [];
+
   let currentPage = 1;
   $: pageAnswers = response.filter(i=>i.expand?.question.page==currentPage);
   $: pageInputs = pageAnswers.filter(i=>i.expand?.question.type!='info')
-  $: isPageValid = pageInputs.length == pageInputs.filter(i=>i.valid).length;
+  $: isPageValid = pageInputs.length == pageInputs.filter(i=>i.valid).length || $application?.status != 'draft';
   $: isLastPage = currentPage == Math.max(...response.map(i=>i.expand?.question.page ?? 99));
 
   const handleNextPage = () => {
@@ -67,30 +59,6 @@
     currentPage = currentPage - 1;
     scrollTo(0, 0);
   }
-
-  if (browser) {
-    try {
-      pb.collection('answers').subscribe<ExpandedResponse>('*', function (e) {
-        if (!(e.action == 'update' && e.record.application == application?.id)) return;
-        const index = response.findIndex(i => i.id == e.record.id);
-        if (index == -1) return;
-        response[index] = e.record;
-      }, {
-        expand: "question"
-      })
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("An error occurred");
-      }
-    }
-  }
-
-  onDestroy(() => {
-    pb.collection('answers').unsubscribe('*')
-  })
 
   let isCreating = false
 
@@ -126,11 +94,11 @@
     </DropdownMenu.Trigger>
     <DropdownMenu.Content>
       <DropdownMenu.Group>
-        {#if application?.status == 'draft'}
+        {#if $application?.status == 'draft'}
         <DropdownMenu.Item on:click={() => deleteOpen = true}>
           Delete draft
         </DropdownMenu.Item>
-        {:else if application?.status != 'withdrawn'}
+        {:else if $application?.status != 'withdrawn'}
         <DropdownMenu.Item on:click={() => withdrawOpen = true}>
           Withdraw
         </DropdownMenu.Item>
@@ -140,12 +108,12 @@
   </DropdownMenu.Root>
 </div>
 
-{#if event && application && response && response.length > 0 && $user}
+{#if event && $application && response && response.length > 0 && user}
   <div class="flex flex-col gap-4 mt-4">
     <Card.Root>
       <Card.Header>
         <Card.Title>
-          <Status type={application.status}  />
+          <Status type={$application.status}  />
         </Card.Title>
         <Card.Description>
           All answers are saved automatically
@@ -163,7 +131,7 @@
 
     {#if response}
       {#each pageAnswers as answer (answer.id)}
-        <Question answer={answer} application={application} />
+        <Question answer={answer} />
       {/each}
 
       <div class="flex justify-end gap-2">
@@ -173,9 +141,9 @@
         </Button>
         {/if}
         {#if isLastPage}
-          {#if application.status == 'draft'}
+          {#if $application.status == 'draft'}
             <form method="post" action="?/submit" class="flex-1 md:flex-none" on:submit={handleSubmit}>
-              <input type="hidden" name="userId" value={$user.model.id}/>
+              <input type="hidden" name="userId" value={user.id}/>
               <Button
                 class="flex items-center gap-2 w-full" 
                 disabled={isCreating || !isPageValid}
@@ -184,9 +152,9 @@
                 Submit <Send size="16" />
               </Button>
             </form>
-          {:else if application.status == 'editsRequested'}
+          {:else if $application.status == 'editsRequested'}
             <form method="post" action="?/submit" class="flex-1 md:flex-none" on:submit={handleSubmit}>
-              <input type="hidden" name="userId" value={$user.model.id}/>
+              <input type="hidden" name="userId" value={user.id}/>
               <Button
                 class="flex items-center gap-2 w-full" 
                 disabled={isCreating || !isPageValid}
@@ -230,7 +198,7 @@
           duration: Number.POSITIVE_INFINITY
         })
       }}>
-        <input type="hidden" name="userId" value={$user?.model.id}/>
+        <input type="hidden" name="userId" value={user?.id}/>
         <Button
           class="flex items-center gap-2 w-full" 
           disabled={isCreating}
@@ -263,7 +231,7 @@
           duration: Number.POSITIVE_INFINITY
         })
       }}>
-        <input type="hidden" name="userId" value={$user?.model.id}/>
+        <input type="hidden" name="userId" value={user?.id}/>
         <Button
           class="flex items-center gap-2 w-full" 
           disabled={isCreating}

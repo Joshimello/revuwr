@@ -11,30 +11,11 @@
   import * as RadioGroup from "$lib/components/ui/radio-group"
   import { Switch } from "$lib/components/ui/switch"
   
+  export let data
+  const { user } = data
 
-  let account: UsersResponse | null = null;
+  let account: UsersResponse | null = user;
   let stringAccount: string | null = null;
-
-  const getAccount = async () => {
-    if (!pb.authStore.model) {
-      toast.error("You are not logged in.")
-      return
-    }
-
-    try {
-      account = await pb.collection("users").getOne<UsersResponse>(pb.authStore.model.id)
-      toast.success("Account loaded.")
-      stringAccount = JSON.stringify(account)
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      }
-      else {
-        toast.error("An error occurred.")
-      }
-    }
-  }
 
   const saveAccount = async () => {
     if (!account) return
@@ -42,9 +23,6 @@
 
     try {
       account = await pb.collection("users").update(account.id, {
-        name: account.name,
-        username: account.username,
-        email: account.email,
         phone: account.phone,
         occupation: account.occupation,
         department: account.department,
@@ -83,10 +61,6 @@
     saveAccount()
   }
 
-  onMount(async () => {
-    getAccount()
-  })
-
 </script>
 
 <div class="flex items-center gap-4">
@@ -117,11 +91,11 @@
         <Card.Content class="grid grid-cols-2 gap-2">
           <div>
             <Label>Name</Label>
-            <Input class="w-full" bind:value={account.name} on:blur={saveAccount} />
+            <Input class="w-full" bind:value={account.name} on:blur={saveAccount} disabled />
           </div>
           <div>
             <Label>Student / Staff ID</Label>
-            <Input class="w-full" bind:value={account.username} on:blur={saveAccount} />
+            <Input class="w-full" bind:value={account.username} on:blur={saveAccount} disabled />
           </div>
         </Card.Content>
       </Card.Root>
@@ -163,11 +137,11 @@
           {#if account.occupation === "student"}
             <div>
               <Label>Department</Label>
-              <Input class="w-full" bind:value={account.department} />
+              <Input class="w-full" bind:value={account.department} on:blur={saveAccount} />
             </div>
             <div>
               <Label>Year</Label>
-              <Input class="w-full" bind:value={account.year} />
+              <Input class="w-full" bind:value={account.year} on:blur={saveAccount} />
             </div>
           {/if}
         </Card.Content>

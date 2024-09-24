@@ -5,7 +5,6 @@
 	import { Button } from "$lib/components/ui/button";
 	import { CirclePlus, Trash } from "lucide-svelte";
 	import { Badge } from "$lib/components/ui/badge";
-  import { user } from "$lib/stores";
   import * as Dialog from "$lib/components/ui/dialog"
 	import { Label } from "$lib/components/ui/label";
   import DatePicker from "$lib/components/date-picker.svelte"

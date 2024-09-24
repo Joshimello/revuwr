@@ -5,10 +5,10 @@
 	import { Button } from "$lib/components/ui/button";
 	import { CirclePlus, Trash } from "lucide-svelte";
 	import { Badge } from "$lib/components/ui/badge";
-  import { user } from "$lib/stores";
   import * as Dialog from "$lib/components/ui/dialog"
 	import { Label } from "$lib/components/ui/label";
   import * as RadioGroup from "$lib/components/ui/radio-group"
+  import { page } from "$app/stores"
 
   export let options: {
     isControlCount: boolean,
@@ -42,14 +42,16 @@
   const checkValid = () => required && value != null && value.length > 0 
     && value.length >= options.minCount && value.length <= options.maxCount;
 
+  const { user } = $page.data
+
   onMount(() => {
     value = value ?? [{
-      name: $user?.model.name,
-      username: $user?.model.username,
-      email: $user?.model.email,
-      phone: $user?.model.phone,
-      department: $user?.model.department,
-      year: $user?.model.year,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      department: user.department,
+      year: user.year,
       status: ""
     }];
     isValid = checkValid();

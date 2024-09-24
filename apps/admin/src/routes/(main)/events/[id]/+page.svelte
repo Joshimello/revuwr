@@ -27,7 +27,7 @@
   let reviews: ExpandedReviews[] = []
 
   const handleCopyFormURL = () => {
-    const formURL = `${PUBLIC_PLATFORM_URL}/new/${id}`
+    const formURL = `${PUBLIC_PLATFORM_URL}/create/${id}`
     navigator.clipboard.writeText(formURL)
     toast.success("Form URL copied to clipboard")
   }
