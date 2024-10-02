@@ -136,12 +136,14 @@ export enum UsersLanguageOptions {
 	"zh" = "zh",
 }
 export type UsersRecord = {
+	applications?: RecordIdString[]
 	avatar?: string
 	department?: string
 	disableNotify?: boolean
 	init?: boolean
 	language?: UsersLanguageOptions
 	name?: string
+	nameEn?: string
 	occupation?: UsersOccupationOptions
 	phone?: string
 	year?: string

@@ -1,27 +1,17 @@
 <script lang="ts">
-  import * as Table from "$lib/components/ui/table"
-	import { pb } from "$lib/pocketbase/client";
-	import type { UsersResponse } from "$lib/pocketbase/pocketbase-types";
 	import { onMount } from "svelte";
-	import { toast } from "svelte-sonner";
-  import * as Card from "$lib/components/ui/card"
   import * as m from '$lib/paraglide/messages.js'
-  
-  let users: UsersResponse[] = []
+  import DataTable from './data-table.svelte'
+  import { users } from './stores'
+	import { Button } from "$lib/components/ui/button";
+  import { getAllUsers } from "./methods";
+  import NewUser from './new-user.svelte'
 
   onMount(async () => {
-    try {
-      users = await pb.collection('users').getFullList()
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      }
-      else {
-        toast.error("An error occurred")
-      }
-    }
+    $users = await getAllUsers() || []
   })
+
+  let createUserOpen = false
 
 </script>
 
@@ -31,53 +21,19 @@
   </h1>
 </div>
 
-<Card.Root>
-  <Card.Content class="pt-6">
-    
-    <Table.Root>
-      <Table.Header>
-        <Table.Row>
-          <Table.Head>
-            {m.internal_id()}
-          </Table.Head>
-          <Table.Head>
-            {m.name()}
-          </Table.Head>
-          <Table.Head>
-            {m.serial_id()}
-          </Table.Head>
-          <Table.Head>
-            {m.email()}
-          </Table.Head>
-          <Table.Head>
-            {m.phone()}
-          </Table.Head>
-          <Table.Head>
-            {m.occupation()}
-          </Table.Head>
-          <Table.Head>
-            {m.department()}
-          </Table.Head>
-          <Table.Head>
-            {m.year()}
-          </Table.Head>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {#each users as user}
-          <Table.Row>
-            <Table.Cell>{user.id}</Table.Cell>
-            <Table.Cell>{user.email}</Table.Cell>
-            <Table.Cell>{user.username}</Table.Cell>
-            <Table.Cell>{user.email}</Table.Cell>
-            <Table.Cell>{user.phone}</Table.Cell>
-            <Table.Cell>{user.occupation}</Table.Cell>
-            <Table.Cell>{user.department}</Table.Cell>
-            <Table.Cell>{user.year}</Table.Cell>
-          </Table.Row>
-        {/each}
-      </Table.Body>
-    </Table.Root>
+<div class="flex gap-2">
+  <Button variant="outline" on:click={async () => {
+    $users = await getAllUsers() || []
+  }}>
+    Refresh list
+  </Button>
+  <Button variant="outline" on:click={() => {
+    createUserOpen = true
+  }}>
+    Create new user
+  </Button>
+</div>
 
-  </Card.Content>
-</Card.Root>
+<DataTable />
+
+<NewUser bind:open={createUserOpen} />

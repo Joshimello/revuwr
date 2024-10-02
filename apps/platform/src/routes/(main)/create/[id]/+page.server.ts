@@ -76,6 +76,10 @@ export const actions = {
         response: answersIds
       })
 
+      await locals.apb.collection("users").update(locals.user.id, {
+        'applications+': application.id
+      })
+
       return redirect(302, `/application/${application.id}`)
 
     }
