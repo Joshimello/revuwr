@@ -10,10 +10,12 @@
 	import { Label } from "$lib/components/ui/label";
   import { deleteUserAccount, deleteUserAssociated, deleteUserExsistance, getAllUsers } from "./methods";
 	import { users } from "./stores";
+	import { toast } from "svelte-sonner";
   
   export let record: ExpandedUsersResponse;
 
   let deleteUserOpen = false;
+  let isLoading = false;
 
 </script>
 
@@ -60,10 +62,13 @@
     </Dialog.Header>
     <Separator />
     <div class="flex flex-col gap-2">
-      <Button variant="destructive" on:click={() => {
+      <Button variant="destructive" disabled={isLoading} on:click={() => {
+        isLoading = true
+        toast.loading("Deleting data...")
         deleteUserAssociated(record.id, async () => {
           deleteUserOpen = false
           $users = await getAllUsers() || []
+          isLoading = false
         })
       }}>
         Delete just data
@@ -74,10 +79,13 @@
     </div>
     <Separator />
     <div class="flex flex-col gap-2">
-      <Button variant="destructive" on:click={() => {
+      <Button variant="destructive" disabled={isLoading} on:click={() => {
+        isLoading = true
+        toast.loading("Deleting account...")
         deleteUserAccount(record.id, async () => {
           deleteUserOpen = false
           $users = await getAllUsers() || []
+          isLoading = false
         })
       }}>
         Delete just account
@@ -88,10 +96,13 @@
     </div>
     <Separator />
     <div class="flex flex-col gap-2">
-      <Button variant="destructive" on:click={() => {
+      <Button variant="destructive" disabled={isLoading} on:click={() => {
+        isLoading = true
+        toast.loading("Deleting all...")
         deleteUserExsistance(record.id, async () => {
           deleteUserOpen = false
           $users = await getAllUsers() || []
+          isLoading = false
         })
       }}>
         DELETE ALL

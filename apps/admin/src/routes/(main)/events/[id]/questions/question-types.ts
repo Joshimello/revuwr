@@ -50,11 +50,11 @@ export default {
     label: m.phone(),
     component: Phone
   },
-  image: {
-    icon: ImageIcon,
-    label: m.image(),
-    component: Image
-  },
+  // image: {
+  //   icon: ImageIcon,
+  //   label: m.image(),
+  //   component: Image
+  // },
   file: {
     icon: FileUp,
     label: m.file(),

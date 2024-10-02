@@ -2,7 +2,6 @@ import ShortText from "./fields/short-text.svelte";
 import LongText from "./fields/long-text.svelte";
 import Email from "./fields/email.svelte";
 import Phone from "./fields/phone.svelte";
-import Image from "./fields/image.svelte";
 import File from "./fields/file.svelte";
 import Checkbox from "./fields/checkbox.svelte";
 import Radio from "./fields/radio.svelte";
@@ -46,11 +45,6 @@ export default {
     icon: PhoneIcon,
     label: "Phone",
     component: Phone
-  },
-  image: {
-    icon: ImageIcon,
-    label: "Image",
-    component: Image
   },
   file: {
     icon: FileUp,
