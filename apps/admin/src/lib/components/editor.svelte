@@ -25,6 +25,10 @@
         }),
         Link.configure({
           autolink: true,
+          HTMLAttributes: {
+            target: '_blank',
+            class: 'text-blue-500 underline cursor-pointer',
+          }
           // openOnClick: false,
         }),
         TextStyle,
@@ -72,6 +76,11 @@
     $editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
+  const setColor = (event: Event) => {
+    const color = (event.target as HTMLInputElement).value;
+    $editor.chain().focus().setColor(color).run();
+  };
+
   $: isActive = (name: string, attrs = {}) => $editor.isActive(name, attrs);
 
 </script>
@@ -82,7 +91,7 @@
     <input
       class="colpick"
       type="color"
-      on:input={event => $editor.chain().focus().setColor(event.target.value).run()}
+      on:input={setColor}
       value={$editor.getAttributes('textStyle').color}
       data-testid="setColor"
     />
