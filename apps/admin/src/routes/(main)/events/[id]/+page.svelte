@@ -6,7 +6,7 @@
   import { onMount } from "svelte"
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
-  import { ArrowUpRight, ChevronLeft, CirclePlus, FileCheck2, FileClock, FileSearch2, FileX2, Grid2x2Check, Link2, ListPlus, Settings, SquareArrowOutUpRight } from "lucide-svelte";
+  import { ArrowUpRight, ChevronLeft, CirclePlus, Grid2x2Check, Link2, ListPlus, Settings, SquareArrowOutUpRight, ListChecks } from "lucide-svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { Label } from "$lib/components/ui/label";
 	import { Badge } from "$lib/components/ui/badge";
@@ -255,6 +255,13 @@
           <Badge variant="secondary" class="ml-3">
             {event ? event.questions.length : 0}
           </Badge>
+        </Button>
+        <Button
+          class="w-full flex items-center gap-2 justify-start"
+          href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/terms` : ''}
+        >
+          <ListChecks size="18" />
+          {m.terms()}
         </Button>
         <Button 
           class="w-full flex items-center gap-2 justify-start"

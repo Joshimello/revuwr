@@ -5,6 +5,8 @@
   import * as Table from "$lib/components/ui/table"
 	import { Button } from "$lib/components/ui/button";
 	import { toast } from "svelte-sonner";
+  import * as Dialog from "$lib/components/ui/dialog"
+	import { Checkbox } from "$lib/components/ui/checkbox";
 
   export let data
   const { event } = data
@@ -16,6 +18,10 @@
     !notStarted && !isEnded
 
   let isCreating = false
+  let termsOpen = false
+  let checked: boolean[] = []
+
+  $: isAllChecked = checked.every(i => i === true)
 
 </script>
 
@@ -59,23 +65,61 @@
     </div>
   </Card.Content>
   <Card.Footer class="justify-end">
-    <form class="mt-6" action="" method="post" on:submit={() => {
-      isCreating = true
-      toast.loading("Creating application...", {
-        duration: Number.POSITIVE_INFINITY
-      })
-    }}>
-      <Button size="lg" type="submit"
-        disabled={isCreating || !canApply}
-      >
-        {#if notStarted && event.beforeStartDate == 'disallow'}
-          Event has not started yet
-        {:else if isEnded && event.afterStartDate == 'disallow'}
-          Event has ended
-        {:else}
-          Apply now !
-        {/if}
-      </Button>
-    </form>
+    <Button size="lg" type="submit"
+      disabled={isCreating || !canApply}
+      on:click={() => {
+        termsOpen = true
+      }}
+    >
+      {#if notStarted && event.beforeStartDate == 'disallow'}
+        Event has not started yet
+      {:else if isEnded && event.afterStartDate == 'disallow'}
+        Event has ended
+      {:else}
+        Apply now !
+      {/if}
+    </Button>
   </Card.Footer>
 </Card.Root>
+
+<Dialog.Root bind:open={termsOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Terms and conditions</Dialog.Title>
+      <Dialog.Description>
+        You have to agree to the terms and conditions to apply for this event.
+      </Dialog.Description>
+    </Dialog.Header>
+    <div class="flex flex-col gap-2">
+      {#each event.terms || [] as term, index}
+        <div class="flex gap-2">
+          <Checkbox bind:checked={checked[index]} class="mr-2 mt-2" />
+          <div>
+            <p class="font-semibold">{@html term.title}</p>
+            <p>{@html term.description}</p>
+          </div>
+        </div>
+      {/each}
+    </div>
+    <Dialog.Footer>
+      <form class="mt-6" action="" method="post" on:submit={() => {
+        isCreating = true
+        toast.loading("Creating application...", {
+          duration: Number.POSITIVE_INFINITY
+        })
+      }}>
+        <Button size="lg" type="submit"
+          disabled={isCreating || !canApply || !isAllChecked}
+        >
+          {#if notStarted && event.beforeStartDate == 'disallow'}
+            Event has not started yet
+          {:else if isEnded && event.afterStartDate == 'disallow'}
+            Event has ended
+          {:else}
+            Apply now !
+          {/if}
+        </Button>
+      </form>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

@@ -80,7 +80,7 @@ export enum EventsAfterStartDateOptions {
 	"disallow" = "disallow",
 	"allow" = "allow",
 }
-export type EventsRecord = {
+export type EventsRecord<Tterms = unknown> = {
 	afterStartDate?: EventsAfterStartDateOptions
 	approvedCount?: number
 	beforeStartDate?: EventsBeforeStartDateOptions
@@ -95,6 +95,7 @@ export type EventsRecord = {
 	startDate?: IsoDateString
 	status?: EventsStatusOptions
 	targetAudience?: EventsTargetAudienceOptions
+	terms?: null | Tterms
 }
 
 export type NotificationsRecord = {
@@ -152,7 +153,7 @@ export type UsersRecord = {
 // Response types include system fields and match responses from the PocketBase API
 export type AnswersResponse<Tresponse = unknown, Texpand = unknown> = Required<AnswersRecord<Tresponse>> & BaseSystemFields<Texpand>
 export type ApplicationsResponse<Texpand = unknown> = Required<ApplicationsRecord> & BaseSystemFields<Texpand>
-export type EventsResponse<Texpand = unknown> = Required<EventsRecord> & BaseSystemFields<Texpand>
+export type EventsResponse<Tterms = unknown, Texpand = unknown> = Required<EventsRecord<Tterms>> & BaseSystemFields<Texpand>
 export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>
 export type QuestionsResponse<Toptions = unknown, Texpand = unknown> = Required<QuestionsRecord<Toptions>> & BaseSystemFields<Texpand>
 export type ReviewersResponse<Texpand = unknown> = Required<ReviewersRecord> & AuthSystemFields<Texpand>

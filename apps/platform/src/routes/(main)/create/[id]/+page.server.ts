@@ -1,9 +1,14 @@
 import type { EventsResponse, QuestionsResponse, TypedPocketBase } from '$lib/pocketbase/pocketbase-types.js'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 
+type Tterms = {
+  title: string,
+  description: string
+}[]
+
 export const load = async ({ locals, params }) => {
   try {
-    const event = await locals.pb.collection('events').getOne(params.id)
+    const event = await locals.pb.collection('events').getOne<EventsResponse<Tterms>>(params.id)
     return {
       event: event
     }
@@ -18,7 +23,7 @@ export const load = async ({ locals, params }) => {
   }
 }
 
-type ExpandedEventsResponse = EventsResponse<{
+type ExpandedEventsResponse = EventsResponse<Tterms, {
   questions: QuestionsResponse[]
 }>
 

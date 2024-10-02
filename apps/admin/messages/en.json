@@ -42,6 +42,7 @@
 
     "settings": "Settings",
     "questions": "Questions",
+    "terms": "Terms",
     "copy_form_url": "Copy Form URL",
     "event_responses": "Event Responses",
     "event_responses_desc": "Recent responses of this event.",
