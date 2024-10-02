@@ -8,8 +8,15 @@
 
   export let data
   const { event } = data
+  const notStarted = new Date(event.startDate) > new Date()
+  const isEnded = new Date(+new Date(event.endDate) + 86400000) < new Date()
+  const canApply = 
+    notStarted && event.beforeStartDate == 'allow' ||
+    isEnded && event.afterStartDate == 'allow' ||
+    !notStarted && !isEnded
 
   let isCreating = false
+
 </script>
 
 <Card.Root>
@@ -59,11 +66,11 @@
       })
     }}>
       <Button size="lg" type="submit"
-        disabled={isCreating || new Date(event.startDate) > new Date() || new Date(+new Date(event.endDate) + 86400000) < new Date()}
+        disabled={isCreating || !canApply}
       >
-        {#if new Date(event.startDate) > new Date()}
+        {#if notStarted && event.beforeStartDate == 'disallow'}
           Event has not started yet
-        {:else if new Date(+new Date(event.endDate) + 86400000) < new Date()}
+        {:else if isEnded && event.afterStartDate == 'disallow'}
           Event has ended
         {:else}
           Apply now !

@@ -36,12 +36,15 @@ export const actions = {
       if (!event.expand?.questions) return fail(400, { message: "Questions could not be fetched" })
       const questions = event.expand.questions
 
-      if (new Date() < new Date(event.startDate)) {
-        return fail(400, { message: "Event has not started yet"})
-      }
+      const notStarted = new Date(event.startDate) > new Date()
+      const isEnded = new Date(+new Date(event.endDate) + 86400000) < new Date()
+      const canApply = 
+        notStarted && event.beforeStartDate == 'allow' ||
+        isEnded && event.afterStartDate == 'allow' ||
+        !notStarted && !isEnded
 
-      if (new Date() > new Date(+new Date(event.endDate) + 86400000)) {
-        return fail(400, { message: "Event has already passed"})
+      if (!canApply) {
+        return fail(400, { message: "Event is not open for applications" })
       }
 
       const userResponses = await locals.apb.collection("applications").getFullList({
