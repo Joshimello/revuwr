@@ -536,7 +536,7 @@
 								<Download size="14" class="mr-1" />
 								PDF
 							</Button>
-							<Button variant="secondary" size="sm" class="h-7" disabled>
+							<Button variant="secondary" size="sm" class="h-7" href={`${PUBLIC_BASE_PATH}/export/csv?ids=${record.id}`} target="_blank">
 								<Download size="14" class="mr-1" />
 								CSV
 							</Button>

@@ -109,9 +109,7 @@
 						{m.download()}
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent>
-						<DropdownMenu.Item disabled href={`${PUBLIC_BASE_PATH}/export/pdf/${record.id}`} target="_blank"
-							>PDF</DropdownMenu.Item
-						>
+						<DropdownMenu.Item disabled>PDF</DropdownMenu.Item>
 						<DropdownMenu.Item disabled>CSV</DropdownMenu.Item>
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>

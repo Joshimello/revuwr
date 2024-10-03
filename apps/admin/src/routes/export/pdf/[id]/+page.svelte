@@ -1,12 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { jsPDF } from 'jspdf';
   import { pb, pbImage } from '$lib/pocketbase/client';
   import { page } from '$app/stores';
   import { toast } from 'svelte-sonner';
 	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse, UsersResponse } from '$lib/pocketbase/pocketbase-types';
-  import * as Table from "$lib/components/ui/table"
-	import { Badge } from '$lib/components/ui/badge';
 	import MemberTable from '../../../(main)/response/[id]/member-table.svelte';
 	import ActivityTable from '../../../(main)/response/[id]/activity-table.svelte';
   

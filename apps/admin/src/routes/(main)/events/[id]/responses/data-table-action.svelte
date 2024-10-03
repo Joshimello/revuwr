@@ -102,7 +102,9 @@
           </DropdownMenu.SubTrigger>
           <DropdownMenu.SubContent>
             <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/export/pdf/${record.id}`} target="_blank">PDF</DropdownMenu.Item>
-            <DropdownMenu.Item disabled>CSV</DropdownMenu.Item>
+            <DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/export/csv?ids=${record.id}`} target="_blank">
+              CSV
+            </DropdownMenu.Item>
           </DropdownMenu.SubContent>
         </DropdownMenu.Sub>
         <DropdownMenu.Item href={`mailto:${record.expand?.responder.email}`} target="_blank">
