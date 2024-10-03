@@ -4,8 +4,8 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
   import { page } from "$app/stores";
-	import MemberTable from "../../(main)/review/[id]/member-table.svelte";
-	import ActivityTable from "../../(main)/review/[id]/activity-table.svelte";
+	import MemberTable from "../../review/[id]/member-table.svelte";
+	import ActivityTable from "../../review/[id]/activity-table.svelte";
 
   type ExpandedReviews = ReviewsResponse<
     Record<string, { status: string, comment: string }>, 
