@@ -24,7 +24,7 @@
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
 	import * as m from '$lib/paraglide/messages.js';
 
-	type ExpandedEvent = EventsResponse<{
+	type ExpandedEvent = EventsResponse<any, {
 		questions: QuestionsResponse[];
 	}>;
 
@@ -198,6 +198,18 @@
 					{@html question.title}
 				</Button>
 			{/each}
+		</div>
+		<div>
+			<Button variant="outline" size="sm" class="mt-3" on:click={() => {
+				selectedQuestions = event?.expand?.questions.map((i) => i.id) || [];
+			}}>
+				{m.select_all()}
+			</Button>
+			<Button variant="outline" size="sm" class="mt-3 ml-2" on:click={() => {
+				selectedQuestions = [];
+			}}>
+				{m.deselect_all()}
+			</Button>
 		</div>
     <div class="flex items-center gap-2 mt-6">
       <Switch bind:checked={shareResponder} />

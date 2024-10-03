@@ -7,7 +7,7 @@
   import { Badge } from '$lib/components/ui/badge';
   import Status, { statuses } from '$lib/components/status.svelte';
   import { Button } from '$lib/components/ui/button';
-	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse, ReviewsResponse } from '$lib/pocketbase/pocketbase-types';
+	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse, ReviewsResponse, UsersResponse } from '$lib/pocketbase/pocketbase-types';
   import * as Table from "$lib/components/ui/table"
   import * as Card from "$lib/components/ui/card"
 	import { FileCheck2, FileClock, FileSearch2, FileX2, Check, PencilLine, X, MessageCircle, Download } from 'lucide-svelte';
@@ -17,6 +17,7 @@
   import { Label } from "$lib/components/ui/label"
   import ActivityTable from './activity-table.svelte';
   import MemberTable from './member-table.svelte';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
 
   type ExpandedReviews = ReviewsResponse<
     Record<string, { status: string, comment: string }>, 
@@ -25,7 +26,8 @@
         event: EventsResponse;
         response: AnswersResponse<any, {
           question: QuestionsResponse<any>;
-        }>[]
+        }>[],
+        responder: UsersResponse;
       }>[]
     }
   >
@@ -34,7 +36,8 @@
     event: EventsResponse;
     response: AnswersResponse<any, {
       question: QuestionsResponse<any>;
-    }>[]
+    }>[];
+    responder: UsersResponse;
   }>
 
   let reviewRequest: ExpandedReviews | null = null;
@@ -82,7 +85,7 @@
 
     try {
       reviewRequest = await pb.collection('reviews').getOne<ExpandedReviews>($page.params.id, {
-        expand: 'applications,applications.event,applications.response,applications.response.question'
+        expand: 'applications,applications.event,applications.response,applications.response.question,applications.responder'
       })
     }
     catch (err) {
@@ -132,7 +135,7 @@
           }
         }
       }, {
-        expand: 'applications,applications.event,applications.response,applications.response.question'
+        expand: 'applications,applications.event,applications.response,applications.response.question,applications.responder'
       })
     }
     catch (err) {
@@ -158,7 +161,7 @@
           }
         }
       }, {
-        expand: 'applications,applications.event,applications.response,applications.response.question'
+        expand: 'applications,applications.event,applications.response,applications.response.question,applications.responder'
       })
     }
     catch (err) {
@@ -184,7 +187,7 @@
           }
         }
       }, {
-        expand: 'applications,applications.event,applications.response,applications.response.question'
+        expand: 'applications,applications.event,applications.response,applications.response.question,applications.responder'
       })
     }
     catch (err) {
@@ -514,8 +517,8 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={viewOpen}>
-  <Dialog.Content class="max-h-screen">
-    <Dialog.Header>
+  <Dialog.Content class="max-h-screen p-0">
+    <Dialog.Header class="p-4 pb-0">
       <Dialog.Title>
         Application
         <span class="font-mono">
@@ -527,7 +530,21 @@
         </span>
       </Dialog.Title>
     </Dialog.Header>
-    <div class="flex flex-col gap-2">
+    <ScrollArea class="flex flex-col gap-2 max-h-[calc(100vh-6rem)] p-4">
+
+      {#if reviewRequest?.shareResponder}
+        <div class="pb-6">
+          <Label>Responder name</Label>
+          <div class="text-sm text-muted-foreground">
+            <span>{openedApplication?.expand?.responder?.name}</span>
+          </div>
+          <Label>Responder email</Label>
+          <div class="text-sm text-muted-foreground">
+            <span>{openedApplication?.expand?.responder?.email}</span>
+          </div>
+        </div>
+      {/if}
+
       {#each openedApplication?.expand?.response || [] as answer}
         <div>
           <Label>{@html answer.expand?.question.title}</Label>
@@ -564,7 +581,7 @@
           </div>
         </div>
       {/each}
-    </div>
+    </ScrollArea>
   </Dialog.Content>
 </Dialog.Root>
 

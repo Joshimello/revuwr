@@ -159,6 +159,8 @@
     "reviewers": "Reviewers",
     "reviewers_desc": "Add reviewers to this review request. They will be able to see and review the applications.",
     "create_review_requests": "Create review requests",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
 
     "review_applications_overview": "Review applications overview",
     "comments_by_reviewers": "Comments by reviewers",

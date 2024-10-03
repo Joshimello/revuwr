@@ -159,6 +159,8 @@
     "reviewers": "評審人",
     "reviewers_desc": "將評審者加入此評審請求。他們將能夠查看並審查這些申請。",
     "create_review_requests": "建立評審請求",
+    "select_all": "全選",
+    "deselect_all": "取消全選",
 
     "review_applications_overview": "評審申請概覽",
     "comments_by_reviewers": "評審人評論",

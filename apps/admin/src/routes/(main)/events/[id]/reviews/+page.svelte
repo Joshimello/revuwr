@@ -1,14 +1,9 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { pb } from '$lib/pocketbase/client';
   import { toast } from 'svelte-sonner';
-  import { goto } from '$app/navigation';
-  import { Badge } from '$lib/components/ui/badge';
-  import Status, { statuses } from '$lib/components/status.svelte';
   import { Button } from '$lib/components/ui/button';
-	import type { ReviewsResponse } from '$lib/pocketbase/pocketbase-types';
-  import { writable } from 'svelte/store';
 	import { ChevronLeft } from 'lucide-svelte';
 	import DataTable from './data-table.svelte';
   import * as m from '$lib/paraglide/messages.js'

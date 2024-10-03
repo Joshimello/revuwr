@@ -112,7 +112,8 @@ export const GET = async ({ url, cookies, locals }) => {
         passwordConfirm: tempPassword,
         name: resourceData.name,
         nameEn: resourceData.name_en,
-        init: false
+        init: false,
+        emailVisibility: true
       })
     }
     catch (err) {
