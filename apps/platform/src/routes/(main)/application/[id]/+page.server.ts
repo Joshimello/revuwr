@@ -11,23 +11,13 @@ type ExpandedApplicationsResponse = ApplicationsResponse<{
 }>
 
 export const actions = {
-  async submit({ params, request }) {
-
-    let apb: TypedPocketBase | null = null
-
+  async submit({ params, locals }) {
     try {
-      const data = await request.formData();
-      const applicationId = params.id
-      const userId = data.get("userId") as string
-
-      apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
-      await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
-
-      const application = await apb.collection("applications").getOne<ExpandedApplicationsResponse>(applicationId, {
+      const application = await locals.apb.collection("applications").getOne<ExpandedApplicationsResponse>(params.id, {
         expand: "response,response.question"
       })
     
-      if (application.responder !== userId) {
+      if (!locals.user || application.responder !== locals.user.id) {
         return fail(400, { message: "Invalid user" })
       }
 
@@ -45,9 +35,13 @@ export const actions = {
         return fail(400, { message: "Some responses are invalid" })
       }
 
-      const updatedApplication = await apb.collection("applications").update(applicationId, {
+      await locals.apb.collection("applications").update(params.id, {
         status: application.status == "editsRequested" ? "resubmitted" : "submitted"
       })
+
+      // await locals.rs.emails.send({
+      //   from: ''
+      // })
 
       return redirect(303, `/application/completed`)
     }
@@ -70,20 +64,13 @@ export const actions = {
       }
     }
   },
-  async delete({ params, request }) {
+  async delete({ params, locals }) {
     try {
-      const data = await request.formData();
-      const applicationId = params.id
-      const userId = data.get("userId") as string
-
-      const apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
-      await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
-
-      const application = await apb.collection("applications").getOne<ExpandedApplicationsResponse>(applicationId, {
+      const application = await locals.apb.collection("applications").getOne<ExpandedApplicationsResponse>(params.id, {
         expand: "response,response.question"
       })
 
-      if (application.responder !== userId) {
+      if (!locals.user || application.responder !== locals.user.id) {
         return fail(400, { message: "Invalid user" })
       }
 
@@ -95,10 +82,10 @@ export const actions = {
         return fail(400, { message: "Invalid application status" })
       }
 
-      await apb.collection("applications").delete(params.id)
+      await locals.apb.collection("applications").delete(params.id)
       
       for (const response of application.expand.response) {
-        await apb.collection("answers").delete(response.id, {
+        await locals.apb.collection("answers").delete(response.id, {
           requestKey: response.id
         })
       }
@@ -123,18 +110,14 @@ export const actions = {
       }
     }
   },
-  async withdraw({ params, request }) {
+  async withdraw({ params, locals }) {
     try {
-      const data = await request.formData();
-      const applicationId = params.id
-      const userId = data.get("userId") as string
-
       const apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
       await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
 
-      const application = await apb.collection("applications").getOne(applicationId)
+      const application = await apb.collection("applications").getOne(params.id)
 
-      if (application.responder !== userId) {
+      if (!locals.user || application.responder !== locals.user.id) {
         return fail(400, { message: "Invalid user" })
       }
 
