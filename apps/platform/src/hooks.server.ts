@@ -1,7 +1,8 @@
-import Pocketbase, { cookieParse } from 'pocketbase';
+import Pocketbase from 'pocketbase';
 import { PUBLIC_PB_URL } from '$env/static/public';
-import { PB_EMAIL, PB_PASSWORD } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import type { UsersResponse } from '$lib/pocketbase/pocketbase-types';
+import { Resend } from 'resend';
 
 export const handle = async ({ event, resolve }) => {
   event.locals.pb = new Pocketbase(PUBLIC_PB_URL);
@@ -17,7 +18,9 @@ export const handle = async ({ event, resolve }) => {
   }
 
   event.locals.apb = new Pocketbase(PUBLIC_PB_URL);
-  await event.locals.apb.admins.authWithPassword(PB_EMAIL, PB_PASSWORD);
+  await event.locals.apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD);
+
+  event.locals.rs = new Resend(env.RS_API_KEY)
 
   const response = await resolve(event);
   response.headers.set('set-cookie', event.locals.pb.authStore.exportToCookie({
