@@ -42,9 +42,9 @@
     isValid = checkValid();
     handleSave();
   }}>
-    {#each options.choices || [] as choice, index}  
+    {#each options.choices || [] as choice, index}
       <div class="flex items-center gap-3">
-        <RadioGroup.Item class="w-5 h-5" value={index.toString()} />
+        <RadioGroup.Item class="w-5 h-5" value={index.toString()}/>
         <Label class="flex-1">
           <span class="text-xl w-full">{choice}</span>
         </Label>

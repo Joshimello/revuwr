@@ -26,7 +26,7 @@
   export let handleSave: () => void;
   export let disabled: boolean;
 
-  const checkValid = () => required && value.selected.length > 0 && 
+  const checkValid = () => ((required && value.selected.length > 0) || !required) &&
     (options.isMaxSelections ? value.selected.length <= options.maxSelections : true);
 
   onMount(() => {
@@ -80,4 +80,12 @@
     </Label>
   </div>
   {/if}
+
+  <span class="text-muted-foreground text-xs">
+    {#if options.isMaxSelections}
+      <span class:text-destructive={value.selected.length > options.maxSelections}>
+        {value.selected.length}/{options.maxSelections} selected
+      </span>
+    {/if}
+  </span>
 {/if}

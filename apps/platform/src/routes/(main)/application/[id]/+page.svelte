@@ -50,6 +50,8 @@
   $: isPageValid = pageInputs.length == pageInputs.filter(i=>i.valid).length || $application?.status != 'draft';
   $: isLastPage = currentPage == Math.max(...response.map(i=>i.expand?.question.page ?? 99));
 
+  $: console.log(isPageValid)
+
   const handleNextPage = () => {
     currentPage = currentPage + 1;
     scrollTo(0, 0);
