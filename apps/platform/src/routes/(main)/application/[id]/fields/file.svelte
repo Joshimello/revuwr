@@ -47,6 +47,7 @@
 
   onMount(() => {
     isValid = checkValid();
+    handleSave();
   });
 
   const handleChange = async (e: FormInputEvent) => {
@@ -54,7 +55,7 @@
     if (!files || files.length == 0) return;
 
     try {
-      await pb.collection("answers").update(record.id, {
+      record = await pb.collection("answers").update(record.id, {
         "files": [...files]
       })
       toast.success("Saved");
@@ -74,7 +75,7 @@
 
   const handleDelete = async (file: string) => {
     try {
-      await pb.collection("answers").update(record.id, {
+      record = await pb.collection("answers").update(record.id, {
         "files-": file
       })
       toast.success("Saved");

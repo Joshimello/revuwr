@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
   import * as Card from "$lib/components/ui/card"
   import questionTypes from "./question-types";
 	import { Badge } from "$lib/components/ui/badge";
@@ -17,10 +16,10 @@
 
     if (!question) return;
     
-    if (!['file', 'image'].includes(question.type)) {
+    if (!['file'].includes(question.type)) {
       if (JSON.stringify(answer.response) === JSON.stringify(newResponse)) return;
     }
-
+    
     try {
       const newAnswer =  await pb.collection("answers").update<ExpandedResponse>(answer.id, {
         response: newResponse,
@@ -71,7 +70,7 @@
           bind:value={newResponse}
           bind:isValid
           handleSave={handleSave}
-          {...(['file', 'image'].includes(question.type) ? {
+          {...(['file'].includes(question.type) ? {
             record: answer
           } : {})}
         />

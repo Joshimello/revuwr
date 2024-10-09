@@ -549,7 +549,7 @@
         <div>
           <Label>{@html answer.expand?.question.title}</Label>
           <div class="text-sm text-muted-foreground">
-            {#if !answer.response && !['image', 'file'].includes(answer.expand?.question.type ?? '')}
+            {#if !answer.response && !['file'].includes(answer.expand?.question.type ?? '')}
 								<span>-</span>
 							{:else if answer.expand?.question.type == 'radio'}
 								{#if answer.response?.selected == answer.expand?.question.options?.choices.length}

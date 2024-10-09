@@ -77,7 +77,7 @@
 
         a.expand?.response.forEach(r => {
           const questionTitle = r.expand?.question.title ?? r.question;
-          if (['image', 'file'].includes(r.expand?.question.type ?? '')) {
+          if (['file'].includes(r.expand?.question.type ?? '')) {
             row[questionTitle] = serialize(r.files.map(f => pbImage(r.collectionId, r.id, f)));
           }
           else {
