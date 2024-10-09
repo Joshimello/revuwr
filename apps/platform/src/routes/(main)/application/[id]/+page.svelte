@@ -50,6 +50,9 @@
   $: isPageValid = pageInputs.length == pageInputs.filter(i=>i.valid).length || $application?.status != 'draft';
   $: isLastPage = currentPage == Math.max(...response.map(i=>i.expand?.question.page ?? 99));
   
+  $: applicationInputs = response.filter(i=>i.expand?.question.type!='info');
+  $: applicationValidCount = applicationInputs.filter(i=>i.valid).length;
+
   const handleNextPage = () => {
     currentPage = currentPage + 1;
     scrollTo(0, 0);
@@ -122,9 +125,9 @@
       <Card.Footer>
         <div class="flex flex-col w-full">
           <span class="text-muted-foreground text-sm">
-            {response.filter(i=>i.valid).length}/{response.filter(i => i.expand?.question.type != 'info').length} Questions completed
+            {applicationValidCount} of {applicationInputs.length} questions answered
           </span>
-          <Progress value={(response.filter(i=>i.valid).length) / (response.length) * 100} />
+          <Progress value={(applicationValidCount) / (applicationInputs.length) * 100} />
         </div>
       </Card.Footer>
     </Card.Root>
