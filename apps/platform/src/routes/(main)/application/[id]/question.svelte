@@ -1,87 +1,122 @@
 <script lang="ts">
-  import * as Card from "$lib/components/ui/card"
+	import type { ExpandedResponse } from "./types";
   import questionTypes from "./question-types";
+	import { Button } from "$lib/components/ui/button";
 	import { Badge } from "$lib/components/ui/badge";
-  import { pb } from "$lib/pocketbase/client";
+  import { updateAnswer } from "./methods";
+	import { answers, currentIndex, isReadOnly } from "./stores";
 	import { toast } from "svelte-sonner";
-  import { application } from "./stores";
-  import { type ExpandedResponse } from "./types";
+	import * as Tooltip from "$lib/components/ui/tooltip";
+	import { Info } from "lucide-svelte";
 
-  export let answer: ExpandedResponse;
-  let question = answer.expand?.question;
-  let newResponse = answer.response;
-  let isValid: boolean;
+  export let content: ExpandedResponse;
+  const question = content.expand?.question;
 
-  const handleSave = async () => {
+  let checkValid: () => [boolean, string];
+  let value: any = content.response;
 
-    if (!question) return;
-    
-    if (!['file'].includes(question.type)) {
-      if (JSON.stringify(answer.response) === JSON.stringify(newResponse)) return;
-    }
-    
-    try {
-      const newAnswer =  await pb.collection("answers").update<ExpandedResponse>(answer.id, {
-        response: newResponse,
-        valid: isValid,
-      }, {
-        expand: "question"
-      });
-      const responseIndex = $application?.expand?.response.findIndex(i => i.id == newAnswer.id);
-      if (responseIndex !== undefined && responseIndex !== -1 && $application && $application.expand) {
-        $application.expand.response[responseIndex] = newAnswer;
-      }
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("An error occurred");
-      }
-    }
-  }
-
-  $: disabled = !((answer.status == 'edit' && $application?.status == 'editsRequested') || $application?.status == 'draft');
-
+  let isLoading = false;
 </script>
 
-{#if question}
-  <Card.Root class={disabled ? 'bg-muted' : ''}>
-    <Card.Header>
-      <Card.Title>
-        {@html question.title}
-      </Card.Title>
-      <Card.Description class="">
-        <span>{@html question.description}</span>
-      </Card.Description>
-      {#if answer.status == 'edit'}
-      <Card.Description class="">
-        Comments for edit: <span>{answer.comment}</span>
-      </Card.Description>
+{#if question && question.type in questionTypes}
+
+  {#key value}
+    <div class="flex gap-2">
+      {#if question.required}
+        <Badge variant="outline">
+          Required
+        </Badge>
+      {:else}
+        <Badge variant="secondary">
+          Optional
+        </Badge>
       {/if}
-    </Card.Header>
-    {#if question.type != "info"}
-      <Card.Content>
-        <svelte:component
-          disabled={disabled}
-          this={questionTypes[question.type].component} 
-          options={question.options}
-          required={question.required}
-          bind:value={newResponse}
-          bind:isValid
-          handleSave={handleSave}
-          {...(['file'].includes(question.type) ? {
-            record: answer
-          } : {})}
-        />
-      </Card.Content>
-      <Card.Footer>
-        {#if question.required}
-          <Badge variant={isValid?'secondary':'default'}>Required</Badge>
-        {:else}
-          <Badge variant="secondary">Optional</Badge>
-        {/if}
-      </Card.Footer>
-    {/if}
-  </Card.Root>
+
+      {#if checkValid && !checkValid()[0]}
+        <span class="text-destructive text-sm">
+          {checkValid()[1]}
+        </span>
+      {/if}
+    </div>
+  {/key}
+
+  <div class="px-3 flex flex-col gap-2 w-full">
+    <span class="text-2xl font-bold">
+      {@html question.title}
+    </span>
+    <span class="text-muted-foreground text-sm text-justify">
+      {@html question.description}
+    </span>
+  
+    <svelte:component
+      this={questionTypes[question.type].component}
+      question={question}
+      disabled={isReadOnly}
+      bind:value
+      bind:checkValid
+    />
+  </div>
+
+  {#if !$isReadOnly}
+  
+  {#key value}
+    <div class="mt-24 flex items-center gap-2 sticky md:bottom-24 bottom-20">
+      {#if $currentIndex < $answers.length - 1}
+        <Button 
+          size="lg" 
+          on:click={async () => {
+            const [status, res] = await updateAnswer(content.id, value);
+            if (status) {
+              $currentIndex = $currentIndex + 1;
+            } else {
+              toast.error('Failed to update answer');
+            }
+          }}
+          disabled={checkValid && !checkValid()[0]}
+        >
+          Continue
+        </Button>
+      {:else}
+        <form method="post" action="?/submit" class="flex-1 md:flex-none" on:submit={async (event) => {
+          const [status, res] = await updateAnswer(content.id, value);
+          if (status) {
+            isLoading = true
+            toast.loading("Submitting application...", {
+              duration: Number.POSITIVE_INFINITY
+            })
+          }
+          else {
+            toast.error('Failed to update answer');
+            event.preventDefault();
+          }
+        }}>
+          <Button
+            size="lg"
+            disabled={isLoading || (checkValid && !checkValid()[0])}
+            type="submit"
+          >
+            Submit Application
+        </Button>
+        </form>
+      {/if}
+
+      <Tooltip.Root openDelay={0}>
+        <Tooltip.Trigger asChild let:builder>
+          <Button builders={[builder]} variant="outline" size="icon" class="h-7 w-7">
+            <Info size="14" />
+          </Button>
+        </Tooltip.Trigger>
+        <Tooltip.Content>
+          Question will be saved once you click continue
+        </Tooltip.Content>
+      </Tooltip.Root>
+    </div>
+  {/key}
+
+  {/if}
+
+  <div class="h-96"></div>
+
+{:else}
+  Invalid question
 {/if}

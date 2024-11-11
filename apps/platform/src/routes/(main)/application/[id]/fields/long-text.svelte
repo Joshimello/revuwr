@@ -1,48 +1,37 @@
 <script lang="ts">
-	import { Input } from "$lib/components/ui/input";
 	import { Textarea } from "$lib/components/ui/textarea";
+	import type { QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
   import { onMount } from "svelte";
 
-  export let options: {
+  export let question: QuestionsResponse;
+  const options = question.options as {
     placeholder: string,
     isMaxLength: boolean,
     maxLength: number,
   }
 
-  export let required: boolean;
-
+  export let disabled = false;
   export let value: string | null;
 
-  export let isValid: boolean;
-  export let handleSave: () => void;
-
-  const whitespaceRegex = /^\s*$/;
-  const checkValid = () => required && value != null && value.length > 0 && !whitespaceRegex.test(value)
-    && (!options.isMaxLength || value.length <= options.maxLength);
+  export const checkValid = () => {
+    if (value == null || disabled) {
+      return [false, ""]
+    }
+    if (options.isMaxLength && value.length > options.maxLength) {
+      return [false, `Character limit of ${options.maxLength} exceeded`];
+    }
+    if (question.required && value.match(/^\s*$/)) {
+      return [false, "Please fill in this field"];
+    }
+    return [true, ""];
+  }
 
   onMount(() => {
-    value = value ?? options.placeholder ?? null;
-    isValid = checkValid();
+    if (!value) {
+      value = "";
+    }
   });
-
-  const handleBlur = (e: FocusEvent) => {
-    value = (e.target as HTMLInputElement).value;
-    isValid = checkValid();
-    handleSave();
-  }
-
-  const handleInput = (e: InputEvent) => {
-    value = (e.target as HTMLInputElement).value;
-    isValid = checkValid();
-  }
-
-  export let disabled: boolean;
 
 </script>
 
-<Textarea {disabled} value={value} on:blur={handleBlur} on:input={handleInput} />
-<span class="text-muted-foreground text-xs">
-  {#if options.isMaxLength}
-    <span class:text-destructive={options.isMaxLength && value && value.length > options.maxLength} >Character limit: {options.maxLength}</span>  
-  {/if}
-</span>
+<Textarea class="h-32 text-lg" {disabled} bind:value={value} />

@@ -1,46 +1,38 @@
 <script lang="ts">
 	import { Input } from "$lib/components/ui/input";
+	import type { QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
   import { onMount } from "svelte";
 
-  export let options: {
+  export let question: QuestionsResponse;
+  const options = question.options as {
 
-  }
-
+  } 
   options
 
-  export let required: boolean;
-
+  export let disabled = false;
   export let value: string | null;
 
-  export let isValid: boolean;
-  export let handleSave: () => void;
-
   const phoneRegex = /^(?:\+8869\d{8}|09\d{8})$/;
-  const checkValid = () => required && value != null && value.length > 0 && phoneRegex.test(value);
+
+  export const checkValid = () => {
+    if (value == null || disabled) {
+      return [false, ""]
+    }
+    if (value.length > 0 && !value.match(phoneRegex)) {
+      return [false, "Invalid phone number"];
+    }
+    if (question.required && value.match(/^\s*$/)) {
+      return [false, "Please fill in this field"];
+    }
+    return [true, ""];
+  }
 
   onMount(() => {
-    value = value ?? null;
-    isValid = checkValid();
+    if (!value) {
+      value = "";
+    }
   });
-
-  const handleBlur = (e: FocusEvent) => {
-    value = (e.target as HTMLInputElement).value;
-    isValid = checkValid();
-    handleSave();
-  }
-
-  const handleInput = (e: InputEvent) => {
-    value = (e.target as HTMLInputElement).value;
-    isValid = checkValid();
-  }
-
-  export let disabled
 
 </script>
 
-<Input {disabled} value={value} on:blur={handleBlur} on:input={handleInput} />
-<span class="text-muted-foreground text-xs">
-  {#if value && !phoneRegex.test(value)}
-    <span class:text-destructive={true} >Invalid mobile number</span>  
-  {/if}
-</span>
+<Input class="text-xl h-16" {disabled} bind:value={value} />

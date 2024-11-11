@@ -4,21 +4,20 @@
   import * as Table from "$lib/components/ui/table"
 	import { Button } from "$lib/components/ui/button";
 	import { CirclePlus, Trash } from "lucide-svelte";
-	import { Badge } from "$lib/components/ui/badge";
   import * as Dialog from "$lib/components/ui/dialog"
 	import { Label } from "$lib/components/ui/label";
   import DatePicker from "$lib/components/date-picker.svelte"
   import * as RadioGroup from "$lib/components/ui/radio-group"
+	import type { QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
   
-
-  export let options: {
+  export let question: QuestionsResponse;
+  const options = question.options as {
     isControlCount: boolean,
     minCount: number,
     maxCount: number,
   }
 
-  export let required: boolean;
-
+  export let disabled = false;
   export let value: {
     date: string,
     startTime: string,
@@ -27,25 +26,25 @@
     form: string,
     location: string,
     note: string
-  }[] = [{
-    date: "",
-    startTime: "",
-    endTime: "",
-    topic: "",
-    form: "",
-    location: "",
-    note: ""
-  }]
+  }[];
 
-  export let isValid: boolean;
-  export let handleSave: () => void;
-
-  const checkValid = () => required && value != null && value.length > 0 
-    && value.length >= options.minCount && value.length <= options.maxCount;
+  export const checkValid = () => {
+    if (value == null || disabled) {
+      return [false, ""]
+    }
+    if (options.isControlCount && (value.length < options.minCount || value.length > options.maxCount)) {
+      return [false, `Please add ${options.minCount}-${options.maxCount} sessions`];
+    }
+    if (question.required && value.length == 0) {
+      return [false, "Please fill in this field"];
+    }
+    return [true, ""];
+  }
 
   onMount(() => {
-    value = value ?? [];
-    isValid = checkValid();
+    if (!value) {
+      value = [];
+    }
   });
 
   let newActivity = {
@@ -72,12 +71,8 @@
       location: "",
       note: ""
     }
-    isValid = checkValid();
-    handleSave();
   }
 
-  export let disabled: boolean;
-  
 </script>
 
 {#if value}
@@ -123,8 +118,6 @@
             <Table.Cell class="text-end">
               <Button {disabled} size="icon" variant="ghost" on:click={() => {
                 value = value.filter((_, i) => i !== index);
-                isValid = checkValid();
-                handleSave();
               }}>
                 <Trash size="16" />
               </Button>
@@ -201,12 +194,4 @@
 
     </div>
   </div>
-
-  <span class="text-muted-foreground text-xs">
-    {#if options.isControlCount}
-      <span class:text-destructive={options.isControlCount && value && value.length < options.minCount}>
-        {options.minCount}-{options.maxCount} sessions required
-      </span>
-    {/if}
-  </span>
 {/if}

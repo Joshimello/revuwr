@@ -9,6 +9,7 @@ export enum Collections {
 	Answers = "answers",
 	Applications = "applications",
 	Events = "events",
+	Files = "files",
 	Notifications = "notifications",
 	Questions = "questions",
 	Reviewers = "reviewers",
@@ -43,7 +44,6 @@ export type AuthSystemFields<T = never> = {
 export type AnswersRecord<Tresponse = unknown> = {
 	application?: RecordIdString
 	comment?: string
-	files?: string[]
 	question?: RecordIdString
 	response?: null | Tresponse
 	status?: string
@@ -96,6 +96,11 @@ export type EventsRecord<Tterms = unknown> = {
 	status?: EventsStatusOptions
 	targetAudience?: EventsTargetAudienceOptions
 	terms?: null | Tterms
+}
+
+export type FilesRecord = {
+	file?: string[]
+	user?: RecordIdString
 }
 
 export type NotificationsRecord = {
@@ -154,6 +159,7 @@ export type UsersRecord = {
 export type AnswersResponse<Tresponse = unknown, Texpand = unknown> = Required<AnswersRecord<Tresponse>> & BaseSystemFields<Texpand>
 export type ApplicationsResponse<Texpand = unknown> = Required<ApplicationsRecord> & BaseSystemFields<Texpand>
 export type EventsResponse<Tterms = unknown, Texpand = unknown> = Required<EventsRecord<Tterms>> & BaseSystemFields<Texpand>
+export type FilesResponse<Texpand = unknown> = Required<FilesRecord> & BaseSystemFields<Texpand>
 export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>
 export type QuestionsResponse<Toptions = unknown, Texpand = unknown> = Required<QuestionsRecord<Toptions>> & BaseSystemFields<Texpand>
 export type ReviewersResponse<Texpand = unknown> = Required<ReviewersRecord> & AuthSystemFields<Texpand>
@@ -166,6 +172,7 @@ export type CollectionRecords = {
 	answers: AnswersRecord
 	applications: ApplicationsRecord
 	events: EventsRecord
+	files: FilesRecord
 	notifications: NotificationsRecord
 	questions: QuestionsRecord
 	reviewers: ReviewersRecord
@@ -177,6 +184,7 @@ export type CollectionResponses = {
 	answers: AnswersResponse
 	applications: ApplicationsResponse
 	events: EventsResponse
+	files: FilesResponse
 	notifications: NotificationsResponse
 	questions: QuestionsResponse
 	reviewers: ReviewersResponse
@@ -191,6 +199,7 @@ export type TypedPocketBase = PocketBase & {
 	collection(idOrName: 'answers'): RecordService<AnswersResponse>
 	collection(idOrName: 'applications'): RecordService<ApplicationsResponse>
 	collection(idOrName: 'events'): RecordService<EventsResponse>
+	collection(idOrName: 'files'): RecordService<FilesResponse>
 	collection(idOrName: 'notifications'): RecordService<NotificationsResponse>
 	collection(idOrName: 'questions'): RecordService<QuestionsResponse>
 	collection(idOrName: 'reviewers'): RecordService<ReviewersResponse>

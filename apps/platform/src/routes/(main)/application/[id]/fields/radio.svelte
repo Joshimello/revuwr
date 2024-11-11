@@ -1,52 +1,63 @@
 <script lang="ts">
+	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
   import * as RadioGroup from "$lib/components/ui/radio-group"
-  import { onMount } from "svelte";
+	import type { QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
+	import { Trash } from "lucide-svelte";
+	import { onMount } from "svelte";
 
-  export let options: {
+  export let question: QuestionsResponse;
+  const options = question.options as {
     choices: string[],
     isMaxSelections: boolean,
     maxSelections: number,
-    isOthers: boolean,
+    isOthers: boolean
   }
 
-  export let required: boolean;
-
+  export let disabled = false;
   export let value: {
     selected: number | null,
     others: string | null,
-  } = {
-    selected: null,
-    others: null,
-  };
+  } | null;
 
-  export let isValid: boolean;
-  export let handleSave: () => void;
-  export let disabled: boolean;
-
-  const checkValid = () => required && value.selected !== null && value.selected >= 0;
+  export const checkValid = () => {
+    if (value == null || disabled) {
+      return [false, ""]
+    }
+    if (value.selected == null && !question.required) {
+      return [true, ""]
+    }
+    if (value.selected == options.choices.length && value.others == null) {
+      return [false, "Please fill in the others field"];
+    }
+    if (question.required && value.selected == null) {
+      return [false, "Please select an option"];
+    }
+    return [true, ""];
+  }
 
   onMount(() => {
-    value = {
-      selected: value?.selected ?? null,
-      others: value?.others ?? null,
-    };
-    isValid = checkValid();
-  });
+    if (!value) {
+      value = {
+        selected: null,
+        others: null
+      }
+    }
+  })
 
 </script>
 
 {#if value}
+  {#key value.selected}
   <RadioGroup.Root {disabled} class="gap-0" value={value.selected?.toString()} onValueChange={v => {
+    if (!value) return;
     value.selected = parseInt(v);
-    isValid = checkValid();
-    handleSave();
   }}>
     {#each options.choices || [] as choice, index}
       <div class="flex items-center gap-3">
         <RadioGroup.Item class="w-5 h-5" value={index.toString()}/>
         <Label class="flex-1">
-          <span class="text-xl w-full">{choice}</span>
+          <span class="text-xl w-full" class:text-muted-foreground={disabled}>{choice}</span>
         </Label>
       </div>
     {/each}
@@ -59,4 +70,16 @@
       </div>
     {/if}
   </RadioGroup.Root>
+  {/key}
 {/if}
+
+<div class="mt-4">
+  <Button disabled={disabled} variant="outline" size="icon" on:click={() => {``
+    value = {
+      selected: null,
+      others: null
+    }
+  }}>
+    <Trash size="16" />
+  </Button>
+</div>

@@ -27,7 +27,6 @@ export const load = async ({ params }) => {
     }
 
     if (err instanceof Error) {
-      console.log(err)
       return fail(400, {
         message: err.message
       })

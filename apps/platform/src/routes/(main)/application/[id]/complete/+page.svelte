@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Button } from "$lib/components/ui/button";
 	import { ChevronLeft } from "lucide-svelte";
-  import { onMount } from "svelte";
 </script>
 
 <div class="flex items-center gap-4">

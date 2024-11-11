@@ -2,20 +2,22 @@ import { fail, redirect, isRedirect } from "@sveltejs/kit"
 import { PUBLIC_PB_URL } from "$env/static/public"
 import { env } from "$env/dynamic/private"
 import Pocketbase from "pocketbase"
-import type { AnswersResponse, ApplicationsResponse, QuestionsResponse, TypedPocketBase } from "$lib/pocketbase/pocketbase-types.js"
-
-type ExpandedApplicationsResponse = ApplicationsResponse<{
-  response: AnswersResponse<any, {
-    question: QuestionsResponse
-  }>[]
-}>
+import type { ExpandedApplication } from "./types.js"
 
 export const actions = {
   async submit({ params, locals }) {
     try {
-      const application = await locals.apb.collection("applications").getOne<ExpandedApplicationsResponse>(params.id, {
-        expand: "response,response.question"
-      })
+
+      const application = await locals.pb
+        .collection('applications')
+        .getOne<ExpandedApplication>(params.id, {
+          expand: "event,response,response.question"
+        }
+      )
+
+      if (application.expand?.event.status != 'active') {
+        return fail(400, { message: "Event has been archived" })
+      }
     
       if (!locals.user || application.responder !== locals.user.id) {
         return fail(400, { message: "Invalid user" })
@@ -31,7 +33,7 @@ export const actions = {
 
       const responses = application.expand.response
 
-      if (responses.some(i => i.valid === false && i.expand?.question.type !== "info")) {
+      if (responses.some(i => i.valid === false)) {
         return fail(400, { message: "Some responses are invalid" })
       }
 
@@ -39,11 +41,14 @@ export const actions = {
         status: application.status == "editsRequested" ? "resubmitted" : "submitted"
       })
 
-      // await locals.rs.emails.send({
-      //   from: ''
-      // })
+      await locals.rs.emails.send({
+        from: "Revuwr <revuwr@mail.nthumods.com>",
+        to: [locals.user.email],
+        subject: "[REVUWR] Application Submitted",
+        html: `Your application ${application.id} has been submitted.`
+      })
 
-      return redirect(303, `/application/completed`)
+      return redirect(303, `/application/${params.id}/completed`)
     }
 
     catch (err) {
@@ -52,7 +57,6 @@ export const actions = {
       }
 
       if (err instanceof Error) {
-        console.log(err)
         return fail(400, {
           message: err.message
         })
@@ -66,7 +70,7 @@ export const actions = {
   },
   async delete({ params, locals }) {
     try {
-      const application = await locals.apb.collection("applications").getOne<ExpandedApplicationsResponse>(params.id, {
+      const application = await locals.pb.collection("applications").getOne<ExpandedApplication>(params.id, {
         expand: "response,response.question"
       })
 
@@ -98,7 +102,6 @@ export const actions = {
       }
 
       if (err instanceof Error) {
-        console.log(err)
         return fail(400, {
           message: err.message
         })
@@ -112,10 +115,7 @@ export const actions = {
   },
   async withdraw({ params, locals }) {
     try {
-      const apb = new Pocketbase(PUBLIC_PB_URL) as TypedPocketBase
-      await apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD)
-
-      const application = await apb.collection("applications").getOne(params.id)
+      const application = await locals.apb.collection("applications").getOne(params.id)
 
       if (!locals.user || application.responder !== locals.user.id) {
         return fail(400, { message: "Invalid user" })
@@ -125,7 +125,7 @@ export const actions = {
         return fail(400, { message: "Invalid application status" })
       }
 
-      await apb.collection("applications").update(params.id, {
+      await locals.apb.collection("applications").update(params.id, {
         status: "withdrawn"
       })
 
@@ -137,7 +137,6 @@ export const actions = {
       }
   
       if (err instanceof Error) {
-        console.log(err)
         return fail(400, {
           message: err.message
         })

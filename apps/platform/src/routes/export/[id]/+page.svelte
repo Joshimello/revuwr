@@ -122,12 +122,15 @@
               </div>
             {:else if answer.expand?.question.type == 'file'}
               <div class="flex flex-col">
-                {#each answer.files as file}
-                  <a
-                    class="text-blue-500 underline"
-                    href={pbImage(answer.collectionId, answer.id, file)}
-                    target="_blank">{file}</a
-                  >
+                {#each answer.response as { collectionId, files, recordId }}
+                  {#each files as file}
+                    <a
+                      class="text-blue-500 underline"
+                      href={pbImage(collectionId, recordId, file)}
+                      target="_blank">
+                      {file}
+                    </a>
+                  {/each}
                 {/each}
               </div>
             {:else}

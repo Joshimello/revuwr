@@ -1,41 +1,51 @@
 <script lang="ts">
+	import { Button } from "$lib/components/ui/button";
 	import { Checkbox } from "$lib/components/ui/checkbox";
-	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
-  import * as RadioGroup from "$lib/components/ui/radio-group"
-  import { onMount } from "svelte";
+	import type { QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
+	import { onMount } from "svelte";
 
-  export let options: {
+  export let question: QuestionsResponse;
+  const options = question.options as {
     choices: string[],
     isMaxSelections: boolean,
     maxSelections: number,
-    isOthers: boolean,
+    isOthers: boolean
   }
 
-  export let required: boolean;
-
+  export let disabled = false;
   export let value: {
     selected: number[],
     others: string | null,
-  } = {
-    selected: [],
-    others: null,
-  };
+  } | null;
 
-  export let isValid: boolean;
-  export let handleSave: () => void;
-  export let disabled: boolean;
-
-  const checkValid = () => ((required && value.selected.length > 0) || !required) &&
-    (options.isMaxSelections ? value.selected.length <= options.maxSelections : true);
+  export const checkValid = () => {
+    if (value == null) {
+      return [false, ""]
+    }
+    if (disabled) {
+      return [true, ""];
+    }
+    if (options.isMaxSelections && value.selected.length > options.maxSelections) {
+      return [false, `Please select at most ${options.maxSelections} options`];
+    }
+    if (value.selected.includes(options.choices.length) && !value.others) {
+      return [false, "Please fill in the others field"];
+    }
+    if (question.required && value.selected.length === 0) {
+      return [false, "Please select an option"];
+    }
+    return [true, ""];
+  }
 
   onMount(() => {
-    value = {
-      selected: value?.selected ?? [],
-      others: value?.others ?? null,
-    };
-    isValid = checkValid();
-  });
+    if(!value) {
+      value = {
+        selected: [],
+        others: null
+      }
+    }
+  })
 
 </script>
 
@@ -45,11 +55,11 @@
     <Checkbox 
       class="h-5 w-5 flex items-center justify-center"
       checked={value.selected.includes(index)}
+      disabled={disabled}
       onCheckedChange={v => {
+        if (!value) return;
         if (v) value.selected = [...value.selected, index].sort((a, b) => a - b);
         else value.selected = value.selected.filter(i => i !== index);
-        isValid = checkValid();
-        handleSave();
       }}  
     />
     <Label class="flex-1">
@@ -64,10 +74,9 @@
       disabled={disabled}
       checked={value.selected.includes(options.choices.length)}
       onCheckedChange={v => {
+        if (!value) return;
         if (v) value.selected = [...value.selected, options.choices.length];
         else value.selected = value.selected.filter(i => i !== options.choices.length);
-        isValid = checkValid();
-        handleSave();
       }}
     />
     <Label class="flex-1">
@@ -80,12 +89,4 @@
     </Label>
   </div>
   {/if}
-
-  <span class="text-muted-foreground text-xs">
-    {#if options.isMaxSelections}
-      <span class:text-destructive={value.selected.length > options.maxSelections}>
-        {value.selected.length}/{options.maxSelections} selected
-      </span>
-    {/if}
-  </span>
 {/if}

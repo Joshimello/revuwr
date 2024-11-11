@@ -1,25 +1,30 @@
 <script lang="ts">
-	import { Input, type FormInputEvent } from "$lib/components/ui/input";
 	import type { Selected } from "bits-ui";
   import { onMount } from "svelte";
-  import { pb, pbImage } from "$lib/pocketbase/client";
-	import { toast } from "svelte-sonner";
+	import type { QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
+  import Dropzone from "svelte-file-dropzone"
+	import { createFiles, removeFile } from "../methods";
+  import * as Alert from "$lib/components/ui/alert";
+  import { ArrowUpRight, FileWarning, SquareArrowOutUpRight, Trash } from "lucide-svelte";
+  import * as Table from "$lib/components/ui/table"
+	import { pbImage } from "$lib/pocketbase/client";
 	import { Button } from "$lib/components/ui/button";
-  import { File, Trash, Upload } from "lucide-svelte"
-	import type { AnswersResponse } from "$lib/pocketbase/pocketbase-types";
+	import { toast } from "svelte-sonner";
 
-  export let options: {
+  export let question: QuestionsResponse;
+  const options = question.options as {
     isMaxFiles: boolean,
     maxFiles: number,
     isSpecificTypes: boolean,
     specificTypes: Selected<string>[]
-  }
+  } | null | {}
 
-  export let required: boolean;
-  export let value: string[]; value
-  export let isValid: boolean;
-  export let record: AnswersResponse;
-  export let handleSave: () => void;
+  export let disabled = false;
+  export let value: {
+    collectionId: string,
+    recordId: string,
+    files: string[]
+  }[]
 
   const fileTypes: Record<string, string[]> = {
     pdf: [".pdf"],
@@ -31,102 +36,151 @@
     presentation: [".key", ".odp", ".ppt", ".pptx"],
   }
 
-  const checkValid = () => required && record.files && record.files.length > 0
-    && (!options.isMaxFiles || record.files.length <= options.maxFiles)
-    && (!options.isSpecificTypes || checkFileType(record.files));
+  const hasSpecificTypes = (opt: typeof options): opt is { 
+    isMaxFiles: boolean; 
+    maxFiles: number; 
+    isSpecificTypes: boolean; 
+    specificTypes: Selected<string>[]; 
+  } => {
+    return opt !== null && typeof opt === 'object' && 'isSpecificTypes' in opt && 'specificTypes' in opt;
+  };
 
   const checkFileType = (files: string[]) => {
     for (const file of files) {
       const ext = file.split('.').pop();
       if (!ext) return false;
-      if (options.specificTypes.length == 0) return true;
-      if (!options.specificTypes.some(i => fileTypes[i.value].includes(`.${ext}`))) return false;
+      if (hasSpecificTypes(options) && options.isSpecificTypes && options.specificTypes.length > 0) {
+        if (!options.specificTypes.some(i => fileTypes[i.value].includes(`.${ext}`))) {
+          return false;
+        }
+      } else {
+        return true;
+      }
     }
     return true;
   }
 
+  export const checkValid = () => {
+    if (value.length == 0 || disabled) {
+      return [false, ""]
+    }
+    if (hasSpecificTypes(options) && options.isMaxFiles && value.length > options.maxFiles) {
+      return [false, `Maximum of ${options.maxFiles} files exceeded`];
+    }
+    if (!checkFileType(value.map(i => i.files).flat())) {
+      return [false, `Invalid file type`];
+    }
+    return [true, ""];
+  }
+
   onMount(() => {
-    isValid = checkValid();
-    handleSave();
+    if (!value) {
+      value = [];
+    }
   });
 
-  const handleChange = async (e: FormInputEvent) => {
-    const files = (e.target as HTMLInputElement).files;
-    if (!files || files.length == 0) return;
+  let acceptedFiles: File[] = [];
+  let fileRejections: {
+    file: File,
+    errors: {
+      code: string,
+      message: string
+    }[]
+  }[] = [];
 
-    try {
-      record = await pb.collection("answers").update(record.id, {
-        "files": [...files]
-      })
-      toast.success("Saved");
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("An error occurred");
-      }
-    }
+  const handleFilesSelect = async (e: CustomEvent<any>) => {
+    ({ acceptedFiles, fileRejections } = e.detail)
+    const uploadedFiles = await createFiles(acceptedFiles);
+    if (!uploadedFiles) return
 
-    fileInput.value = "";
-    isValid = checkValid();
-    handleSave();
+    const filePaths = uploadedFiles.map(i => ({
+      collectionId: i.collectionId,
+      recordId: i.id,
+      files: i.file
+    }))
+
+    value = [...value, ...filePaths];
   }
-
-  const handleDelete = async (file: string) => {
-    try {
-      record = await pb.collection("answers").update(record.id, {
-        "files-": file
-      })
-      toast.success("Saved");
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("An error occurred");
-      }
-    }
-    
-    fileInput.value = "";
-    isValid = checkValid();
-    handleSave();
-  }
-
-  let fileInput: HTMLInputElement;
-
-  export let disabled: boolean;
 
 </script>
 
-{#if record.files && record.files.length > 0}
-  <span class="text-sm">Uploaded files:</span>
-  <div class="flex flex-col gap-2 mb-2 mt-1">
-    {#each record.files as file}
-      <div class="flex items-center gap-2">
-        <Button {disabled} size="icon" variant="secondary" on:click={()=>handleDelete(file)}>
-          <Trash size="16" />
-        </Button>
-        <a href={pbImage(record.collectionId, record.id, file)} target="_blank">
-          {file}
-        </a>
-      </div>
+{#if value}
+
+{#if value.length > 0}
+<Table.Root class="border">
+  <Table.Header>
+    <Table.Row>
+      <Table.Head></Table.Head>
+      <Table.Head>File name</Table.Head>
+      <Table.Head class="text-nowrap">File Type</Table.Head>
+      <Table.Head class="text-right">Link</Table.Head>
+    </Table.Row>
+  </Table.Header>
+  <Table.Body>
+    {#each value as { collectionId, recordId, files }}
+      {#each files as file}
+        <Table.Row>
+          <Table.Cell>
+            <Button disabled={disabled} size="icon" variant="secondary" class="h-8 w-8" on:click={async () => {
+              if (await removeFile(recordId, file)) {
+                value = value.filter(i => {
+                  const j = i.files.filter(k => k != file);
+                  if (j.length == 0) return false;
+                  i.files = j;
+                  return true;
+                })
+              }
+              else {
+                toast.error('Failed to delete file');
+              }
+            }}>
+              <Trash size="16" />
+            </Button>
+          </Table.Cell>
+          <Table.Cell>{file}</Table.Cell>
+          <Table.Cell>
+            {@const ext = file.split('.').pop() || 'Unknown'}
+            {ext}
+          </Table.Cell>
+          <Table.Cell class="text-right">
+            <Button
+              size="icon" 
+              variant="secondary" 
+              class="h-8 w-8"
+              href={pbImage(collectionId, recordId, file)} target="_blank" rel="noopener noreferrer"
+            >
+              <SquareArrowOutUpRight size="16" />
+            </Button>
+          </Table.Cell>
+        </Table.Row>
+      {/each}
     {/each}
-  </div>
+  </Table.Body>
+</Table.Root>
 {/if}
-<input class="hidden" type="file" on:change={handleChange} multiple bind:this={fileInput} />
-<Button {disabled} class="flex items-center gap-2 w-full" variant="outline" on:click={() => fileInput.click()}>
-  <Upload size="16" /> Upload files
-</Button>
-<span class="text-muted-foreground text-xs flex flex-col mt-1">
-  {#if options.isSpecificTypes}
-    <span class:text-destructive={options.isSpecificTypes && record.files && !checkFileType(record.files)} >
-      Only {options.specificTypes.map(i => i.value).join(", ")} files allowed
-    </span>
-  {/if}
-  {#if options.isMaxFiles}
-    <span class:text-destructive={options.isMaxFiles && record.files && record.files.length > options.maxFiles} >
-      Maximum {options.maxFiles} files allowed
-    </span>
-  {/if}
-</span>
+
+<Dropzone 
+  disabled={disabled}
+  on:drop={handleFilesSelect}
+  multiple={hasSpecificTypes(options) && ((options.isMaxFiles && options.maxFiles > 1) || !options.isMaxFiles)}
+  accept={hasSpecificTypes(options) && options.isSpecificTypes ? options.specificTypes.map(i => fileTypes[i.value].join(',')).join(',') : ''}
+  maxSize={104857600}
+  { ...(disabled ? {containerClasses: "cursor-not-allowed"} : {}) }
+>
+  Click or drop here
+</Dropzone>
+
+{#each fileRejections as { file, errors }}
+  <Alert.Root variant="destructive">
+    <FileWarning size="16" />
+    <Alert.Title>
+      {file.name}
+    </Alert.Title>
+    <Alert.Description class="flex flex-col gap-1">
+      {#each errors as { code, message }}
+        <span>{code} - {message}</span>
+      {/each}
+    </Alert.Description>
+  </Alert.Root>
+{/each}
+{/if}

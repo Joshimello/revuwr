@@ -9,15 +9,16 @@
 	import { Label } from "$lib/components/ui/label";
   import * as RadioGroup from "$lib/components/ui/radio-group"
   import { page } from "$app/stores"
+	import type { QuestionsResponse } from "$lib/pocketbase/pocketbase-types";
 
-  export let options: {
+  export let question: QuestionsResponse;
+  const options = question.options as {
     isControlCount: boolean,
     minCount: number,
     maxCount: number,
   }
 
-  export let required: boolean;
-
+  export let disabled = false;
   export let value: {
     name: string,
     username: string,
@@ -26,35 +27,38 @@
     department: string,
     year: string,
     status: string
-  }[] = [{
-    name: "",
-    username: "",
-    email: "",
-    phone: "",
-    department: "",
-    year: "",
-    status: ""
-  }];
+  }[];
 
-  export let isValid: boolean;
-  export let handleSave: () => void;
-
-  const checkValid = () => required && value != null && value.length > 0 
-    && value.length >= options.minCount && value.length <= options.maxCount;
+  export const checkValid = () => {
+    if (value == null || disabled) {
+      return [false, ""]
+    }
+    if (options.isControlCount && value && value.length < options.minCount) {
+      return [false, `At least ${options.minCount} members required`];
+    }
+    if (options.isControlCount && value && value.length > options.maxCount) {
+      return [false, `Maximum ${options.maxCount} members allowed`];
+    }
+    if (question.required && value.length == 0) {
+      return [false, "Please fill in this field"];
+    }
+    return [true, ""];
+  }
 
   const { user } = $page.data
 
   onMount(() => {
-    value = value ?? [{
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      phone: user.phone,
-      department: user.department,
-      year: user.year,
-      status: ""
-    }];
-    isValid = checkValid();
+    if (!value) {
+      value = [{
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        department: user.department,
+        year: user.year,
+        status: ""
+      }];
+    }
   });
 
   let newMember = {
@@ -81,11 +85,7 @@
       year: "",
       status: ""
     }
-    isValid = checkValid();
-    handleSave();
   }
-
-  export let disabled: boolean;
 
 </script>
 
@@ -129,8 +129,6 @@
               {#if index > 0}
               <Button {disabled} size="icon" variant="ghost" on:click={() => {
                 value = value.filter((_, i) => i !== index);
-                isValid = checkValid();
-                handleSave();
               }}>
                 <Trash size="16" />
               </Button>
@@ -208,11 +206,4 @@
     </div>
   </div>
 
-  <span class="text-muted-foreground text-xs">
-    {#if options.isControlCount}
-      <span class:text-destructive={options.isControlCount && value && value.length < options.minCount}>
-        {options.minCount}-{options.maxCount} Members required
-      </span>
-    {/if}
-  </span>
 {/if}

@@ -40,8 +40,10 @@
     getApplications()
   })
 
-  $: editableApplications = applications.filter(a => editableStatus.includes(a.status))
-  $: otherApplications = applications.filter(a => !editableStatus.includes(a.status))
+  $: activeApplications = applications.filter(a => a.expand?.event.status == 'active')
+  $: archivedApplications = applications.filter(a => a.expand?.event.status == 'archived')
+  $: editableApplications = activeApplications.filter(a => editableStatus.includes(a.status))
+  $: otherApplications = activeApplications.filter(a => !editableStatus.includes(a.status))
   const editableStatus = ['draft', 'editsRequested']
 
   export let data
@@ -164,7 +166,7 @@
         </div>
         {/if}
 
-        {#if applications.length == 0}
+        {#if activeApplications.length == 0}
         <div class="flex flex-col items-center gap-1">
           <h3 class="text-2xl font-bold tracking-tight">
             No applications found
@@ -178,14 +180,68 @@
       </Tabs.Content>
       <Tabs.Content value="archived">
 
+        {#if archivedApplications.length > 0}
+        <div class="flex flex-col pb-6">
+          <div class="mt-2 mx-2 flex flex-col mb-4">
+            <span class="text-2xl">
+              Archived applications
+            </span>
+            <span class="text-muted-foreground text-sm">
+              {archivedApplications.length} application(s) have been archived. You can no longer edit them, but you can still view them.
+            </span>
+          </div>
+          <div class="grid md:grid-cols-2 grid-cols-1 gap-2">
+            {#each archivedApplications as application}
+              <Card.Root>
+                <Card.Header>
+                  {#if application.serial}
+                    <span class="text-lg font-bold leading-3">
+                      {application.expand?.event.responsePrefix}{application.serial.toString().padStart(3, '0')}
+                    </span>
+                  {/if}                    
+                  <span class="text-xl leading-4">
+                    {application.expand?.event.name}
+                  </span>
+                  <div>
+                    <Status type={application.status} />
+                    <Badge variant="outline">Updated {format(application.updated)}</Badge>
+                  </div>
+                </Card.Header>
+                <Card.Content>
+                  <div class="flex gap-2 items-end">
+                    <div class="flex flex-col w-full gap-1">
+                      <div class="flex items-center gap-1">
+                        <Badge variant="secondary" class="text-muted-foreground">
+                          <span class="text-foreground">{application.expand?.response.filter(i=>i.valid).length}</span>/{application.response.length}
+                          Completed
+                        </Badge>
+                      </div>
+                      <Progress value={(application.expand?.response.filter(i=>i.valid).length ?? 0)/application.response.length*100} />
+                    </div>
+                    <!-- <Button size="icon" variant="outline" class="shrink-0">
+                      <Ellipsis size="16" />
+                    </Button> -->
+                    <Button size="icon" variant="default" class="shrink-0" href={`/application/${application.id}`}>
+                      <ArrowUpRight size="16" />
+                    </Button>
+                  </div>
+                </Card.Content>
+              </Card.Root>
+            {/each}
+          </div>
+        </div>
+        {/if}
+
+        {#if archivedApplications.length == 0}
         <div class="flex flex-col items-center gap-1">
           <h3 class="text-2xl font-bold tracking-tight">
             No archived applications found
           </h3>
           <p class="text-muted-foreground text-sm">
-            TODO
+            No applications you have submitted have been archived.
           </p>
         </div>
+        {/if}
 
       </Tabs.Content>
     </Tabs.Root>    
