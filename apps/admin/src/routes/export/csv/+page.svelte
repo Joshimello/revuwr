@@ -1,115 +1,124 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { page } from '$app/stores'
-	import type { AnswersResponse, ApplicationsResponse, EventsResponse, QuestionsResponse, UsersResponse } from '$lib/pocketbase/pocketbase-types';
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import type {
+		AnswersResponse,
+		ApplicationsResponse,
+		EventsResponse,
+		QuestionsResponse,
+		UsersResponse
+	} from '$lib/pocketbase/pocketbase-types';
 	import { pb, pbImage } from '$lib/pocketbase/client';
 	import { toast } from 'svelte-sonner';
 
-  type ExpandedApplication = ApplicationsResponse<{
-    event: EventsResponse,
-    responder: UsersResponse,
-    response: AnswersResponse<any, {
-      question: QuestionsResponse<any>
-    }>[]
-  }>
+	type ExpandedApplication = ApplicationsResponse<{
+		event: EventsResponse;
+		responder: UsersResponse;
+		response: AnswersResponse<
+			any,
+			{
+				question: QuestionsResponse<any>;
+			}
+		>[];
+	}>;
 
-  const serialize = (value: any) => {
-    if (value === null || value === undefined) {
-      return '';
-    }
-    const serializedValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
-    return serializedValue?.replace(/,/g, '|');
-  };
+	const seriadaw = () => {};
 
-  const applicationIds = $page.url.searchParams.get('ids')?.split(',') || [];
-  let allApplications: ExpandedApplication[] = [];
+	const serialize = (value: any) => {
+		if (value === null || value === undefined) {
+			return '';
+		}
+		const serializedValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
+		return serializedValue?.replace(/,/g, '|');
+	};
 
-  onMount(async () => {
-    try {
-      allApplications = await pb.collection('applications').getFullList({
-        expand: 'event,responder,response,response.question'
-      })
+	const applicationIds = $page.url.searchParams.get('ids')?.split(',') || [];
+	let allApplications: ExpandedApplication[] = [];
 
-      const applications = allApplications.filter(a => applicationIds.includes(a.id))
+	onMount(async () => {
+		try {
+			allApplications = await pb.collection('applications').getFullList({
+				expand: 'event,responder,response,response.question'
+			});
 
-      const allKeys = new Set<string>();
+			const applications = allApplications.filter((a) => applicationIds.includes(a.id));
 
-      applications.forEach(a => {
-        const keys = [
-          'Event Internal ID',
-          'Event Name',
-          'Application Internal ID',
-          'Application Serial',
-          'Status',
-          'Responder Internal ID',
-          'Responder ID',
-          'Responder Name',
-          'Responder Email',
-          'Responder Phone',
-          'Responder Occupation',
-          'Responder Department',
-          'Responder Year',
-          ...a.expand?.response.map(r => r.expand?.question.title ?? r.question) ?? []
-        ];
-        keys.forEach(key => allKeys.add(key));
-      });
+			const allKeys = new Set<string>();
 
-      const rows = applications.map(a => {
-        const row: Record<string, string> = {};
+			applications.forEach((a) => {
+				const keys = [
+					'Event Internal ID',
+					'Event Name',
+					'Application Internal ID',
+					'Application Serial',
+					'Status',
+					'Responder Internal ID',
+					'Responder ID',
+					'Responder Name',
+					'Responder Email',
+					'Responder Phone',
+					'Responder Occupation',
+					'Responder Department',
+					'Responder Year',
+					...(a.expand?.response.map((r) => r.expand?.question.title ?? r.question) ?? [])
+				];
+				keys.forEach((key) => allKeys.add(key));
+			});
 
-        allKeys.forEach(key => {
-          row[key] = '';
-        });
+			const rows = applications.map((a) => {
+				const row: Record<string, string> = {};
 
-        row['Event Internal ID'] = a.expand?.event.id ?? '';
-        row['Event Name'] = a.expand?.event.name ?? '';
-        row['Application Internal ID'] = a.id;
-        row['Application Serial'] = `${a.expand?.event.responsePrefix}${a.serial.toString().padStart(3, '0')}`;
-        row['Status'] = a.status;
-        row['Responder Internal ID'] = a.expand?.responder.id ?? '';
-        row['Responder ID'] = a.expand?.responder.username ?? '';
-        row['Responder Name'] = a.expand?.responder.name ?? '';
-        row['Responder Email'] = a.expand?.responder.email ?? '';
-        row['Responder Phone'] = a.expand?.responder.phone ?? '';
-        row['Responder Occupation'] = a.expand?.responder.occupation ?? '';
-        row['Responder Department'] = a.expand?.responder.department ?? '';
-        row['Responder Year'] = a.expand?.responder.year ?? '';
+				allKeys.forEach((key) => {
+					row[key] = '';
+				});
 
-        a.expand?.response.forEach(r => {
-          const questionTitle = r.expand?.question.title ?? r.question;
-          if (['file'].includes(r.expand?.question.type ?? '')) {
-            row[questionTitle] = serialize(r.files.map(f => pbImage(r.collectionId, r.id, f)));
-          }
-          else {
-            row[questionTitle] = serialize(r.response);
-          }
-        });
+				row['Event Internal ID'] = a.expand?.event.id ?? '';
+				row['Event Name'] = a.expand?.event.name ?? '';
+				row['Application Internal ID'] = a.id;
+				row['Application Serial'] =
+					`${a.expand?.event.responsePrefix}${a.serial.toString().padStart(3, '0')}`;
+				row['Status'] = a.status;
+				row['Responder Internal ID'] = a.expand?.responder.id ?? '';
+				row['Responder ID'] = a.expand?.responder.username ?? '';
+				row['Responder Name'] = a.expand?.responder.name ?? '';
+				row['Responder Email'] = a.expand?.responder.email ?? '';
+				row['Responder Phone'] = a.expand?.responder.phone ?? '';
+				row['Responder Occupation'] = a.expand?.responder.occupation ?? '';
+				row['Responder Department'] = a.expand?.responder.department ?? '';
+				row['Responder Year'] = a.expand?.responder.year ?? '';
 
-        return row;
-      });
+				a.expand?.response.forEach((r) => {
+					const questionTitle = r.expand?.question.title ?? r.question;
+					row[questionTitle] = serialize(r.response);
+				});
 
-      const csvHeaders = Array.from(allKeys).join(',')
-      const csvRows = rows.map(row => Array.from(allKeys).map(key => `"${row[key] ?? ''}"`).join(',')).join('\n')
-      const csvContent = `${csvHeaders}\n${csvRows}`
+				return row;
+			});
 
-      const csvFile = 'data:text/csv;charset=utf-8,' + csvContent
-      const encodedUri = encodeURI(csvFile)
-      
-      var link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `${applications.length}_applications.csv`);
-      document.body.appendChild(link)
-      link.click();
+			const csvHeaders = Array.from(allKeys).join(',');
+			const csvRows = rows
+				.map((row) =>
+					Array.from(allKeys)
+						.map((key) => `"${row[key] ?? ''}"`)
+						.join(',')
+				)
+				.join('\n');
+			const csvContent = `${csvHeaders}\n${csvRows}`;
 
-    }
-    catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      }
-      else {
-        toast.error('An error occurred')
-      }
-    }
-  })
+			const csvFile = 'data:text/csv;charset=utf-8,' + csvContent;
+			const encodedUri = encodeURI(csvFile);
 
+			var link = document.createElement('a');
+			link.setAttribute('href', encodedUri);
+			link.setAttribute('download', `${applications.length}_applications.csv`);
+			document.body.appendChild(link);
+			link.click();
+		} catch (err) {
+			if (err instanceof Error) {
+				toast.error(err.message);
+			} else {
+				toast.error('An error occurred');
+			}
+		}
+	});
 </script>

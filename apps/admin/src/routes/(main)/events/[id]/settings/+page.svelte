@@ -459,6 +459,7 @@
               builders={[builder]}
               class="w-72"
               variant="destructive"
+              disabled
             >
               {m.delete_event()}
             </Button>

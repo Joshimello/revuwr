@@ -1,9 +1,19 @@
-import type { AnswersResponse, ApplicationsResponse, UsersResponse } from "$lib/pocketbase/pocketbase-types";
-import { writable } from "svelte/store";
+import type {
+	AnswersResponse,
+	ApplicationsResponse,
+	QuestionsResponse,
+	UsersResponse
+} from '$lib/pocketbase/pocketbase-types';
+import { writable } from 'svelte/store';
 
 type ExpandedApplication = ApplicationsResponse<{
-  responder: UsersResponse,
-  response: AnswersResponse[]
-}>
+	responder: UsersResponse;
+	response: AnswersResponse<
+		any,
+		{
+			question: QuestionsResponse;
+		}
+	>[];
+}>;
 
-export const applications = writable<ExpandedApplication[]>([])
+export const applications = writable<ExpandedApplication[]>([]);

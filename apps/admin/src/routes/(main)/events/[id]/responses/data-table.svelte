@@ -28,16 +28,25 @@
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import Status, { statuses } from '$lib/components/status.svelte';
 	import * as Select from '$lib/components/ui/select';
-	import * as m from '$lib/paraglide/messages.js'
+	import * as m from '$lib/paraglide/messages.js';
+	import ResponseRenderer from '$lib/components/response-renderer.svelte';
 
 	type ExpandedApplications = ApplicationsResponse<{
 		responder: UsersResponse;
-		response: AnswersResponse[];
+		response: AnswersResponse<
+			any,
+			{
+				question: QuestionsResponse;
+			}
+		>[];
 	}>;
 
-	type ExpandedEvents = EventsResponse<{
-		questions: QuestionsResponse[];
-	}>;
+	type ExpandedEvents = EventsResponse<
+		any,
+		{
+			questions: QuestionsResponse[];
+		}
+	>;
 
 	export let data: Writable<ExpandedApplications[]>;
 	export let event: ExpandedEvents;
@@ -128,10 +137,10 @@
 			header: m.status(),
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
-        colFilter: {
-          fn: ({ filterValue, value }) => filterValue === value,
-        }
-      },
+				colFilter: {
+					fn: ({ filterValue, value }) => filterValue === value
+				}
+			}
 		}),
 		table.column({
 			id: 'updated',
@@ -179,43 +188,10 @@
 				accessor: (value: ExpandedApplications) =>
 					value.expand?.response.find((i) => i.question == question.id),
 				header: question.title.replaceAll(/<[^>]*>/g, ''),
-				cell: ({ value }) => {
-					if (value?.response == null) return '-';
-					if (['shortText', 'longText', 'email', 'phone'].includes(question.type)) {
-						return value.response as string;
-					}
-					if (question.type == 'radio') {
-						if (
-							(value.response as { selected: number; others: string }).selected ==
-							(question.options as { choices: string[] }).choices.length
-						) {
-							return (value.response as { selected: number; others: string }).others;
-						}
-						return (question.options as { choices: string[] }).choices[
-							(value.response as { selected: number; others: string }).selected
-						];
-					}
-					if (question.type == 'member') {
-						return createRender(DataTableTable, {
-							headers: ['Department', 'Email', 'Name', 'Phone', 'Tags', 'ID', 'Year'],
-							rows: value.response as Record<string, string>[]
-						});
-					}
-					if (question.type == 'activity') {
-						return createRender(DataTableTable, {
-							headers: ['Date', 'End', 'Form', 'Location', 'Note', 'Start', 'Topic'],
-							rows: value.response as Record<string, string>[]
-						});
-					}
-					if (question.type == 'file') {
-						return createRender(DataTableLink, {
-							collectionId: value.collectionId,
-							recordId: value.id,
-							file: value.files
-						});
-					}
-					return JSON.stringify(value?.response);
-				}
+				cell: ({ value }) =>
+					createRender(ResponseRenderer, {
+						data: value
+					})
 			})
 		);
 	});
@@ -225,7 +201,9 @@
 	const { filterValue } = pluginStates.filter;
 	const { hiddenColumnIds } = pluginStates.hide;
 	const { selectedDataIds } = pluginStates.select;
-	const { filterValues } = pluginStates.colFilter
+	const { filterValues } = pluginStates.colFilter;
+
+	$: console.log($headerRows);
 
 	const ids = flatColumns.map((col) => col.id);
 	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
@@ -270,10 +248,12 @@
 			type="text"
 			bind:value={$filterValue}
 		/>
-		<Select.Root onSelectedChange={selected => {
-			if (selected?.value == "all") $filterValues.status = undefined
-			else $filterValues.status = selected?.value
-		}}>
+		<Select.Root
+			onSelectedChange={(selected) => {
+				if (selected?.value == 'all') $filterValues.status = undefined;
+				else $filterValues.status = selected?.value;
+			}}
+		>
 			<Select.Trigger class="w-[180px]">
 				<Select.Value placeholder={m.status()} />
 			</Select.Trigger>
@@ -291,7 +271,8 @@
 		<DropdownMenu.Root closeOnItemClick={false}>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="outline" builders={[builder]}>
-					{m.columns()} <ChevronDown class="ml-2 h-4 w-4" />
+					{m.columns()}
+					<ChevronDown class="ml-2 h-4 w-4" />
 				</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="max-w-64">

@@ -6,7 +6,7 @@
   import { onMount } from "svelte"
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
-  import { ArrowUpRight, ChevronLeft, CirclePlus, Grid2x2Check, Link2, ListPlus, Settings, SquareArrowOutUpRight, ListChecks } from "lucide-svelte";
+  import { ArrowUpRight, ChevronLeft, CirclePlus, Grid2x2Check, Link2, ListPlus, Settings, SquareArrowOutUpRight, ListChecks, Mail } from "lucide-svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { Label } from "$lib/components/ui/label";
 	import { Badge } from "$lib/components/ui/badge";
@@ -238,7 +238,7 @@
   <div class="lg:w-64 flex-shrink-0">
 
     <Card.Root>
-      <Card.Content class="pt-6 flex lg:flex-col flex-row gap-2">
+      <Card.Content class="pt-6 grid lg:grid-cols-1 grid-cols-2 gap-2">
         <Button 
           class="w-full flex items-center gap-2 justify-start" 
           href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/settings` : ''}
@@ -262,6 +262,13 @@
         >
           <ListChecks size="18" />
           {m.terms()}
+        </Button>
+        <Button
+          class="w-full flex items-center gap-2 justify-start"
+          href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/mailing` : ''}
+        >
+          <Mail size="18" />
+          Mailing
         </Button>
         <Button 
           class="w-full flex items-center gap-2 justify-start"

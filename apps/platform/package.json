@@ -17,7 +17,6 @@
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.5.5",
-		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",
 		"mode-watcher": "^0.4.1",
 		"resend": "^4.0.0",
@@ -39,6 +38,8 @@
 		"@typescript-eslint/eslint-plugin": "^7.1.0",
 		"@typescript-eslint/parser": "^7.1.0",
 		"autoprefixer": "^10.4.19",
+		"bits-ui": "^0.21.16",
+		"cmdk-sv": "^0.0.18",
 		"eslint": "^8.57.0",
 		"eventsource": "^2.0.2",
 		"lucide-svelte": "^0.424.0",

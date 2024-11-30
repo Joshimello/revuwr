@@ -9,7 +9,7 @@
 	import { Checkbox } from "$lib/components/ui/checkbox";
 
   export let data
-  const { event } = data
+  const { event, user } = data
   const notStarted = new Date(event.startDate) > new Date()
   const isEnded = new Date(+new Date(event.endDate) + 86400000) < new Date()
   const canApply = 
@@ -66,7 +66,7 @@
   </Card.Content>
   <Card.Footer class="justify-end">
     <Button size="lg" type="submit"
-      disabled={isCreating || !canApply}
+      disabled={isCreating || !canApply || !user}
       on:click={() => {
         termsOpen = true
       }}
@@ -75,6 +75,8 @@
         Event has not started yet
       {:else if isEnded && event.afterStartDate == 'disallow'}
         Event has ended
+      {:else if !user}
+        Login to continue
       {:else}
         Apply now !
       {/if}
@@ -109,7 +111,7 @@
         })
       }}>
         <Button size="lg" type="submit"
-          disabled={isCreating || !canApply || !isAllChecked}
+          disabled={isCreating || !canApply || !isAllChecked || !user}
         >
           {#if notStarted && event.beforeStartDate == 'disallow'}
             Event has not started yet

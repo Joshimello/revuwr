@@ -34,7 +34,8 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
-	import * as m from '$lib/paraglide/messages.js'
+	import * as m from '$lib/paraglide/messages.js';
+	import ResponseRenderer from '$lib/components/response-renderer.svelte';
 
 	type ExpandedApplication = ApplicationsResponse<{
 		event: EventsResponse;
@@ -272,7 +273,6 @@
 			}
 		}
 	};
-
 </script>
 
 <div class="flex items-center gap-4">
@@ -304,35 +304,8 @@
 							<Label class="text-muted-foreground">
 								{@html answer.expand?.question.title}
 							</Label>
-							{#if !answer.response && !['file'].includes(answer.expand?.question.type ?? '')}
-								<span>-</span>
-							{:else if answer.expand?.question.type == 'radio'}
-								{#if answer.response?.selected == answer.expand?.question.options?.choices.length}
-									<span>{answer.response?.others}</span>
-								{:else}
-									<span
-										>{answer.expand?.question.options?.choices[
-											answer.response?.selected ?? '0'
-										]}</span
-									>
-								{/if}
-							{:else if answer.expand?.question.type == 'member'}
-								<MemberTable value={answer.response} />
-							{:else if answer.expand?.question.type == 'activity'}
-								<ActivityTable value={answer.response} />
-							{:else if answer.expand?.question.type == 'file'}
-								<div class="flex flex-col">
-									{#each answer.files as file}
-										<a
-											class="text-blue-500 underline"
-											href={pbImage(answer.collectionId, answer.id, file)}
-											target="_blank">{file}</a
-										>
-									{/each}
-								</div>
-							{:else}
-								<span>{answer.response}</span>
-							{/if}
+
+							<ResponseRenderer data={answer} />
 
 							<div class="flex gap-1">
 								<Popover.Root>
@@ -346,15 +319,19 @@
 											<PenBox size="16" />
 										</Button>
 									</Popover.Trigger>
-									<Popover.Content class="h-96 flex flex-col gap-2">
+									<Popover.Content class="flex h-96 flex-col gap-2">
 										<textarea
-											class="w-full flex-1 font-mono bg-transparent text-sm"
+											class="w-full flex-1 bg-transparent font-mono text-sm"
 											value={JSON.stringify(answer.response, null, 1)}
 											bind:this={editTextareas[answer.id]}
 										/>
-										<Button size="sm" variant="secondary" on:click={() => {
-											handleEditSave(answer.id);
-										}}>
+										<Button
+											size="sm"
+											variant="secondary"
+											on:click={() => {
+												handleEditSave(answer.id);
+											}}
+										>
 											{m.edit_response()}
 										</Button>
 									</Popover.Content>
@@ -536,7 +513,13 @@
 								<Download size="14" class="mr-1" />
 								PDF
 							</Button>
-							<Button variant="secondary" size="sm" class="h-7" href={`${PUBLIC_BASE_PATH}/export/csv?ids=${record.id}`} target="_blank">
+							<Button
+								variant="secondary"
+								size="sm"
+								class="h-7"
+								href={`${PUBLIC_BASE_PATH}/export/csv?ids=${record.id}`}
+								target="_blank"
+							>
 								<Download size="14" class="mr-1" />
 								CSV
 							</Button>
@@ -550,7 +533,8 @@
 	<Dialog.Root bind:open={addNotesOpen}>
 		<Dialog.Content>
 			<Dialog.Header>
-				<Dialog.Title>{m.note_for()} <span class="font-mono font-normal">{record.id}</span></Dialog.Title
+				<Dialog.Title
+					>{m.note_for()} <span class="font-mono font-normal">{record.id}</span></Dialog.Title
 				>
 				<Textarea class="h-64" bind:value={record.adminNote} on:blur={handleSaveNotes} />
 			</Dialog.Header>
@@ -558,7 +542,7 @@
 	</Dialog.Root>
 
 	<div class="pointer-events-none fixed bottom-0 left-0 right-0 md:bottom-6 md:left-6 md:right-6">
-		<Card.Root class="bg-muted pointer-events-auto mx-auto w-max">
+		<Card.Root class="pointer-events-auto mx-auto w-max bg-muted">
 			<Card.Content class="flex items-center gap-1 p-2">
 				<Button
 					class="flex items-center gap-1 bg-green-500 text-white"
