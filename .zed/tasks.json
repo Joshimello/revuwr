@@ -1,0 +1,22 @@
+[
+  {
+    "label": "Run npm run dev on startup",
+    "command": "npm run dev",
+    "reveal": "always",
+    "reveal_target": "dock",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": false,
+    "hide": "never",
+    "shell": "system"
+  },
+  {
+    "label": "Start pocketbase dev db on startup",
+    "command": "./pb/pocketbase serve",
+    "reveal": "always",
+    "reveal_target": "dock",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": false,
+    "hide": "never",
+    "shell": "system"
+  }
+]
