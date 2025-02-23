@@ -1,35 +1,33 @@
 <script lang="ts">
+	import ResponseRenderer from '$lib/components/response-renderer.svelte';
+	import Status, { statuses } from '$lib/components/status.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Input } from '$lib/components/ui/input';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import * as Select from '$lib/components/ui/select';
+	import * as Table from '$lib/components/ui/table';
+	import * as m from '$lib/paraglide/messages.js';
 	import type {
 		AnswersResponse,
 		ApplicationsResponse,
 		EventsResponse,
-		UsersResponse,
-		QuestionsResponse
+		QuestionsResponse,
+		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { readable, type Writable } from 'svelte/store';
+	import { ArrowDownAZ, ArrowUpZA, ChevronDown, Minus } from 'lucide-svelte';
 	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table';
-	import * as Table from '$lib/components/ui/table';
-	import DataTableCell from './data-table-cell.svelte';
-	import DataTableAction from './data-table-action.svelte';
 	import {
-		addSortBy,
-		addTableFilter,
+		addColumnFilters,
 		addHiddenColumns,
 		addSelectedRows,
-		addColumnFilters
+		addSortBy,
+		addTableFilter
 	} from 'svelte-headless-table/plugins';
-	import { Button } from '$lib/components/ui/button';
-	import { ArrowDownAZ, ArrowUpZA, ChevronDown, Minus } from 'lucide-svelte';
-	import { Input } from '$lib/components/ui/input';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { type Writable } from 'svelte/store';
+	import DataTableAction from './data-table-action.svelte';
+	import DataTableCell from './data-table-cell.svelte';
 	import DataTableCheckbox from './data-table-checkbox.svelte';
-	import DataTableTable from './data-table-table.svelte';
-	import DataTableLink from './data-table-link.svelte';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import Status, { statuses } from '$lib/components/status.svelte';
-	import * as Select from '$lib/components/ui/select';
-	import * as m from '$lib/paraglide/messages.js';
-	import ResponseRenderer from '$lib/components/response-renderer.svelte';
 
 	type ExpandedApplications = ApplicationsResponse<{
 		responder: UsersResponse;
@@ -203,8 +201,6 @@
 	const { selectedDataIds } = pluginStates.select;
 	const { filterValues } = pluginStates.colFilter;
 
-	$: console.log($headerRows);
-
 	const ids = flatColumns.map((col) => col.id);
 	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
 
@@ -329,7 +325,7 @@
 						<Table.Row
 							{...rowAttrs}
 							data-state={$selectedDataIds[row.id] && 'selected'}
-							on:click={(e) => {}}
+							class={`${row.original.adminColor} hover:${row.original.adminColor}`}
 						>
 							{#each row.cells as cell (cell.id)}
 								<Subscribe attrs={cell.attrs()} let:attrs>

@@ -1,16 +1,15 @@
 <script lang="ts">
-	import { Button } from "$lib/components/ui/button";
-	import type { AnswersResponse, ApplicationsResponse, UsersResponse } from "$lib/pocketbase/pocketbase-types";
-  import { SquareArrowOutUpRight, SquareMenu } from "lucide-svelte";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { statuses, default as Status } from "$lib/components/status.svelte"
-  import { pb } from "$lib/pocketbase/client";
-  import * as Dialog from "$lib/components/ui/dialog";
-	import { Textarea } from "$lib/components/ui/textarea";
-	import { toast } from "svelte-sonner";
-  import * as m from '$lib/paraglide/messages.js'
 	import { PUBLIC_BASE_PATH } from "$env/static/public";
-  import { reviewRequests } from './stores'
+	import { default as Status, statuses } from "$lib/components/status.svelte";
+	import { Button } from "$lib/components/ui/button";
+	import * as Dialog from "$lib/components/ui/dialog";
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { Textarea } from "$lib/components/ui/textarea";
+	import * as m from '$lib/paraglide/messages.js';
+	import { pb } from "$lib/pocketbase/client";
+	import { SquareArrowOutUpRight, SquareMenu } from "lucide-svelte";
+	import { toast } from "svelte-sonner";
+	import { reviewRequests } from './stores';
 	import type { ExpandedApplication } from "./types";
 
   export let record: ExpandedApplication
@@ -54,6 +53,44 @@
       }
     }
   }
+
+ 	const tailwindColors = [
+		'gray',
+		'red',
+		'orange',
+		'amber',
+		'yellow',
+		'lime',
+		'green',
+		'emerald',
+		'teal',
+		'cyan',
+		'sky',
+		'blue',
+		'indigo',
+		'violet',
+		'purple',
+		'fuchsia',
+		'pink',
+		'rose'
+	];
+
+	const handleSetColor = async (color: string) => {
+		try {
+			record.adminColor = color;
+			await pb.collection('applications').update(record.id, {
+				adminColor: color
+			});
+			toast.success('Color updated');
+			$reviewRequests = $reviewRequests
+		} catch (err) {
+			if (err instanceof Error) {
+				toast.error(err.message);
+			} else {
+				toast.error('An error occurred');
+			}
+		}
+	};
 </script>
 
 <div class="flex">
@@ -100,6 +137,21 @@
         <DropdownMenu.Item on:click={() => addNotesOpen = true}>
           {m.add_note()}
         </DropdownMenu.Item>
+        <DropdownMenu.Sub>
+					<DropdownMenu.SubTrigger>
+						{m.set_color()}
+					</DropdownMenu.SubTrigger>
+					<DropdownMenu.SubContent>
+						<!-- none -->
+						<DropdownMenu.Item on:click={() => handleSetColor('')}>none</DropdownMenu.Item>
+						{#each tailwindColors as color}
+							<DropdownMenu.Item on:click={() => handleSetColor(`bg-${color}-200`)}>
+								<div class={`mr-2 h-4 w-4 rounded bg-${color}-200`}></div>
+								{color}
+							</DropdownMenu.Item>
+						{/each}
+					</DropdownMenu.SubContent>
+				</DropdownMenu.Sub>
       </DropdownMenu.Group>
       <DropdownMenu.Separator />
       <DropdownMenu.Label class="text-xs font-normal font-mono text-muted-foreground p-0 px-2">{record.id}</DropdownMenu.Label>

@@ -1,49 +1,41 @@
 <script lang="ts">
-	import type {
-	AnswersResponse,
-	ApplicationsResponse,
-		EventsResponse,
-		ReviewsResponse,
-
-		UsersResponse
-
-	} from '$lib/pocketbase/pocketbase-types';
-	import { type Readable, type Writable } from 'svelte/store';
-	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table';
+	import Status, { statuses } from '$lib/components/status.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Input } from '$lib/components/ui/input';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
+	import * as m from '$lib/paraglide/messages.js';
+	import type { EventsResponse } from '$lib/pocketbase/pocketbase-types';
+	import { ArrowDownAZ, ArrowUpZA, ChevronDown, Minus } from 'lucide-svelte';
+	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table';
 	import {
-		addSortBy,
-		addTableFilter,
+		addColumnFilters,
 		addHiddenColumns,
 		addSelectedRows,
-		addColumnFilters
+		addSortBy,
+		addTableFilter
 	} from 'svelte-headless-table/plugins';
-	import { Button } from '$lib/components/ui/button';
-	import { ArrowDownAZ, ArrowUpZA, ChevronDown, Minus } from 'lucide-svelte';
-	import { Input } from '$lib/components/ui/input';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import Status, { statuses } from '$lib/components/status.svelte';
-	import * as Select from '$lib/components/ui/select';
-	import DataTableAction from './data-table-action.svelte';
+	import { type Readable } from 'svelte/store';
 	import DataTableCell from '../responses/data-table-cell.svelte';
-	import DataTableReviews from './data-table-reviews.svelte';
+	import DataTableAction from './data-table-action.svelte';
 	import DataTableControl from './data-table-control.svelte';
-	import * as m from '$lib/paraglide/messages.js'
+	import DataTableReviews from './data-table-reviews.svelte';
 	import type { ExpandedApplication } from './types';
 
 	type ReviewApplications = {
-    application: ExpandedApplication;
-    reviews: {
+		application: ExpandedApplication;
+		reviews: {
 			reviewId: string;
 			reviewer: string;
 			status: string | undefined;
 			comment: string | undefined;
-    }[];
-	}[]
+		}[];
+	}[];
 
 	export let data: Readable<ReviewApplications>;
-	export let event: EventsResponse
+	export let event: EventsResponse;
 
 	const table = createTable(data, {
 		sort: addSortBy(),
@@ -87,7 +79,7 @@
 		}),
 		table.column({
 			id: 'responder',
-			accessor: value => value.application.expand?.responder,
+			accessor: (value) => value.application.expand?.responder,
 			header: m.user(),
 			cell: ({ value }) => createRender(DataTableCell, { a: value?.name, b: value?.username }),
 			plugins: {
@@ -101,18 +93,18 @@
 		}),
 		table.column({
 			id: 'status',
-			accessor: value => value.application.status,
+			accessor: (value) => value.application.status,
 			header: m.status(),
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
-        colFilter: {
-          fn: ({ filterValue, value }) => filterValue === value,
-        }
-      },
+				colFilter: {
+					fn: ({ filterValue, value }) => filterValue === value
+				}
+			}
 		}),
 		table.column({
 			id: 'updated',
-			accessor: value => value.application.updated,
+			accessor: (value) => value.application.updated,
 			header: m.updated(),
 			cell: ({ value }) => {
 				return createRender(DataTableCell, {
@@ -166,7 +158,7 @@
 		}),
 		table.column({
 			id: m.notes(),
-			accessor: value => value.application.adminNote,
+			accessor: (value) => value.application.adminNote,
 			header: m.notes()
 		})
 	]);
@@ -176,7 +168,7 @@
 	const { filterValue } = pluginStates.filter;
 	const { hiddenColumnIds } = pluginStates.hide;
 	const { selectedDataIds } = pluginStates.select;
-	const { filterValues } = pluginStates.colFilter
+	const { filterValues } = pluginStates.colFilter;
 
 	const ids = flatColumns.map((col) => col.id);
 	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
@@ -199,10 +191,12 @@
 			type="text"
 			bind:value={$filterValue}
 		/>
-		<Select.Root onSelectedChange={selected => {
-			if (selected?.value == "all") $filterValues.status = undefined
-			else $filterValues.status = selected?.value
-		}}>
+		<Select.Root
+			onSelectedChange={(selected) => {
+				if (selected?.value == 'all') $filterValues.status = undefined;
+				else $filterValues.status = selected?.value;
+			}}
+		>
 			<Select.Trigger class="w-[180px]">
 				<Select.Value placeholder={m.status()} />
 			</Select.Trigger>
@@ -220,7 +214,8 @@
 		<DropdownMenu.Root closeOnItemClick={false}>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="outline" builders={[builder]}>
-					{m.columns()} <ChevronDown class="ml-2 h-4 w-4" />
+					{m.columns()}
+					<ChevronDown class="ml-2 h-4 w-4" />
 				</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="max-w-64">
@@ -277,7 +272,7 @@
 						<Table.Row
 							{...rowAttrs}
 							data-state={$selectedDataIds[row.id] && 'selected'}
-							on:click={(e) => {}}
+							class={`${row.original.application.adminColor} hover:${row.original.application.adminColor}`}
 						>
 							{#each row.cells as cell (cell.id)}
 								<Subscribe attrs={cell.attrs()} let:attrs>
