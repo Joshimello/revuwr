@@ -44,7 +44,7 @@ export const actions: Actions = {
 				html: `Your application ${application.id} has been submitted.`
 			});
 
-			return redirect(303, `/application/${params.id}/completed`);
+			return redirect(303, `/application/${params.id}/complete`);
 		} catch (err) {
 			if (isRedirect(err)) {
 				return redirect(err.status, err.location);
