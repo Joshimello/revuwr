@@ -140,12 +140,12 @@
 									</div>
 								</Table.Cell>
 								<Table.Cell>
-									<div class="font-medium">
-										{application.expand?.responder.name}
-									</div>
-									<div class="hidden text-xs text-muted-foreground md:inline">
-										{application.expand?.responder.email}
-									</div>
+								<div class="font-medium">
+									{application.expand?.responder?.name || 'Unknown user'}
+								</div>
+								<div class="hidden text-xs text-muted-foreground md:inline">
+									{application.expand?.responder?.email || 'No email'}
+								</div>
 								</Table.Cell>
 								<Table.Cell class="">
 									<Status type={application.status} />
@@ -234,29 +234,29 @@
 						{#each reviews as review}
 							<Table.Row>
 								<Table.Cell>
-									<div class="font-medium">{review.reviewerEmail}</div>
+								<div class="font-medium">{review.reviewerEmail || 'Unknown reviewer'}</div>
 								</Table.Cell>
 								<Table.Cell>
 									<Status type={review.status} />
 								</Table.Cell>
 								<Table.Cell>
 									<div class="flex items-center gap-1">
-										<Badge class="flex w-6 justify-end bg-lime-200 p-1" variant="outline">
-											{Object.values(review.review ?? {}).filter((i) => i.status === 'approved')
-												.length}
-										</Badge>
-										<Badge class="flex w-6 justify-end bg-orange-200 p-1" variant="outline">
-											{Object.values(review.review ?? {}).filter(
-												(i) => i.status === 'editsRequested'
-											).length}
-										</Badge>
-										<Badge class="flex w-6 justify-end bg-red-200 p-1" variant="outline">
-											{Object.values(review.review ?? {}).filter((i) => i.status === 'rejected')
-												.length}
-										</Badge>
-										<Badge class="flex w-6 justify-end p-1" variant="outline">
-											{review.applications.filter((i) => !Object.keys(review).includes(i)).length}
-										</Badge>
+									<Badge class="flex w-6 justify-end bg-lime-200 p-1" variant="outline">
+										{Object.values(review.review || {}).filter((i) => i?.status === 'approved')
+											.length}
+									</Badge>
+									<Badge class="flex w-6 justify-end bg-orange-200 p-1" variant="outline">
+										{Object.values(review.review || {}).filter(
+											(i) => i?.status === 'editsRequested'
+										).length}
+									</Badge>
+									<Badge class="flex w-6 justify-end bg-red-200 p-1" variant="outline">
+										{Object.values(review.review || {}).filter((i) => i?.status === 'rejected')
+											.length}
+									</Badge>
+									<Badge class="flex w-6 justify-end p-1" variant="outline">
+										{(review.applications || []).filter((i) => !Object.keys(review.review || {}).includes(i)).length}
+									</Badge>
 									</div>
 								</Table.Cell>
 								<Table.Cell class="text-right text-xs">

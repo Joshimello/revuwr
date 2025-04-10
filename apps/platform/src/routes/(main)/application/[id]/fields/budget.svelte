@@ -19,6 +19,8 @@
 		maxQuantity: number;
 		minQuantity: number;
 		calculationMethod: string;
+		roundingMethod: 'none' | 'round' | 'floor' | 'ceil';
+		roundingDecimalPlaces: number;
 		customFormula: string;
 		rangeTable: {
 			input: number[];
@@ -133,23 +135,39 @@
 		let total = 0;
 		for (let i = 0; i < options.length; i++) {
 			const item = options[i];
+			let itemValue;
+			
 			if (item.calculationMethod === 'default') {
-				total += item.defaultPrice * item.defaultQuantity;
+				itemValue = item.defaultPrice * item.defaultQuantity;
 			} else if (item.calculationMethod === 'custom') {
-				const value = parseFormula(item.customFormula, options);
-				if (Number.isNaN(value) || value === 'ERROR') {
+				itemValue = parseFormula(item.customFormula, options);
+				if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
 					return 'ERROR';
 				}
-				total += value;
 			} else if (item.calculationMethod === 'range') {
-				const value = parseRange(item.customFormula, options, item.rangeTable);
-				if (Number.isNaN(value) || value === 'ERROR') {
+				itemValue = parseRange(item.customFormula, options, item.rangeTable);
+				if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
 					return 'ERROR';
 				}
 				// cuz rangeTable.input and rangeTable.output are both string arrays due to input
-				// @ts-ignore
-				total += parseInt(value);
+				if (typeof itemValue === 'string') {
+					itemValue = parseInt(itemValue);
+				}
 			}
+			
+			// Apply rounding if configured
+			if (typeof itemValue === 'number' && item.roundingMethod && item.roundingMethod !== 'none') {
+				const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+				if (item.roundingMethod === 'round') {
+					itemValue = Math.round(itemValue * multiplier) / multiplier;
+				} else if (item.roundingMethod === 'floor') {
+					itemValue = Math.floor(itemValue * multiplier) / multiplier;
+				} else if (item.roundingMethod === 'ceil') {
+					itemValue = Math.ceil(itemValue * multiplier) / multiplier;
+				}
+			}
+			
+			total += itemValue;
 		}
 		return total;
 	};
@@ -227,13 +245,52 @@
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-48 align-top">
-							{#if item.calculationMethod === 'default'}
-								{item.defaultPrice * item.defaultQuantity}
-							{:else if item.calculationMethod === 'custom'}
-								{parseFormula(item.customFormula, options)}
-							{:else if item.calculationMethod === 'range'}
-								{parseRange(item.customFormula, options, item.rangeTable)}
-							{/if}
+						{#if item.calculationMethod === 'default'}
+							{(() => {
+								let value = item.defaultPrice * item.defaultQuantity;
+								if (item.roundingMethod && item.roundingMethod !== 'none') {
+									const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+									if (item.roundingMethod === 'round') {
+										return Math.round(value * multiplier) / multiplier;
+									} else if (item.roundingMethod === 'floor') {
+										return Math.floor(value * multiplier) / multiplier;
+									} else if (item.roundingMethod === 'ceil') {
+										return Math.ceil(value * multiplier) / multiplier;
+									}
+								}
+								return value;
+							})()}
+						{:else if item.calculationMethod === 'custom'}
+							{(() => {
+								let value = parseFormula(item.customFormula, options);
+								if (typeof value === 'number' && item.roundingMethod && item.roundingMethod !== 'none') {
+									const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+									if (item.roundingMethod === 'round') {
+										return Math.round(value * multiplier) / multiplier;
+									} else if (item.roundingMethod === 'floor') {
+										return Math.floor(value * multiplier) / multiplier;
+									} else if (item.roundingMethod === 'ceil') {
+										return Math.ceil(value * multiplier) / multiplier;
+									}
+								}
+								return value;
+							})()}
+						{:else if item.calculationMethod === 'range'}
+							{(() => {
+								let value = parseRange(item.customFormula, options, item.rangeTable);
+								if (typeof value === 'number' && item.roundingMethod && item.roundingMethod !== 'none') {
+									const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+									if (item.roundingMethod === 'round') {
+										return Math.round(value * multiplier) / multiplier;
+									} else if (item.roundingMethod === 'floor') {
+										return Math.floor(value * multiplier) / multiplier;
+									} else if (item.roundingMethod === 'ceil') {
+										return Math.ceil(value * multiplier) / multiplier;
+									}
+								}
+								return value;
+							})()}
+						{/if}
 						</Table.Cell>
 						<Table.Cell class="w-96 align-top">
 							{@html item.description}

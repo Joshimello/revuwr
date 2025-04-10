@@ -1,19 +1,16 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import * as Table from '$lib/components/ui/table';
-	import * as Select from '$lib/components/ui/select';
 	import Editor from '$lib/components/editor.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Expand, Scroll } from 'lucide-svelte';
-	import * as Sheet from '$lib/components/ui/sheet/index.js';
-	import { Label } from '$lib/components/ui/label';
 	import Range from '$lib/components/range.svelte';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import { onMount } from 'svelte';
-	import * as Tabs from '$lib/components/ui/tabs';
+	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as Select from '$lib/components/ui/select';
+	import * as Sheet from '$lib/components/ui/sheet/index.js';
+	import * as Table from '$lib/components/ui/table';
 	import { Textarea } from '$lib/components/ui/textarea';
+	import { onMount } from 'svelte';
 
 	export let isEditing: boolean;
 	export let required: boolean;
@@ -31,6 +28,8 @@
 		maxQuantity: number;
 		minQuantity: number;
 		calculationMethod: string;
+		roundingMethod: 'none' | 'round' | 'floor' | 'ceil';
+		roundingDecimalPlaces: number;
 		customFormula: string;
 		rangeTable: {
 			input: number[];
@@ -62,6 +61,8 @@
 		maxQuantity: 0,
 		minQuantity: 0,
 		calculationMethod: 'default',
+		roundingMethod: 'none',
+		roundingDecimalPlaces: 0,
 		customFormula: '',
 		rangeTable: {
 			input: [0, 0],
@@ -369,6 +370,42 @@
 								{#if item.calculationMethod === 'range'}
 									<Range bind:value={item.rangeTable} />
 								{/if}
+								<div class="flex flex-col gap-1">
+									<div class="flex items-center gap-2">
+										<Select.Root
+											selected={[
+												{ value: 'none', label: '不處理' },
+												{ value: 'round', label: '四捨五入' },
+												{ value: 'floor', label: '無條件捨去' },
+												{ value: 'ceil', label: '無條件進位' }
+											].find((option) => option.value === (item.roundingMethod || 'none'))}
+											onSelectedChange={(selected) => {
+												item.roundingMethod = selected ? selected.value : 'none';
+											}}
+										>
+											<Select.Trigger>
+												<Select.Value placeholder="選擇四捨五入方式..." />
+											</Select.Trigger>
+											<Select.Content>
+												<Select.Item value="none">不處理</Select.Item>
+												<Select.Item value="round">四捨五入</Select.Item>
+												<Select.Item value="floor">無條件捨去</Select.Item>
+												<Select.Item value="ceil">無條件進位</Select.Item>
+											</Select.Content>
+										</Select.Root>
+
+										{#if item.roundingMethod && item.roundingMethod !== 'none'}
+											<Label class="text-muted-foreground">小數位數</Label>
+											<Input
+												type="number"
+												class="h-8 w-24"
+												min="0"
+												max="10"
+												bind:value={item.roundingDecimalPlaces}
+											/>
+										{/if}
+									</div>
+								</div>
 								<div class="flex items-center gap-2">
 									<Checkbox bind:checked={item.isLimitTotal} />
 									<span>限制範圍</span>
@@ -459,11 +496,50 @@
 						</Table.Cell>
 						<Table.Cell class="w-48">
 							{#if item.calculationMethod === 'default'}
-								{item.defaultPrice * item.defaultQuantity}
+								{(() => {
+									let value = item.defaultPrice * item.defaultQuantity;
+									if (item.roundingMethod !== 'none') {
+										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
+										if (item.roundingMethod === 'round') {
+											return Math.round(value * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'floor') {
+											return Math.floor(value * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'ceil') {
+											return Math.ceil(value * multiplier) / multiplier;
+										}
+									}
+									return value;
+								})()}
 							{:else if item.calculationMethod === 'custom'}
-								{parseFormula(item.customFormula, options)}
+								{(() => {
+									let value = parseFormula(item.customFormula, options);
+									if (typeof value === 'number' && item.roundingMethod !== 'none') {
+										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
+										if (item.roundingMethod === 'round') {
+											return Math.round(value * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'floor') {
+											return Math.floor(value * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'ceil') {
+											return Math.ceil(value * multiplier) / multiplier;
+										}
+									}
+									return value;
+								})()}
 							{:else if item.calculationMethod === 'range'}
-								{parseRange(item.customFormula, options, item.rangeTable)}
+								{(() => {
+									let value = parseRange(item.customFormula, options, item.rangeTable);
+									if (typeof value === 'number' && item.roundingMethod !== 'none') {
+										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
+										if (item.roundingMethod === 'round') {
+											return Math.round(value * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'floor') {
+											return Math.floor(value * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'ceil') {
+											return Math.ceil(value * multiplier) / multiplier;
+										}
+									}
+									return value;
+								})()}
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-96">
@@ -482,26 +558,48 @@
 					<Table.Cell>
 						{(() => {
 							let total = 0;
+							let hasError = false;
+
 							options.forEach((item) => {
+								let itemValue;
+
 								if (item.calculationMethod === 'default') {
-									total += item.defaultPrice * item.defaultQuantity;
+									itemValue = item.defaultPrice * item.defaultQuantity;
 								} else if (item.calculationMethod === 'custom') {
-									const value = parseFormula(item.customFormula, options);
-									if (Number.isNaN(value) || value === 'ERROR') {
-										return 'ERROR';
+									itemValue = parseFormula(item.customFormula, options);
+									if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
+										hasError = true;
+										return;
 									}
-									total += value;
 								} else if (item.calculationMethod === 'range') {
-									const value = parseRange(item.customFormula, options, item.rangeTable);
-									if (Number.isNaN(value) || value === 'ERROR') {
-										return 'ERROR';
+									itemValue = parseRange(item.customFormula, options, item.rangeTable);
+									if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
+										hasError = true;
+										return;
 									}
 									// cuz rangeTable.input and rangeTable.output are both string arrays due to input
-									// @ts-ignore
-									total += parseInt(value);
+									if (typeof itemValue === 'string') {
+										itemValue = parseInt(itemValue);
+									}
+								}
+
+								// Apply rounding if configured
+								if (typeof itemValue === 'number') {
+									if (item.roundingMethod !== 'none') {
+										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
+										if (item.roundingMethod === 'round') {
+											itemValue = Math.round(itemValue * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'floor') {
+											itemValue = Math.floor(itemValue * multiplier) / multiplier;
+										} else if (item.roundingMethod === 'ceil') {
+											itemValue = Math.ceil(itemValue * multiplier) / multiplier;
+										}
+									}
+									total += itemValue;
 								}
 							});
-							return total;
+
+							return hasError ? 'ERROR' : total;
 						})()}
 					</Table.Cell>
 					<Table.Cell></Table.Cell>
