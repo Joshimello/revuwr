@@ -17,6 +17,7 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
 	import { applications } from './stores';
+import { reviewRequests, event as eventStore } from '../overview/stores';
 
 	type ExpandedApplication = ApplicationsResponse<{
 		responder: UsersResponse;
@@ -47,6 +48,15 @@
 			event = await pb.collection('events').getOne($page.params.id, {
 				expand: 'questions'
 			});
+			$eventStore = event;
+			
+			// Fetch review requests
+			const records = await pb.collection('reviews').getFullList({
+				filter: `applications.event?~"${$page.params.id}"`,
+				sort: '-created',
+				expand: 'applications,questions,applications.responder'
+			});
+			$reviewRequests = records;
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);

@@ -26,8 +26,10 @@
 	} from 'svelte-headless-table/plugins';
 	import { type Writable } from 'svelte/store';
 	import DataTableAction from './data-table-action.svelte';
-	import DataTableCell from './data-table-cell.svelte';
-	import DataTableCheckbox from './data-table-checkbox.svelte';
+import DataTableCell from './data-table-cell.svelte';
+import DataTableCheckbox from './data-table-checkbox.svelte';
+import DataTableReviews from './data-table-reviews.svelte';
+import DataTableControl from './data-table-control.svelte';
 
 	type ExpandedApplications = ApplicationsResponse<{
 		responder: UsersResponse;
@@ -141,6 +143,28 @@
 			}
 		}),
 		table.column({
+			id: 'reviews',
+			accessor: (value) => value,
+			header: m.reviews(),
+			cell: ({ value }) => createRender(DataTableReviews, { record: value }),
+			plugins: {
+				sort: {
+					disable: true
+				}
+			}
+		}),
+		table.column({
+			id: 'controls',
+			accessor: (value) => value,
+			header: m.controls(),
+			cell: ({ value }) => createRender(DataTableControl, { record: value, event }),
+			plugins: {
+				sort: {
+					disable: true
+				}
+			}
+		}),
+		table.column({
 			id: 'updated',
 			accessor: 'updated',
 			header: m.updated(),
@@ -207,6 +231,10 @@
 	event.questions.forEach((questionId) => {
 		hideForId[questionId] = false;
 	});
+	
+	// Hide Reviews and Controls columns by default
+	hideForId['reviews'] = false;
+	hideForId['controls'] = false;
 
 	$: $hiddenColumnIds = Object.entries(hideForId)
 		.filter(([, hide]) => !hide)
