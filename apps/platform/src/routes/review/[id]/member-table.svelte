@@ -22,7 +22,7 @@
     </Table.Row>
   </Table.Header>
   <Table.Body>
-    {#each value as member}
+    {#each (value || []) as member}
       <Table.Row>
         <Table.Cell>
           <div class="font-medium">

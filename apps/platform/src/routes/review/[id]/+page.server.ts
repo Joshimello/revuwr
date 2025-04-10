@@ -43,7 +43,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					'applications,applications.event,applications.response,applications.response.question,applications.responder'
 			});
 
-		return { reviewRequest };
+		// Ensure the returned object has valid defaults
+return { 
+  reviewRequest: {
+    ...reviewRequest,
+    applications: reviewRequest.applications || [],
+    expand: reviewRequest.expand || { applications: [] },
+    review: reviewRequest.review || {}
+  } 
+};
 	} catch (err) {
 		if (isRedirect(err)) {
 			throw err;

@@ -22,7 +22,7 @@
     </Table.Row>
   </Table.Header>
   <Table.Body>
-    {#each value as session}
+    {#each (value || []) as session}
       <Table.Row>
         <Table.Cell>
           <div class="font-medium">

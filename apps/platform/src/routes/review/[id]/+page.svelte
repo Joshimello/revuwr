@@ -49,8 +49,18 @@
 	}>;
 
 	let reviewRequest: ExpandedReviewsResponse | undefined = undefined;
-	export let data;
-	({ reviewRequest } = data);
+export let data;
+({ reviewRequest } = data);
+
+// Ensure reviewRequest has valid defaults for all properties
+if (reviewRequest) {
+  reviewRequest = {
+    ...reviewRequest,
+    expand: reviewRequest.expand || { applications: [] },
+    applications: reviewRequest.applications || [],
+    review: reviewRequest.review || {}
+  };
+}
 
 	const handleSubmitReviews = async () => {
 		if (!reviewRequest) return;
@@ -130,30 +140,30 @@
 </Card.Root>
 
 {#if reviewRequest?.review}
-	<Card.Root class="mt-2">
-		<Card.Header>
-			<Card.Title>
-				<div class="flex flex-wrap items-center gap-1">
-					<Badge class="bg-lime-100 text-lime-600" variant="outline">
-						{Object.values(reviewRequest.review).filter((i) => i.status === 'approved').length}
-						<FileCheck2 class="ml-1" size="14" />
-						<span class="ml-1 font-normal">Approved</span>
-					</Badge>
+  <Card.Root class="mt-2">
+	<Card.Header>
+		<Card.Title>
+			<div class="flex flex-wrap items-center gap-1">
+				<Badge class="bg-lime-100 text-lime-600" variant="outline">
+					{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'approved').length}
+					<FileCheck2 class="ml-1" size="14" />
+					<span class="ml-1 font-normal">Approved</span>
+				</Badge>
 					<Badge class="bg-orange-100 text-orange-600" variant="outline">
-						{Object.values(reviewRequest.review).filter((i) => i.status === 'editsRequested')
-							.length}
+					{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'editsRequested')
+												.length}
 						<FileSearch2 class="ml-1" size="14" />
 						<span class="ml-1 font-normal">Requested Edits</span>
 					</Badge>
 					<Badge class="bg-red-100 text-red-500" variant="outline">
-						{Object.values(reviewRequest.review).filter((i) => i.status === 'rejected').length}
+					{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'rejected').length}
 						<FileX2 class="ml-1" size="14" />
 						<span class="ml-1 font-normal">Rejected</span>
 					</Badge>
 					<Badge class="bg-sky-100 text-sky-500" variant="outline">
-						{reviewRequest.applications.filter(
-							(i) => !Object.keys(reviewRequest?.review || {}).includes(i)
-						).length}
+					{(reviewRequest?.applications || []).filter(
+												(i) => !Object.keys(reviewRequest?.review || {}).includes(i)
+											).length}
 						<FileClock class="ml-1" size="14" />
 						<span class="ml-1 font-normal">Unreviewed</span>
 					</Badge>
@@ -173,7 +183,7 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each reviewRequest.expand?.applications || [] as application}
+				{#each (reviewRequest?.expand?.applications || []) as application}
 						<Table.Row>
 							<!-- Serial ID -->
 
@@ -206,7 +216,7 @@
 							<!-- Files -->
 
 							<Table.Cell>
-								{#each reviewRequest.review?.[application.id]?.files as file}
+							{#each (reviewRequest?.review?.[application.id]?.files || []) as file}
 									<Button
 										size="icon"
 										variant="outline"
