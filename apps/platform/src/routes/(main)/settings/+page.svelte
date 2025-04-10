@@ -26,7 +26,6 @@
         phone: account.phone,
         occupation: account.occupation,
         department: account.department,
-        year: account.year,
         language: account.language,
         disableNotify: account.disableNotify
       })
@@ -135,13 +134,9 @@
             </RadioGroup.Root>
           </div>
           {#if account.occupation === "student"}
-            <div>
+            <div class="col-span-2">
               <Label>Department</Label>
               <Input class="w-full" bind:value={account.department} on:blur={saveAccount} />
-            </div>
-            <div>
-              <Label>Year</Label>
-              <Input class="w-full" bind:value={account.year} on:blur={saveAccount} />
             </div>
           {/if}
         </Card.Content>

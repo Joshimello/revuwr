@@ -1,19 +1,13 @@
 <script lang="ts">
-	import Check from 'svelte-radix/Check.svelte';
-	import CaretSort from 'svelte-radix/CaretSort.svelte';
-	import { tick } from 'svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils.js';
-	import { departments } from '$lib/consts/departments';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-
-	type Department = {
-		code: string;
-		name_en: string;
-		name_zh: string;
-	};
+	import { departments } from '$lib/consts/departments';
+	import { cn } from '$lib/utils.js';
+	import { tick } from 'svelte';
+	import CaretSort from 'svelte-radix/CaretSort.svelte';
+	import Check from 'svelte-radix/Check.svelte';
 
 	let open = false;
 	export let value: string = '';
@@ -52,7 +46,7 @@
 					{#each departments as department}
 						<Command.Item
 							value={`${department.code} ${department.name_en} ${department.name_zh}`}
-							onSelect={(currentValue) => {
+							onSelect={() => {
 								value = department.code;
 								closeAndFocusTrigger(ids.trigger);
 							}}

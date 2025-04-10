@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { Label } from '$lib/components/ui/label';
-	import { Input } from '$lib/components/ui/input';
-	import { ArrowRight, ArrowLeft, Bird, UserPen, BriefcaseBusiness } from 'lucide-svelte';
-	import * as Card from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
-	import * as ToggleGroup from '$lib/components/ui/toggle-group';
-	import { pb } from '$lib/pocketbase/client';
-	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
 	import DepartmentPicker from '$lib/components/department-picker.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import { ArrowLeft, ArrowRight, Bird, BriefcaseBusiness, UserPen } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
 
 	export let data;
 	const { user } = data;
@@ -34,7 +32,7 @@
 		}
 	];
 
-	let page = 2;
+	let page = 0;
 
 	let values = {
 		language: '',
@@ -43,8 +41,7 @@
 		email: user?.email,
 		phone: '',
 		occupation: '',
-		department: '',
-		year: ''
+		department: ''
 	};
 
 	let isLoading = false;
@@ -132,16 +129,12 @@
 					</ToggleGroup.Item>
 				</ToggleGroup.Root>
 				{#if values.occupation == 'student'}
-					<div class="grid grid-cols-2 gap-6">
-						<div class="flex-1">
-							<Label>Department or Institute or Program</Label>
-							<DepartmentPicker bind:value={values.department} />
-						</div>
-						<div class="flex-1">
-							<Label>Year</Label>
-							<Input type="number" bind:value={values.year} min={0} max={10} />
-						</div>
+				<div class="grid grid-cols-1 gap-6">
+					<div class="flex-1">
+						<Label>Department or Institute or Program</Label>
+						<DepartmentPicker bind:value={values.department} />
 					</div>
+				</div>
 				{:else if values.occupation == 'teacher'}
 					<div class="grid grid-cols-1 gap-6">
 						<div class="flex-1">
@@ -185,18 +178,17 @@
 					toast.loading('Updating profile...');
 				}}
 			>
-				<input type="hidden" value={values.language} name="language" />
-				<input type="hidden" value={values.phone} name="phone" />
-				<input type="hidden" value={values.occupation} name="occupation" />
-				<input type="hidden" value={values.department} name="department" />
-				<input type="hidden" value={values.year} name="year" />
+			<input type="hidden" value={values.language} name="language" />
+			<input type="hidden" value={values.phone} name="phone" />
+			<input type="hidden" value={values.occupation} name="occupation" />
+			<input type="hidden" value={values.department} name="department" />
 				<Button
 					type="submit"
 					class="flex w-full items-center gap-2 md:w-auto"
 					disabled={isLoading ||
 						!(
 							values.occupation &&
-							(values.occupation == 'student' ? values.department && values.year : true)
+							(values.occupation == 'student' ? values.department : true)
 						)}
 				>
 					Finish <ArrowRight size="16" />
