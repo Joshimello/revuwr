@@ -1,29 +1,39 @@
 <script lang="ts">
-	import DepartmentPicker from '$lib/components/department-picker.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
-	import { Switch } from '$lib/components/ui/switch';
-	import { pb } from '$lib/pocketbase/client';
-	import type {
-		UsersLanguageOptions,
-		UsersOccupationOptions,
-		UsersResponse
-	} from '$lib/pocketbase/pocketbase-types';
-	import { ChevronLeft } from 'lucide-svelte';
-	import { toast } from 'svelte-sonner';
+  import DepartmentPicker from '$lib/components/department-picker.svelte';
+  import * as Alert from '$lib/components/ui/alert';
+  import { Button } from '$lib/components/ui/button';
+  import * as Card from '$lib/components/ui/card';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import * as RadioGroup from '$lib/components/ui/radio-group';
+  import { Switch } from '$lib/components/ui/switch';
+  import { pb } from '$lib/pocketbase/client';
+  import type {
+	UsersLanguageOptions,
+	UsersOccupationOptions,
+	UsersResponse
+  } from '$lib/pocketbase/pocketbase-types';
+  import { AlertTriangle, ChevronLeft } from 'lucide-svelte';
+  import { toast } from 'svelte-sonner';
 
 	export let data;
 	const { user } = data;
 
 	let account: UsersResponse | null = user;
 	let stringAccount: string | null = null;
+	const phoneRegex = /^(?:\+8869\d{8}|09\d{8})$/;
+	$: isPhoneValid = account?.phone ? phoneRegex.test(account.phone) : false;
+	$: hasPhoneNumber = account?.phone && account.phone.trim() !== '';
 
 	const saveAccount = async () => {
 		if (!account) return;
 		if (JSON.stringify(account) === stringAccount) return;
+		
+		// If phone number is provided but invalid, don't save
+		if (account.phone && !isPhoneValid) {
+			toast.error('Please enter a valid phone number before saving.');
+			return;
+		}
 
 		try {
 			account = await pb.collection('users').update(account.id, {
@@ -82,6 +92,15 @@
 		</div>
 		<div class="flex w-full flex-col gap-2">
 			<span class="text-xs text-muted-foreground">* All changes are saved automatically.</span>
+			{#if !hasPhoneNumber}
+				<Alert.Root variant="destructive">
+					<AlertTriangle class="h-4 w-4" />
+					<Alert.Title>Phone number required</Alert.Title>
+					<Alert.Description>
+						Please add a valid phone number to complete your profile. This is required for important communications.
+					</Alert.Description>
+				</Alert.Root>
+			{/if}
 
 			<Card.Root id="account">
 				<Card.Header>
@@ -110,8 +129,19 @@
 						<span class="text-xs text-muted-foreground">Cannot be changed.</span>
 					</div>
 					<div>
-						<Label>Phone number</Label>
-						<Input class="w-full" bind:value={account.phone} on:blur={saveAccount} />
+						<Label>
+							Phone number
+							{#if account.phone && !isPhoneValid}
+								<span class="text-destructive">(Invalid format)</span>
+							{/if}
+						</Label>
+						<Input 
+							class="w-full" 
+							bind:value={account.phone} 
+							on:blur={saveAccount} 
+							placeholder="+886912345678 or 0912345678"
+						/>
+						<span class="text-xs text-muted-foreground">* Phone number is mandatory for important communications.</span>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -157,7 +187,6 @@
 								<RadioGroup.Item value="zh" />
 								<Label>Chinese</Label>
 							</div>
-							<span class="text-xs text-muted-foreground">More languages coming soon!</span>
 						</RadioGroup.Root>
 					</div>
 				</Card.Content>
