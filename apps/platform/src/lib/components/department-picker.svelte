@@ -12,6 +12,7 @@
 	let open = false;
 	export let value: string = '';
 	export let lang: 'en' | 'zh' = 'en';
+	export let onDepartmentChange: ((value: string) => void) | undefined = undefined;
 
 	$: selectedValue =
 		departments.find((f) => f.code === value)?.[`name_${lang}`] ?? 'Select a department...';
@@ -21,6 +22,9 @@
 		tick().then(() => {
 			document.getElementById(triggerId)?.focus();
 		});
+		if (onDepartmentChange) {
+			onDepartmentChange(value);
+		}
 	}
 </script>
 
