@@ -73,6 +73,9 @@
 	"end_date": "End Date",
 	"delete_event_title": "Are you sure absolutely sure?",
 	"delete_event_desc": "This action cannot be undone. This will permanently delete the event and all associated data.",
+	"this_action_cannot_be_undone": "This action cannot be undone.",
+	"type_event_name_to_confirm": "Type {name} to confirm deletion.",
+	"cancel": "Cancel",
 
 	"editing_event_questions": "Editing Event Questions",
 	"page": "Page",
