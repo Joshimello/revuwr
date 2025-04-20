@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { pb, pbImage } from '$lib/pocketbase/client';
 	import { page } from '$app/stores';
-	import { toast } from 'svelte-sonner';
+	import ResponseRenderer from '$lib/components/response-renderer.svelte';
+	import { pb } from '$lib/pocketbase/client';
 	import type {
 		AnswersResponse,
 		ApplicationsResponse,
@@ -10,9 +9,8 @@
 		QuestionsResponse,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import MemberTable from '../../../(main)/response/[id]/member-table.svelte';
-	import ActivityTable from '../../../(main)/response/[id]/activity-table.svelte';
-	import ResponseRenderer from '$lib/components/response-renderer.svelte';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	type ExpandedApplication = ApplicationsResponse<{
 		event: EventsResponse;
@@ -125,7 +123,7 @@
 		</div>
 
 		<div class="flex items-center gap-4 text-xl leading-none">
-			<span class="text-muted-foreground">DEPARTMENT</span>
+			<span class="text-muted-foreground">COLLEGE</span>
 			<span class="">{responder.department}</span>
 		</div>
 
