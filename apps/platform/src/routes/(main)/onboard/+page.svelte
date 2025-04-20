@@ -129,16 +129,16 @@
 					</ToggleGroup.Item>
 				</ToggleGroup.Root>
 				{#if values.occupation == 'student'}
-				<div class="grid grid-cols-1 gap-6">
-					<div class="flex-1">
-						<Label>Department or Institute or Program</Label>
-						<DepartmentPicker bind:value={values.department} />
+					<div class="grid grid-cols-1 gap-6">
+						<div class="flex-1">
+							<Label>College or Institute or Program</Label>
+							<DepartmentPicker bind:value={values.department} />
+						</div>
 					</div>
-				</div>
 				{:else if values.occupation == 'teacher'}
 					<div class="grid grid-cols-1 gap-6">
 						<div class="flex-1">
-							<Label>Department or Institute or Program</Label>
+							<Label>College or Institute or Program</Label>
 							<DepartmentPicker bind:value={values.department} />
 						</div>
 					</div>
@@ -178,18 +178,15 @@
 					toast.loading('Updating profile...');
 				}}
 			>
-			<input type="hidden" value={values.language} name="language" />
-			<input type="hidden" value={values.phone} name="phone" />
-			<input type="hidden" value={values.occupation} name="occupation" />
-			<input type="hidden" value={values.department} name="department" />
+				<input type="hidden" value={values.language} name="language" />
+				<input type="hidden" value={values.phone} name="phone" />
+				<input type="hidden" value={values.occupation} name="occupation" />
+				<input type="hidden" value={values.department} name="department" />
 				<Button
 					type="submit"
 					class="flex w-full items-center gap-2 md:w-auto"
 					disabled={isLoading ||
-						!(
-							values.occupation &&
-							(values.occupation == 'student' ? values.department : true)
-						)}
+						!(values.occupation && (values.occupation == 'student' ? values.department : true))}
 				>
 					Finish <ArrowRight size="16" />
 				</Button>

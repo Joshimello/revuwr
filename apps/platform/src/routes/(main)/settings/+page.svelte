@@ -1,20 +1,20 @@
 <script lang="ts">
-  import DepartmentPicker from '$lib/components/department-picker.svelte';
-  import * as Alert from '$lib/components/ui/alert';
-  import { Button } from '$lib/components/ui/button';
-  import * as Card from '$lib/components/ui/card';
-  import { Input } from '$lib/components/ui/input';
-  import { Label } from '$lib/components/ui/label';
-  import * as RadioGroup from '$lib/components/ui/radio-group';
-  import { Switch } from '$lib/components/ui/switch';
-  import { pb } from '$lib/pocketbase/client';
-  import type {
-	UsersLanguageOptions,
-	UsersOccupationOptions,
-	UsersResponse
-  } from '$lib/pocketbase/pocketbase-types';
-  import { AlertTriangle, ChevronLeft } from 'lucide-svelte';
-  import { toast } from 'svelte-sonner';
+	import DepartmentPicker from '$lib/components/department-picker.svelte';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as RadioGroup from '$lib/components/ui/radio-group';
+	import { Switch } from '$lib/components/ui/switch';
+	import { pb } from '$lib/pocketbase/client';
+	import type {
+		UsersLanguageOptions,
+		UsersOccupationOptions,
+		UsersResponse
+	} from '$lib/pocketbase/pocketbase-types';
+	import { AlertTriangle, ChevronLeft } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
 
 	export let data;
 	const { user } = data;
@@ -28,7 +28,7 @@
 	const saveAccount = async () => {
 		if (!account) return;
 		if (JSON.stringify(account) === stringAccount) return;
-		
+
 		// If phone number is provided but invalid, don't save
 		if (account.phone && !isPhoneValid) {
 			toast.error('Please enter a valid phone number before saving.');
@@ -39,7 +39,7 @@
 			account = await pb.collection('users').update(account.id, {
 				phone: account.phone,
 				occupation: account.occupation,
-				department: account.department,
+				college: account.department,
 				language: account.language,
 				disableNotify: account.disableNotify
 			});
@@ -97,7 +97,8 @@
 					<AlertTriangle class="h-4 w-4" />
 					<Alert.Title>Phone number required</Alert.Title>
 					<Alert.Description>
-						Please add a valid phone number to complete your profile. This is required for important communications.
+						Please add a valid phone number to complete your profile. This is required for important
+						communications.
 					</Alert.Description>
 				</Alert.Root>
 			{/if}
@@ -135,13 +136,15 @@
 								<span class="text-destructive">(Invalid format)</span>
 							{/if}
 						</Label>
-						<Input 
-							class="w-full" 
-							bind:value={account.phone} 
-							on:blur={saveAccount} 
+						<Input
+							class="w-full"
+							bind:value={account.phone}
+							on:blur={saveAccount}
 							placeholder="+886912345678 or 0912345678"
 						/>
-						<span class="text-xs text-muted-foreground">* Phone number is mandatory for important communications.</span>
+						<span class="text-xs text-muted-foreground"
+							>* Phone number is mandatory for important communications.</span
+						>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -165,7 +168,7 @@
 					</div>
 					{#if account.occupation === 'student'}
 						<div class="col-span-2">
-							<Label>Department or Institute or Program</Label>
+							<Label>College or Institute or Program</Label>
 							<DepartmentPicker bind:value={account.department} onDepartmentChange={saveAccount} />
 						</div>
 					{/if}

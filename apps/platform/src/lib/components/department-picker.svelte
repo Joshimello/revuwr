@@ -3,19 +3,39 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import { departments } from '$lib/consts/departments';
+	import { pb } from '$lib/pocketbase/client';
 	import { cn } from '$lib/utils.js';
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import CaretSort from 'svelte-radix/CaretSort.svelte';
 	import Check from 'svelte-radix/Check.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let open = false;
 	export let value: string = '';
 	export let lang: 'en' | 'zh' = 'en';
 	export let onDepartmentChange: ((value: string) => void) | undefined = undefined;
 
+	let departments: { code: string; name_en: string; name_zh: string }[] = [];
+
+	const getColleges = async () => {
+		try {
+			const collegesData = await pb.collection('colleges').getFullList();
+			return collegesData.map((college) => ({
+				code: college.id,
+				name_en: college.en,
+				name_zh: college.zh
+			}));
+		} catch (err) {
+			toast.error('Error fetching colleges');
+		}
+	};
+
+	onMount(async () => {
+		departments = (await getColleges()) || [];
+	});
+
 	$: selectedValue =
-		departments.find((f) => f.code === value)?.[`name_${lang}`] ?? 'Select a department...';
+		departments.find((f) => f.code === value)?.[`name_${lang}`] ?? 'Select a college...';
 
 	function closeAndFocusTrigger(triggerId: string) {
 		open = false;
@@ -43,8 +63,8 @@
 	</Popover.Trigger>
 	<Popover.Content class="p-0">
 		<Command.Root>
-			<Command.Input placeholder="Search department..." class="h-9" />
-			<Command.Empty>No departments found.</Command.Empty>
+			<Command.Input placeholder="Search college..." class="h-9" />
+			<Command.Empty>No colleges found.</Command.Empty>
 			<Command.Group>
 				<ScrollArea class="h-48">
 					{#each departments as department}

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { pb } from '$lib/pocketbase/client';
 	import type {
 		AnswersResponse,
 		ApplicationsResponse,
@@ -8,7 +8,7 @@
 		QuestionsResponse,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { pb, pbImage } from '$lib/pocketbase/client';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	type ExpandedApplication = ApplicationsResponse<{
@@ -58,7 +58,7 @@
 					'Responder Email',
 					'Responder Phone',
 					'Responder Occupation',
-					'Responder Department',
+					'Responder College',
 					'Responder Year',
 					...(a.expand?.response.map((r) => r.expand?.question.title ?? r.question) ?? [])
 				];
@@ -84,7 +84,7 @@
 				row['Responder Email'] = a.expand?.responder.email ?? '';
 				row['Responder Phone'] = a.expand?.responder.phone ?? '';
 				row['Responder Occupation'] = a.expand?.responder.occupation ?? '';
-				row['Responder Department'] = a.expand?.responder.department ?? '';
+				row['Responder College'] = a.expand?.responder.department ?? '';
 				row['Responder Year'] = a.expand?.responder.year ?? '';
 
 				a.expand?.response.forEach((r) => {
