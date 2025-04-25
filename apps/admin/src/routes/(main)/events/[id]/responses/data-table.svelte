@@ -26,10 +26,10 @@
 	} from 'svelte-headless-table/plugins';
 	import { type Writable } from 'svelte/store';
 	import DataTableAction from './data-table-action.svelte';
-import DataTableCell from './data-table-cell.svelte';
-import DataTableCheckbox from './data-table-checkbox.svelte';
-import DataTableReviews from './data-table-reviews.svelte';
-import DataTableControl from './data-table-control.svelte';
+	import DataTableCell from './data-table-cell.svelte';
+	import DataTableCheckbox from './data-table-checkbox.svelte';
+	import DataTableControl from './data-table-control.svelte';
+	import DataTableReviews from './data-table-reviews.svelte';
 
 	type ExpandedApplications = ApplicationsResponse<{
 		responder: UsersResponse;
@@ -127,7 +127,7 @@ import DataTableControl from './data-table-control.svelte';
 					getSortValue: (value) => value.username
 				},
 				filter: {
-					getFilterValue: (value) => value.name + ` ${value.username}`
+					getFilterValue: (value) => (value?.name || '') + ` ${value?.username || ''}`
 				}
 			}
 		}),
@@ -231,7 +231,7 @@ import DataTableControl from './data-table-control.svelte';
 	event.questions.forEach((questionId) => {
 		hideForId[questionId] = false;
 	});
-	
+
 	// Hide Reviews and Controls columns by default
 	hideForId['reviews'] = false;
 	hideForId['controls'] = false;

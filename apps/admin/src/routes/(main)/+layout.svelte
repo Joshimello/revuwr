@@ -1,39 +1,36 @@
 <script lang="ts">
-	import {
-		CircleUser,
-		Bell,
-		Menu,
-		Search,
-		PanelsTopLeft,
-		CalendarFold,
-		Languages,
-		ALargeSmall
-	} from 'lucide-svelte';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Input } from '$lib/components/ui/input';
-	import * as Sheet from '$lib/components/ui/sheet';
-	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
-	import { type ComponentType } from 'svelte';
-	import { pb } from '$lib/pocketbase/client';
 	import { page } from '$app/stores';
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
+	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Popover from '$lib/components/ui/popover';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import * as Sheet from '$lib/components/ui/sheet';
+	import { Slider } from '$lib/components/ui/slider';
+	import { i18n } from '$lib/i18n.js';
 	import * as m from '$lib/paraglide/messages.js';
 	import { availableLanguageTags, languageTag } from '$lib/paraglide/runtime.js';
-	import { i18n } from '$lib/i18n.js';
-	import { PUBLIC_BASE_PATH } from '$env/static/public';
-	import * as Popover from '$lib/components/ui/popover';
-	import { Slider } from '$lib/components/ui/slider';
-  import { onMount } from 'svelte';
+	import { pb } from '$lib/pocketbase/client';
+	import {
+		ALargeSmall,
+		CalendarFold,
+		CircleUser,
+		Languages,
+		Menu,
+		PanelsTopLeft,
+		Settings2Icon
+	} from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
 	const user = pb.authStore.model;
 
 	let nav = [
 		{ icon: PanelsTopLeft, text: m.overview(), href: `${PUBLIC_BASE_PATH}/`, badge: 0 },
 		{ icon: CalendarFold, text: m.events(), href: `${PUBLIC_BASE_PATH}/events`, badge: 0 },
-		{ icon: CircleUser, text: m.users(), href: `${PUBLIC_BASE_PATH}/users`, badge: 0 }
+		{ icon: CircleUser, text: m.users(), href: `${PUBLIC_BASE_PATH}/users`, badge: 0 },
+		{ icon: Settings2Icon, text: m.settings(), href: `${PUBLIC_BASE_PATH}/settings`, badge: 0 }
 	];
 
 	$: breadcrumbs = (() => {
@@ -50,14 +47,16 @@
 		return paths;
 	})();
 
-  onMount(() => {
-    document.documentElement.style.setProperty('--font-multiplier', localStorage.getItem('font-multiplier') || '1');
-  })
-
+	onMount(() => {
+		document.documentElement.style.setProperty(
+			'--font-multiplier',
+			localStorage.getItem('font-multiplier') || '1'
+		);
+	});
 </script>
 
 <div class="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-	<div class="bg-muted/40 hidden border-r md:block">
+	<div class="hidden border-r bg-muted/40 md:block">
 		<div class="flex h-full max-h-screen flex-col gap-2">
 			<div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
 				<a href="{PUBLIC_BASE_PATH}/" class="flex items-center gap-2 font-semibold">
@@ -71,7 +70,7 @@
 					{#each nav as { icon, text, href, badge }}
 						<a
 							{href}
-							class="text-muted-foreground hover:text-primary flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
+							class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
 						>
 							<svelte:component this={icon} class="h-4 w-4" />
 							<span>
@@ -91,7 +90,7 @@
 		</div>
 	</div>
 	<div class="flex flex-col">
-		<header class="bg-muted/40 flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+		<header class="flex h-14 items-center border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
 			<Sheet.Root>
 				<Sheet.Trigger let:builder>
 					<Button variant="outline" size="icon" class="shrink-0 md:hidden" builders={[builder]}>
@@ -107,7 +106,7 @@
 						{#each nav as { icon, text, href, badge }}
 							<a
 								{href}
-								class="text-muted-foreground hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+								class="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
 							>
 								<svelte:component this={icon} class="h-4 w-4" />
 								<span>
@@ -157,13 +156,13 @@
 				</Popover.Trigger>
 				<Popover.Content>
 					<Slider
-            value={[parseFloat(localStorage.getItem('font-multiplier') || '1')]}
+						value={[parseFloat(localStorage.getItem('font-multiplier') || '1')]}
 						min={0.5}
 						max={2}
 						step={0.5}
 						onValueChange={(v) => {
 							document.documentElement.style.setProperty('--font-multiplier', v[0].toString());
-              localStorage.setItem('font-multiplier', v[0].toString());
+							localStorage.setItem('font-multiplier', v[0].toString());
 						}}
 					/>
 				</Popover.Content>

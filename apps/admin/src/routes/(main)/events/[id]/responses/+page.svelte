@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { ChevronLeft } from 'lucide-svelte';
 	import { page } from '$app/stores';
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { statuses } from '$lib/components/status.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as m from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
-	import { onMount } from 'svelte';
 	import type {
 		AnswersResponse,
 		ApplicationsResponse,
@@ -11,13 +12,13 @@
 		QuestionsResponse,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
+	import { ChevronLeft } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import DataTable from './data-table.svelte';
+	import { event as eventStore, reviewRequests } from '../overview/stores';
 	import DataTableBatch from './data-table-batch.svelte';
-	import * as m from '$lib/paraglide/messages.js';
-	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import DataTable from './data-table.svelte';
 	import { applications } from './stores';
-import { reviewRequests, event as eventStore } from '../overview/stores';
 
 	type ExpandedApplication = ApplicationsResponse<{
 		responder: UsersResponse;
@@ -49,7 +50,7 @@ import { reviewRequests, event as eventStore } from '../overview/stores';
 				expand: 'questions'
 			});
 			$eventStore = event;
-			
+
 			// Fetch review requests
 			const records = await pb.collection('reviews').getFullList({
 				filter: `applications.event?~"${$page.params.id}"`,
@@ -82,8 +83,22 @@ import { reviewRequests, event as eventStore } from '../overview/stores';
 		</span>
 	</Button>
 	<h1 class="text-lg font-semibold md:text-2xl">
-		{m.event_responses()}
+		{m.event_responses()} ({$applications.length})
 	</h1>
+</div>
+
+<div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+	{#each Object.entries(statuses) as [key, status]}
+		{#if ['draft', 'submitted', 'editsRequested', 'approved', 'rejected'].includes(key)}
+			<div class="flex flex-col items-center justify-center rounded-md border p-4">
+				<div class={`h-4 w-4 rounded-full ${status.classes}`}></div>
+				<div class="mt-2 text-nowrap text-sm font-medium">{status.label}</div>
+				<div class="text-xs text-muted-foreground">
+					{$applications.filter((app) => app.status === key).length}
+				</div>
+			</div>
+		{/if}
+	{/each}
 </div>
 
 {#if event && $applications.length > 0}
