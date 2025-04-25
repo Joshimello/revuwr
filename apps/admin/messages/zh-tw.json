@@ -50,6 +50,7 @@
 	"user": "使用者",
 	"status": "狀態",
 	"updated": "已更新",
+	"index": "Index",
 	"view_all": "看全部",
 	"review_requests": "評審請求",
 	"review_requests_desc": "此活動的最新評審請求。",
