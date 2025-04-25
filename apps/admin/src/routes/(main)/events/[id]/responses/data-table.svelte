@@ -51,6 +51,11 @@
 	export let data: Writable<ExpandedApplications[]>;
 	export let event: ExpandedEvents;
 
+	data.subscribe((items) => {
+		items.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
+		items.forEach((item, index) => (item.index = index + 1));
+	});
+
 	const table = createTable(data, {
 		sort: addSortBy(),
 		filter: addTableFilter({
@@ -94,6 +99,16 @@
 			header: '',
 			cell: ({ value }) => {
 				return createRender(DataTableAction, { record: value });
+			}
+		}),
+		table.column({
+			id: 'index',
+			accessor: 'index',
+			header: m.index(),
+			plugins: {
+				sort: {
+					disable: false
+				}
 			}
 		}),
 		table.column({
@@ -240,7 +255,7 @@
 		.filter(([, hide]) => !hide)
 		.map(([id]) => id);
 
-	const hiddenCols = ['checkbox', 'actions'];
+	const hiddenCols = ['checkbox', 'actions', 'index'];
 
 	if (localStorage.getItem('hideForId')) {
 		const filterValueFromLocalStorage = localStorage.getItem('filterValue') || '';

@@ -50,6 +50,7 @@
 	"user": "User",
 	"status": "Status",
 	"updated": "Updated",
+	"index": "Index",
 	"view_all": "View All",
 	"review_requests": "Review Requests",
 	"review_requests_desc": "Recent review requests of this event.",
