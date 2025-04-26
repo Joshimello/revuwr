@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { AnswersResponse, QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { pbImage } from '$lib/pocketbase/client';
-	import * as Table from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Table from '$lib/components/ui/table';
+	import { pbImage } from '$lib/pocketbase/client';
+	import type { AnswersResponse, QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 	import BudgetRenderer from './budget-renderer.svelte';
 
 	type ExpandedAnswer = AnswersResponse<
@@ -28,6 +28,16 @@
 			<span>{response.others}</span>
 		{:else}
 			<span>{question.options.choices[response.selected]}</span>
+		{/if}
+	{:else if question.type == 'checkbox'}
+		{#each [...response.selected] as selected, index}
+			{[...question.options.choices, response.others][
+				selected
+			]}{#if index < response.selected.length - 1}<span>, </span>
+			{/if}
+		{/each}
+		{#if response.selected.length == 0}
+			<span>No selection</span>
 		{/if}
 	{:else if question.type == 'budget'}
 		<Dialog.Root>
