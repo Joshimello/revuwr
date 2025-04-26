@@ -48,7 +48,7 @@ const getResource = async (access_token: string) => {
 			userid: '111000777',
 			name: '測試帳',
 			name_en: 'DEV USER',
-			email: 'dev@uwu.uwu'
+			email: 'joshualeanjw@gmail.com'
 		};
 	}
 
