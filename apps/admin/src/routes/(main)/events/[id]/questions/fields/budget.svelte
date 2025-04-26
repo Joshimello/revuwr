@@ -79,12 +79,12 @@
 		maxFinalTotal: 0
 	};
 
-	export let options: Option[] = [];
+	export let options: Option[] | null = [];
 
 	$: isInstanceofOptions = options instanceof Array;
 
 	onMount(() => {
-		if (!isInstanceofOptions) {
+		if (!isInstanceofOptions || !options) {
 			options = [{ ...newItem }];
 		}
 
@@ -157,7 +157,7 @@
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#each options as item, index}
+				{#each options || [] as item, index}
 					<Table.Row>
 						<Table.Cell>{index + 1}.</Table.Cell>
 						<Table.Cell>{item.name}</Table.Cell>
@@ -336,7 +336,7 @@
 											</DropdownMenu.Trigger>
 											<DropdownMenu.Content class="h-64 overflow-auto">
 												<DropdownMenu.Group>
-													{#each options as option, optionIndex}
+													{#each options || [] as option, optionIndex}
 														<DropdownMenu.Item
 															on:click={() => {
 																item.customFormula += `{${optionIndex + 1}P}`;
@@ -476,7 +476,7 @@
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#each options as item, index}
+				{#each Array.isArray(options) ? options : [] as item, index}
 					<Table.Row>
 						<Table.Cell>{index + 1}.</Table.Cell>
 						<Table.Cell class="text-nowrap">{item.name}</Table.Cell>
@@ -560,7 +560,7 @@
 							let total = 0;
 							let hasError = false;
 
-							options.forEach((item) => {
+							(Array.isArray(options) ? options : []).forEach((item) => {
 								let itemValue;
 
 								if (item.calculationMethod === 'default') {

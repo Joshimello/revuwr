@@ -49,36 +49,17 @@
 	}>;
 
 	let reviewRequest: ExpandedReviewsResponse | undefined = undefined;
-export let data;
-({ reviewRequest } = data);
+	export let data;
+	({ reviewRequest } = data);
 
-// Ensure reviewRequest has valid defaults for all properties
-if (reviewRequest) {
-  reviewRequest = {
-    ...reviewRequest,
-    expand: reviewRequest.expand || { applications: [] },
-    applications: reviewRequest.applications || [],
-    review: reviewRequest.review || {}
-  };
-}
-
-	const handleSubmitReviews = async () => {
-		if (!reviewRequest) return;
-		try {
-			await pb.collection('reviews').update(reviewRequest.id, {
-				status: 'submitted'
-			});
-			toast.success('Reviews submitted successfully');
-			pb.authStore.clear();
-			goto('/review/completed');
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-			}
-		}
-	};
+	if (reviewRequest) {
+		reviewRequest = {
+			...reviewRequest,
+			expand: reviewRequest.expand || { applications: [] },
+			applications: reviewRequest.applications || [],
+			review: reviewRequest.review || {}
+		};
+	}
 
 	let openedStatus: null | string = null;
 	let openedApplication: ExpandedApplication | null = null;
@@ -132,7 +113,7 @@ if (reviewRequest) {
 		</div>
 
 		<div class="mt-6 flex justify-end">
-			<Button variant="outline" href={`/export/${$page.params.id}`} target="_blank">
+			<Button variant="outline" href={`/review/${$page.params.id}/export`} target="_blank">
 				Download all as PDF
 			</Button>
 		</div>
@@ -140,30 +121,32 @@ if (reviewRequest) {
 </Card.Root>
 
 {#if reviewRequest?.review}
-  <Card.Root class="mt-2">
-	<Card.Header>
-		<Card.Title>
-			<div class="flex flex-wrap items-center gap-1">
-				<Badge class="bg-lime-100 text-lime-600" variant="outline">
-					{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'approved').length}
-					<FileCheck2 class="ml-1" size="14" />
-					<span class="ml-1 font-normal">Approved</span>
-				</Badge>
+	<Card.Root class="mt-2">
+		<Card.Header>
+			<Card.Title>
+				<div class="flex flex-wrap items-center gap-1">
+					<Badge class="bg-lime-100 text-lime-600" variant="outline">
+						{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'approved')
+							.length}
+						<FileCheck2 class="ml-1" size="14" />
+						<span class="ml-1 font-normal">Approved</span>
+					</Badge>
 					<Badge class="bg-orange-100 text-orange-600" variant="outline">
-					{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'editsRequested')
-												.length}
+						{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'editsRequested')
+							.length}
 						<FileSearch2 class="ml-1" size="14" />
 						<span class="ml-1 font-normal">Requested Edits</span>
 					</Badge>
 					<Badge class="bg-red-100 text-red-500" variant="outline">
-					{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'rejected').length}
+						{Object.values(reviewRequest?.review || {}).filter((i) => i.status === 'rejected')
+							.length}
 						<FileX2 class="ml-1" size="14" />
 						<span class="ml-1 font-normal">Rejected</span>
 					</Badge>
 					<Badge class="bg-sky-100 text-sky-500" variant="outline">
-					{(reviewRequest?.applications || []).filter(
-												(i) => !Object.keys(reviewRequest?.review || {}).includes(i)
-											).length}
+						{(reviewRequest?.applications || []).filter(
+							(i) => !Object.keys(reviewRequest?.review || {}).includes(i)
+						).length}
 						<FileClock class="ml-1" size="14" />
 						<span class="ml-1 font-normal">Unreviewed</span>
 					</Badge>
@@ -183,7 +166,7 @@ if (reviewRequest) {
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-				{#each (reviewRequest?.expand?.applications || []) as application}
+					{#each reviewRequest?.expand?.applications || [] as application}
 						<Table.Row>
 							<!-- Serial ID -->
 
@@ -216,7 +199,7 @@ if (reviewRequest) {
 							<!-- Files -->
 
 							<Table.Cell>
-							{#each (reviewRequest?.review?.[application.id]?.files || []) as file}
+								{#each reviewRequest?.review?.[application.id]?.files || [] as file}
 									<Button
 										size="icon"
 										variant="outline"
@@ -388,11 +371,9 @@ if (reviewRequest) {
 					<Dialog.Description>
 						{#if openedStatus === 'rejected'}
 							You are about to reject the application. If possible, please provide a reason for this
-							rejection, helping the applicant understand why their application was rejected.
-						{:else if openedStatus === 'editsRequested'}
-							You are about to make suggestions for edits to the application, which the applicant
-							can then make and resubmit for admins to review. Please provide comments explaining
-							what edits are needed.
+							rejection, helping the applicant understand why their application was rejected. can
+							then make and resubmit for admins to review. Please provide comments explaining what
+							edits are needed.
 						{:else if openedStatus === 'approved'}
 							You are about to approve the application. It is not necessary to provide a comment,
 							but you may do so if you wish.

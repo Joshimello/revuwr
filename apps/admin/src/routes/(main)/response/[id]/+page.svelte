@@ -1,18 +1,20 @@
 <script lang="ts">
+	import { page } from '$app/stores';
+	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import ResponseRenderer from '$lib/components/response-renderer.svelte';
+	import Status, { statuses } from '$lib/components/status.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		ChevronLeft,
-		Download,
-		Mail,
-		PenBox,
-		FileCheck,
-		FileOutput,
-		FileX,
-		MessageCircleReply
-	} from 'lucide-svelte';
-	import { pb, pbImage } from '$lib/pocketbase/client';
-	import { toast } from 'svelte-sonner';
-	import { onMount } from 'svelte';
+	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Input, type FormInputEvent } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as Popover from '$lib/components/ui/popover';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import { Switch } from '$lib/components/ui/switch';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import * as m from '$lib/paraglide/messages.js';
+	import { pb } from '$lib/pocketbase/client';
 	import type {
 		AnswersResponse,
 		ApplicationsResponse,
@@ -20,22 +22,18 @@
 		QuestionsResponse,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { page } from '$app/stores';
-	import * as Card from '$lib/components/ui/card';
-	import Status, { statuses } from '$lib/components/status.svelte';
-	import { Label } from '$lib/components/ui/label';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Textarea, type FormTextareaEvent } from '$lib/components/ui/textarea';
-	import * as Popover from '$lib/components/ui/popover';
-	import { Input, type FormInputEvent } from '$lib/components/ui/input';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import MemberTable from './member-table.svelte';
-	import ActivityTable from './activity-table.svelte';
-	import { Switch } from '$lib/components/ui/switch';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
-	import * as m from '$lib/paraglide/messages.js';
-	import ResponseRenderer from '$lib/components/response-renderer.svelte';
+	import {
+		ChevronLeft,
+		Download,
+		FileCheck,
+		FileOutput,
+		FileX,
+		Mail,
+		MessageCircleReply,
+		PenBox
+	} from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	type ExpandedApplication = ApplicationsResponse<{
 		event: EventsResponse;

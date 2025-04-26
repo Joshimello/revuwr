@@ -19,7 +19,6 @@
 		ArrowUpRight,
 		ChevronLeft,
 		CirclePlus,
-		Grid2x2Check,
 		Link2,
 		ListChecks,
 		ListPlus,
@@ -140,12 +139,12 @@
 									</div>
 								</Table.Cell>
 								<Table.Cell>
-								<div class="font-medium">
-									{application.expand?.responder?.name || 'Unknown user'}
-								</div>
-								<div class="hidden text-xs text-muted-foreground md:inline">
-									{application.expand?.responder?.email || 'No email'}
-								</div>
+									<div class="font-medium">
+										{application.expand?.responder?.name || 'Unknown user'}
+									</div>
+									<div class="hidden text-xs text-muted-foreground md:inline">
+										{application.expand?.responder?.email || 'No email'}
+									</div>
 								</Table.Cell>
 								<Table.Cell class="">
 									<Status type={application.status} />
@@ -186,18 +185,18 @@
 						{m.review_requests_desc()}
 					</Card.Description>
 				</div>
-				<Button
+				<!-- <Button
 					href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/overview` : ''}
 					size="sm"
 					class="ml-auto gap-1"
 				>
 					<Grid2x2Check size="16" />
 					{m.review_overview()}
-				</Button>
+				</Button> -->
 				<Button
 					href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/reviews/new` : ''}
 					size="sm"
-					class="ml-1 gap-1"
+					class="ml-auto gap-1"
 				>
 					<CirclePlus size="16" />
 					{m.new_review()}
@@ -234,29 +233,31 @@
 						{#each reviews as review}
 							<Table.Row>
 								<Table.Cell>
-								<div class="font-medium">{review.reviewerEmail || 'Unknown reviewer'}</div>
+									<div class="font-medium">{review.reviewerEmail || 'Unknown reviewer'}</div>
 								</Table.Cell>
 								<Table.Cell>
 									<Status type={review.status} />
 								</Table.Cell>
 								<Table.Cell>
 									<div class="flex items-center gap-1">
-									<Badge class="flex w-6 justify-end bg-lime-200 p-1" variant="outline">
-										{Object.values(review.review || {}).filter((i) => i?.status === 'approved')
-											.length}
-									</Badge>
-									<Badge class="flex w-6 justify-end bg-orange-200 p-1" variant="outline">
-										{Object.values(review.review || {}).filter(
-											(i) => i?.status === 'editsRequested'
-										).length}
-									</Badge>
-									<Badge class="flex w-6 justify-end bg-red-200 p-1" variant="outline">
-										{Object.values(review.review || {}).filter((i) => i?.status === 'rejected')
-											.length}
-									</Badge>
-									<Badge class="flex w-6 justify-end p-1" variant="outline">
-										{(review.applications || []).filter((i) => !Object.keys(review.review || {}).includes(i)).length}
-									</Badge>
+										<Badge class="flex w-6 justify-end bg-lime-200 p-1" variant="outline">
+											{Object.values(review.review || {}).filter((i) => i?.status === 'approved')
+												.length}
+										</Badge>
+										<Badge class="flex w-6 justify-end bg-orange-200 p-1" variant="outline">
+											{Object.values(review.review || {}).filter(
+												(i) => i?.status === 'editsRequested'
+											).length}
+										</Badge>
+										<Badge class="flex w-6 justify-end bg-red-200 p-1" variant="outline">
+											{Object.values(review.review || {}).filter((i) => i?.status === 'rejected')
+												.length}
+										</Badge>
+										<Badge class="flex w-6 justify-end p-1" variant="outline">
+											{(review.applications || []).filter(
+												(i) => !Object.keys(review.review || {}).includes(i)
+											).length}
+										</Badge>
 									</div>
 								</Table.Cell>
 								<Table.Cell class="text-right text-xs">

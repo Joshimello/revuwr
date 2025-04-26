@@ -44,9 +44,6 @@
 					<div class="font-medium">
 						{member.college}
 					</div>
-					<div class="hidden text-sm text-muted-foreground md:inline">
-						Y{member.year}
-					</div>
 				</Table.Cell>
 				<Table.Cell>
 					<Badge variant="secondary">
