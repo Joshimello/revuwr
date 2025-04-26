@@ -1,9 +1,17 @@
 import { fail, redirect, isRedirect } from '@sveltejs/kit';
 import type { ExpandedApplication } from './types.js';
 import type { Actions } from '@sveltejs/kit';
+import { render } from 'svelty-email';
+import SubmissionEmail from '$lib/emails/submission.svelte';
+
+// this code is haram
 
 export const actions: Actions = {
 	async submit({ params, locals }) {
+		// if (!params.id) {
+		// 	return fail(400, { message: 'Invalid application ID' });
+		// }
+
 		try {
 			const application = await locals.pb
 				.collection('applications')
@@ -37,11 +45,18 @@ export const actions: Actions = {
 				status: application.status == 'editsRequested' ? 'resubmitted' : 'submitted'
 			});
 
+			const submissionEmail = render({
+				template: SubmissionEmail,
+				props: {
+					application: application
+				}
+			});
+
 			await locals.rs.emails.send({
 				from: 'Revuwr <revuwr@mail.nthumods.com>',
 				to: [locals.user.email],
 				subject: '[REVUWR] Application Submitted',
-				html: `Your application ${application.id} has been submitted.`
+				html: submissionEmail
 			});
 
 			return redirect(303, `/application/${params.id}/complete`);
