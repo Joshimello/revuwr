@@ -1,13 +1,14 @@
 <script lang="ts">
-	import type { ExpandedResponse } from './types';
-	import questionTypes from './question-types';
-	import { Button } from '$lib/components/ui/button';
+	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
-	import { updateAnswer } from './methods';
-	import { answers, currentIndex, isReadOnly } from './stores';
-	import { toast } from 'svelte-sonner';
+	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { Info } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
+	import { updateAnswer } from './methods';
+	import questionTypes from './question-types';
+	import { answers, currentIndex, isReadOnly } from './stores';
+	import type { ExpandedResponse } from './types';
 
 	export let content: ExpandedResponse;
 	const question = content.expand?.question;
@@ -51,6 +52,15 @@
 			bind:checkValid
 		/>
 	</div>
+
+	{#if $answers[$currentIndex].comment}
+		<Alert.Root variant="destructive">
+			<Alert.Title>Comments</Alert.Title>
+			<Alert.Description>
+				{$answers[$currentIndex].comment}
+			</Alert.Description>
+		</Alert.Root>
+	{/if}
 
 	{#if !$isReadOnly}
 		{#key value}
