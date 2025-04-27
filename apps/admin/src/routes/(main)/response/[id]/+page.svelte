@@ -34,6 +34,7 @@
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import ResponseEditor from './response-editor.svelte';
 
 	type ExpandedApplication = ApplicationsResponse<{
 		event: EventsResponse;
@@ -251,26 +252,6 @@
 			}
 		}
 	};
-
-	const editTextareas: Record<string, HTMLTextAreaElement> = {};
-	const handleEditSave = async (answerId: string) => {
-		try {
-			const index = response.findIndex((i) => i.id == answerId);
-			if (!editTextareas[answerId]) return;
-			if (index == -1) return;
-			await pb.collection('answers').update(answerId, {
-				response: JSON.parse(editTextareas[answerId].value)
-			});
-			response[index].response = JSON.parse(editTextareas[answerId].value);
-			toast.success('Response saved');
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-			}
-		}
-	};
 </script>
 
 <div class="flex items-center gap-4">
@@ -306,34 +287,7 @@
 							<ResponseRenderer data={answer} />
 
 							<div class="flex gap-1">
-								<Popover.Root>
-									<Popover.Trigger asChild let:builder>
-										<Button
-											builders={[builder]}
-											size="icon"
-											variant="secondary"
-											class="h-7 w-7 hover:bg-sky-500 hover:text-white"
-										>
-											<PenBox size="16" />
-										</Button>
-									</Popover.Trigger>
-									<Popover.Content class="flex h-96 flex-col gap-2">
-										<textarea
-											class="w-full flex-1 bg-transparent font-mono text-sm"
-											value={JSON.stringify(answer.response, null, 1)}
-											bind:this={editTextareas[answer.id]}
-										/>
-										<Button
-											size="sm"
-											variant="secondary"
-											on:click={() => {
-												handleEditSave(answer.id);
-											}}
-										>
-											{m.edit_response()}
-										</Button>
-									</Popover.Content>
-								</Popover.Root>
+								<ResponseEditor {response} {answer} />
 
 								{#if answer.status == 'edit'}
 									<Button
@@ -346,14 +300,6 @@
 									>
 										<MessageCircleReply size="16" />
 									</Button>
-									<Input
-										type="text"
-										class="h-7"
-										bind:value={answer.comment}
-										on:blur={() => {
-											handleSaveComment(answer.id);
-										}}
-									/>
 								{:else}
 									<Button
 										size="icon"
@@ -366,6 +312,14 @@
 										<MessageCircleReply size="16" />
 									</Button>
 								{/if}
+								<Input
+									type="text"
+									class="h-7"
+									bind:value={answer.comment}
+									on:blur={() => {
+										handleSaveComment(answer.id);
+									}}
+								/>
 							</div>
 						</div>
 					{/each}
