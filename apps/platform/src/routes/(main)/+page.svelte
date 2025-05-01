@@ -6,6 +6,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Progress } from '$lib/components/ui/progress';
 	import * as Tabs from '$lib/components/ui/tabs';
+	import { m } from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
 	import type {
 		AnswersResponse,
@@ -58,8 +59,8 @@
 			<Tabs.Root value="active">
 				<div class="flex items-center justify-between">
 					<Tabs.List>
-						<Tabs.Trigger value="active">Active</Tabs.Trigger>
-						<Tabs.Trigger value="archived">Archived</Tabs.Trigger>
+						<Tabs.Trigger value="active">{m.tabs_active()}</Tabs.Trigger>
+						<Tabs.Trigger value="archived">{m.tabs_archived()}</Tabs.Trigger>
 					</Tabs.List>
 					<div>
 						<Button
@@ -69,7 +70,7 @@
 							on:click={getApplications}
 						>
 							<RefreshCcw size="14" />
-							Refresh
+							{m.button_refresh()}
 						</Button>
 					</div>
 				</div>
@@ -78,10 +79,9 @@
 					{#if editableApplications.length > 0}
 						<div class="flex flex-col pb-6">
 							<div class="mx-2 mb-4 mt-2 flex flex-col">
-								<span class="text-2xl"> Applications in progress </span>
+								<span class="text-2xl">{m.applications_in_progress_title()}</span>
 								<span class="text-sm text-muted-foreground">
-									There are {editableApplications.length} application(s) in progress waiting for you
-									to complete.
+									{m.applications_in_progress_description({ count: editableApplications.length })}
 								</span>
 							</div>
 							<div class="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -100,18 +100,21 @@
 											</span>
 											<div>
 												<Status type={application.status} />
-												<Badge variant="outline">Updated {format(application.updated)}</Badge>
+												<Badge variant="outline"
+													>{m.badge_updated({ time: format(application.updated) })}</Badge
+												>
 											</div>
 										</Card.Header>
 										<Card.Content>
 											<div class="flex items-end gap-2">
 												<div class="flex w-full flex-col gap-1">
 													<div class="flex items-center gap-1">
-														<Badge variant="secondary" class="text-muted-foreground">
-															<span class="text-foreground"
-																>{application.expand?.response.filter((i) => i.valid).length}</span
-															>/{application.response.length}
-															Completed
+														<Badge variant="secondary" class="text-muted-foreground"
+															>{m.badge_completed({
+																completed:
+																	application.expand?.response.filter((i) => i.valid).length ?? 0,
+																total: application.response.length
+															})}
 														</Badge>
 													</div>
 													<Progress
@@ -143,9 +146,9 @@
 					{#if otherApplications.length > 0}
 						<div class="flex flex-col pb-12">
 							<div class="mx-2 mb-4 mt-2 flex flex-col">
-								<span class="text-2xl"> Other active applications </span>
+								<span class="text-2xl">{m.other_active_applications_title()}</span>
 								<span class="text-sm text-muted-foreground">
-									All other applications that are going on but no action is required from you.
+									{m.other_active_applications_description()}
 								</span>
 							</div>
 							<div class="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -185,9 +188,9 @@
 
 					{#if activeApplications.length == 0}
 						<div class="flex flex-col items-center gap-1">
-							<h3 class="text-2xl font-bold tracking-tight">No applications found</h3>
+							<h3 class="text-2xl font-bold tracking-tight">{m.no_applications_found_title()}</h3>
 							<p class="text-sm text-muted-foreground">
-								You have not submitted any applications yet.
+								{m.no_applications_found_description()}
 							</p>
 						</div>
 					{/if}
@@ -196,10 +199,9 @@
 					{#if archivedApplications.length > 0}
 						<div class="flex flex-col pb-6">
 							<div class="mx-2 mb-4 mt-2 flex flex-col">
-								<span class="text-2xl"> Archived applications </span>
+								<span class="text-2xl">{m.archived_applications_title()}</span>
 								<span class="text-sm text-muted-foreground">
-									{archivedApplications.length} application(s) have been archived. You can no longer
-									edit them, but you can still view them.
+									{m.archived_applications_description({ count: archivedApplications.length })}
 								</span>
 							</div>
 							<div class="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -260,9 +262,11 @@
 
 					{#if archivedApplications.length == 0}
 						<div class="flex flex-col items-center gap-1">
-							<h3 class="text-2xl font-bold tracking-tight">No archived applications found</h3>
+							<h3 class="text-2xl font-bold tracking-tight">
+								{m.no_archived_applications_found_title()}
+							</h3>
 							<p class="text-sm text-muted-foreground">
-								No applications you have submitted have been archived.
+								{m.no_archived_applications_found_description()}
 							</p>
 						</div>
 					{/if}
@@ -276,10 +280,10 @@
 	>
 		<div class="flex flex-col items-center gap-1 text-center">
 			<h3 class="text-2xl font-bold tracking-tight">
-				Welcome to {PUBLIC_ACME}'s application platform
+				{m.login_welcome({ name: PUBLIC_ACME })}
 			</h3>
-			<p class="mb-4 text-sm text-muted-foreground">Start by logging in to your account.</p>
-			<Button href="/api/auth/signin">Login</Button>
+			<p class="mb-4 text-sm text-muted-foreground">{m.login_prompt()}</p>
+			<Button href="/api/auth/signin">{m.login_button()}</Button>
 		</div>
 	</div>
 {/if}

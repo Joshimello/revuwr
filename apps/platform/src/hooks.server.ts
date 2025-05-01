@@ -4,8 +4,20 @@ import { env } from '$env/dynamic/private';
 import type { UsersResponse } from '$lib/pocketbase/pocketbase-types';
 import { Resend } from 'resend';
 import type { Handle } from '@sveltejs/kit';
+import { paraglideMiddleware } from '$lib/paraglide/server';
+import { sequence } from '@sveltejs/kit/hooks';
 
-export const handle: Handle = async ({ event, resolve }) => {
+const paraglideHandle: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request: localizedRequest, locale }) => {
+		event.request = localizedRequest;
+		return resolve(event, {
+			transformPageChunk: ({ html }) => {
+				return html.replace('%lang%', locale);
+			}
+		});
+	});
+
+const defaultHandle: Handle = async ({ event, resolve }) => {
 	event.locals.pb = new Pocketbase(PUBLIC_PB_URL);
 	event.locals.pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '');
 
@@ -32,3 +44,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 	);
 	return response;
 };
+
+export const handle: Handle = sequence(paraglideHandle, defaultHandle);
