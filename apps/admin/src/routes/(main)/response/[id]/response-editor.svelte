@@ -63,7 +63,7 @@
 			<PenBox size="16" />
 		</Button>
 	</Popover.Trigger>
-	<Popover.Content class="flex h-96 w-[calc(100%-4rem)] flex-col gap-2">
+	<Popover.Content class="flex h-96 max-h-96 w-[calc(100%-4rem)] flex-col gap-2 overflow-auto">
 		{#if answer.expand?.question.type == 'budget'}
 			<Budget
 				question={answer.expand.question}

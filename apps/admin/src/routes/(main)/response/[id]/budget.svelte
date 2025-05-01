@@ -35,6 +35,8 @@
 		minTotal: number;
 		description: string;
 		requestExplaination: boolean;
+		explaination: string;
+		comment: string;
 		minFinalTotal: number;
 		maxFinalTotal: number;
 	}[];
@@ -258,7 +260,8 @@
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-96 align-top">
-							<Textarea class="mt-2" placeholder="..." bind:value={item.description} />
+							<Textarea class="mt-2" placeholder="" bind:value={item.explaination} disabled />
+							<Textarea class="mt-2" placeholder="修改說明" bind:value={item.comment} />
 						</Table.Cell>
 					</Table.Row>
 				{/each}

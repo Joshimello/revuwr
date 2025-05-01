@@ -7,7 +7,7 @@
 	import { toast } from 'svelte-sonner';
 	import { updateAnswer } from './methods';
 	import questionTypes from './question-types';
-	import { answers, currentIndex, isReadOnly } from './stores';
+	import { answers, application, currentIndex, isReadOnly } from './stores';
 	import type { ExpandedResponse } from './types';
 
 	export let content: ExpandedResponse;
@@ -62,7 +62,7 @@
 		</Alert.Root>
 	{/if}
 
-	{#if !$isReadOnly}
+	{#if !$isReadOnly || ($currentIndex === $answers.length - 1 && $application?.status === 'editsRequested')}
 		{#key value}
 			<div class="sticky bottom-20 mt-24 flex items-center gap-2 md:bottom-24">
 				{#if $currentIndex < $answers.length - 1}
@@ -100,7 +100,13 @@
 					>
 						<Button
 							size="lg"
-							disabled={isLoading || (checkValid && !checkValid()[0])}
+							disabled={isLoading ||
+								(checkValid &&
+									!checkValid()[0] &&
+									!(
+										$currentIndex === $answers.length - 1 &&
+										$application?.status === 'editsRequested'
+									))}
 							type="submit"
 						>
 							Submit Application
