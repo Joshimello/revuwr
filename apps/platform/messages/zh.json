@@ -44,5 +44,22 @@
 	"language_option_en": "英文",
 	"language_option_zh": "中文",
 	"section_notifications": "通知",
-	"disable_notify_label": "停用電子郵件通知"
+	"disable_notify_label": "停用電子郵件通知",
+	"button_back": "返回",
+	"app_readonly_title": "此申請目前為唯讀狀態。",
+	"app_readonly_description": "您將只能檢視您的回答，無法進行修改。<br/>如需變更，請聯絡活動主辦單位。",
+	"button_next": "下一步",
+	"question_of": "第 {current} 題，共 {total} 題",
+	"badge_valid": "有效",
+	"badge_invalid": "無效",
+	"loading_or_not_found": "載入中或未找到",
+	"required_badge": "必填",
+	"optional_badge": "選填",
+	"button_continue": "繼續",
+	"error_update_answer": "更新回答失敗",
+	"toast_submitting_application": "正在提交申請…",
+	"button_submit_application": "提交申請",
+	"tooltip_question_saved": "點擊繼續後題目將會儲存",
+	"alert_comments_title": "留言",
+	"invalid_question": "無效的題目"
 }
