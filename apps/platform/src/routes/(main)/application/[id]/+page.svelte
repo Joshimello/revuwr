@@ -11,6 +11,7 @@
 	import { Info } from 'lucide-svelte';
 	import Status from '$lib/components/status.svelte';
 	import { ChevronLeft } from 'svelte-radix';
+	import { m } from '$lib/paraglide/messages.js';
 
 	onMount(async () => {
 		$application = (await getApplication($page.params.id)) ?? null;
@@ -22,7 +23,7 @@
 <div class="flex items-center gap-4">
 	<Button variant="outline" size="icon" class="h-7 w-7" href="/">
 		<ChevronLeft class="h-4 w-4" />
-		<span class="sr-only">Back</span>
+		<span class="sr-only">{m.button_back()}</span>
 	</Button>
 </div>
 
@@ -48,11 +49,8 @@
 			{#if $isReadOnly}
 				<Alert.Root>
 					<Info class="h-4 w-4" />
-					<Alert.Title class="font-bold">This application is currently read-only.</Alert.Title>
-					<Alert.Description>
-						You will be able to view your responses but you will not be able to edit them. <br /> If
-						you need to make changes, please contact the event organizer.
-					</Alert.Description>
+					<Alert.Title class="font-bold">{m.app_readonly_title()}</Alert.Title>
+					<Alert.Description>{@html m.app_readonly_description()}</Alert.Description>
 				</Alert.Root>
 			{/if}
 
@@ -65,17 +63,17 @@
 					}}
 					disabled={$currentIndex === 0}
 				>
-					{'<-'} &nbsp; Back
+				{'<-'}&nbsp;{m.button_back()}
 				</Button>
 				<div class="flex gap-2">
 					<Status type={$application.status} />
 					<span class="text-sm text-muted-foreground">
-						Question {$currentIndex + 1} of {$answers.length}
-					</span>
+    {m.question_of({ current: $currentIndex + 1, total: $answers.length })}
+</span>
 					{#if $answers[$currentIndex].valid}
-						<Badge variant="outline">Valid</Badge>
+					<Badge variant="outline">{m.badge_valid()}</Badge>
 					{:else}
-						<Badge variant="default">Invalid</Badge>
+					<Badge variant="default">{m.badge_invalid()}</Badge>
 					{/if}
 				</div>
 				<Button
@@ -86,12 +84,12 @@
 					}}
 					disabled={!$isReadOnly || $currentIndex === $answers.length - 1}
 				>
-					Next &nbsp; {'->'}
+				{m.button_next()}&nbsp;{'->'}
 				</Button>
 			</div>
 			<Progress value={(($answers.filter((i) => i.valid).length || 0) / $answers.length) * 100} />
 		</div>
 	</div>
 {:else}
-	<div>Loading or not found</div>
+<div>{m.loading_or_not_found()}</div>
 {/if}

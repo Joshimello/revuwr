@@ -44,5 +44,22 @@
 	"language_option_en": "English",
 	"language_option_zh": "Chinese",
 	"section_notifications": "Notifications",
-	"disable_notify_label": "Disable sending notifications to email"
+	"disable_notify_label": "Disable sending notifications to email",
+	"button_back": "Back",
+	"app_readonly_title": "This application is currently read-only.",
+	"app_readonly_description": "You will be able to view your responses but you will not be able to edit them.<br/>If you need to make changes, please contact the event organizer.",
+	"button_next": "Next",
+	"question_of": "Question {current} of {total}",
+	"badge_valid": "Valid",
+	"badge_invalid": "Invalid",
+	"loading_or_not_found": "Loading or not found",
+	"required_badge": "Required",
+	"optional_badge": "Optional",
+	"button_continue": "Continue",
+	"error_update_answer": "Failed to update answer",
+	"toast_submitting_application": "Submitting application...",
+	"button_submit_application": "Submit Application",
+	"tooltip_question_saved": "Question will be saved once you click continue",
+	"alert_comments_title": "Comments",
+	"invalid_question": "Invalid question"
 }
