@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import CountryPicker from '$lib/components/country-picker.svelte';
 	import DepartmentPicker from '$lib/components/department-picker.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
 	import * as Table from '$lib/components/ui/table';
 	import type { QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { CirclePlus, Trash } from 'lucide-svelte';
@@ -26,7 +26,7 @@
 		email: string;
 		phone: string;
 		department: string;
-		status: string;
+		country: string;
 	}[];
 
 	export const checkValid = () => {
@@ -56,7 +56,7 @@
 					email: user.email,
 					phone: user.phone,
 					department: user.department,
-					status: ''
+					country: ''
 				}
 			];
 		}
@@ -68,7 +68,7 @@
 		email: '',
 		phone: '',
 		department: '',
-		status: ''
+		country: ''
 	};
 
 	let open = false;
@@ -81,12 +81,15 @@
 		newMember.name &&
 		newMember.username &&
 		newMember.department &&
-		newMember.status &&
+		newMember.country &&
 		isPhoneValid &&
 		isEmailValid;
 
 	const handleDepartmentChange = (value: string) => {
 		newMember.department = value;
+	};
+	const handleCountryChange = (value: string) => {
+		newMember.country = value;
 	};
 
 	const handleAdd = () => {
@@ -98,7 +101,7 @@
 			email: '',
 			phone: '',
 			department: '',
-			status: ''
+			country: ''
 		};
 	};
 </script>
@@ -111,7 +114,7 @@
 					<Table.Head>Member</Table.Head>
 					<Table.Head>Contact</Table.Head>
 					<Table.Head>Dept/Grade</Table.Head>
-					<Table.Head>Status</Table.Head>
+					<Table.Head>Country</Table.Head>
 					<Table.Head></Table.Head>
 				</Table.Row>
 			</Table.Header>
@@ -134,7 +137,7 @@
 							<div class="font-medium">{member.department}</div>
 						</Table.Cell>
 						<Table.Cell>
-							<Badge variant="secondary">{member.status}</Badge>
+							<Badge variant="secondary">{member.country}</Badge>
 						</Table.Cell>
 						<Table.Cell class="text-end">
 							{#if index > 0}
@@ -201,18 +204,13 @@
 								onDepartmentChange={handleDepartmentChange}
 							/>
 						</div>
-						<div class="">
-							<Label>Nationality status</Label>
-							<RadioGroup.Root class="mt-1" bind:value={newMember.status}>
-								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="local" />
-									<Label>Local</Label>
-								</div>
-								<div class="flex items-center space-x-2">
-									<RadioGroup.Item value="foreigner" />
-									<Label>Foreigner</Label>
-								</div>
-							</RadioGroup.Root>
+						<div class="md:col-span-2">
+							<Label>Country</Label>
+							<CountryPicker
+								bind:value={newMember.country}
+								onCountryChange={handleCountryChange}
+								lang="en"
+							/>
 						</div>
 						<Button class="mt-6 md:col-span-2" on:click={handleAdd} disabled={!isFormValid}>
 							Add member

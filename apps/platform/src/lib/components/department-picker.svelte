@@ -12,8 +12,11 @@
 
 	let open = false;
 	export let value: string = '';
-	export let lang: 'en' | 'zh' = 'en';
-	export let onDepartmentChange: ((value: string) => void) | undefined = undefined;
+export let lang: 'en' | 'zh' = 'en';
+export let onDepartmentChange: ((value: string) => void) | undefined = undefined;
+
+// Internal ID tracking to maintain selection state
+let selectedId: string = '';
 
 	let departments: { code: string; name_en: string; name_zh: string }[] = [];
 
@@ -34,8 +37,24 @@
 		departments = (await getColleges()) || [];
 	});
 
+	$: {
+		// Initialize or update selectedId when departments load or value changes
+		const matchingDept = departments.find((f) => f.name_zh === value);
+		if (matchingDept) {
+			selectedId = matchingDept.code;
+		} else if (departments.length > 0 && !selectedId && value) {
+			// Try to find a department by ID for backward compatibility
+			const deptById = departments.find((f) => f.code === value);
+			if (deptById) {
+				selectedId = deptById.code;
+				// Update the exported value to be name_zh
+				value = deptById.name_zh;
+			}
+		}
+	}
+
 	$: selectedValue =
-		departments.find((f) => f.code === value)?.[`name_${lang}`] ?? 'Select a college...';
+		departments.find((f) => f.code === selectedId)?.[`name_${lang}`] ?? 'Select a college...';
 
 	function closeAndFocusTrigger(triggerId: string) {
 		open = false;
@@ -71,13 +90,14 @@
 						<Command.Item
 							value={`${department.code} ${department.name_en} ${department.name_zh}`}
 							onSelect={() => {
-								value = department.code;
+								selectedId = department.code;
+								value = department.name_zh;
 								closeAndFocusTrigger(ids.trigger);
 							}}
 						>
-							<Check
-								class={cn('mr-2 h-4 w-4 shrink-0', value !== department.code && 'text-transparent')}
-							/>
+						<Check
+							class={cn('mr-2 h-4 w-4 shrink-0', selectedId !== department.code && 'text-transparent')}
+						/>
 							{department[`name_${lang}`]}
 						</Command.Item>
 					{/each}
