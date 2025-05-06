@@ -1,33 +1,33 @@
 <script lang="ts">
+	import CountryPicker from '$lib/components/country-picker.svelte';
 	import DepartmentPicker from '$lib/components/department-picker.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import { m } from '$lib/paraglide/messages.js';
+	import { getLocale, setLocale } from '$lib/paraglide/runtime.js';
 	import { ArrowLeft, ArrowRight, Bird, BriefcaseBusiness, UserPen } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	export let data;
 	const { user } = data;
 
-	const stages = [
+	$: stages = [
 		{
-			title: 'Welcome! Lets get you started',
-			description:
-				"Before anything, what language would you prefer? Don't worry, you will be able to change this anytime in your user settings later.",
+			title: m.onboard_welcome_title(),
+			description: m.onboard_welcome_description(),
 			icon: Bird
 		},
 		{
-			title: 'Basic Information',
-			description:
-				'We need some basic information to get you started. You will have the options to modify this later as well.',
+			title: m.onboard_basic_info_title(),
+			description: m.onboard_basic_info_description(),
 			icon: UserPen
 		},
 		{
-			title: 'Occupation status',
-			description:
-				'Are you a student or a staff member? This will help us to provide you with the right resources.',
+			title: m.onboard_occupation_title(),
+			description: m.onboard_occupation_description(),
 			icon: BriefcaseBusiness
 		}
 	];
@@ -35,10 +35,11 @@
 	let page = 0;
 
 	let values = {
-		language: '',
+		language: getLocale(),
 		name: user?.name,
 		username: user?.username,
 		email: user?.email,
+		country: '',
 		phone: '',
 		occupation: '',
 		department: ''
@@ -68,43 +69,54 @@
 					type="single"
 					class="grid w-full grid-cols-2"
 					bind:value={values.language}
+					onValueChange={(v) => {
+						if (getLocale() != v) {
+							setLocale(v, {
+								reload: true
+							});
+						}
+					}}
 				>
 					<ToggleGroup.Item
 						value="en"
 						class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
 					>
-						English
+						{m.language_option_en()}
 					</ToggleGroup.Item>
 					<ToggleGroup.Item
 						value="zh"
 						class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
 					>
-						中文
+						{m.language_option_zh()}
 					</ToggleGroup.Item>
 				</ToggleGroup.Root>
 			</div>
 		{:else if page == 1}
 			<div class="grid grid-cols-2 gap-6">
 				<div class="flex-1">
-					<Label>Full Name</Label>
+					<Label>{m.onboard_fullname()}</Label>
 					<Input type="text" bind:value={values.name} disabled />
 				</div>
 				<div class="flex-1">
-					<Label>Student or Staff ID</Label>
+					<Label>{m.onboard_student_staff_id()}</Label>
 					<Input type="text" bind:value={values.username} disabled />
 				</div>
 				<div class="flex-1">
-					<Label>Email</Label>
+					<Label>{m.onboard_email()}</Label>
 					<Input type="text" bind:value={values.email} disabled />
 				</div>
 				<div class="flex-1">
 					<Label>
-						Phone number
+						{m.onboard_phone()}
 						{#if values.phone && !isPhoneValid}
-							<span class:text-destructive={true}>(Invalid mobile number)</span>
+							<span class:text-destructive={true}>{m.onboard_phone_invalid()}</span>
 						{/if}
 					</Label>
 					<Input type="text" bind:value={values.phone} />
+				</div>
+				<div class="flex-1">
+					<Label>{m.onboard_country()}</Label>
+					<CountryPicker bind:value={values.country} lang={'en'} />
 				</div>
 			</div>
 		{:else if page == 2}
@@ -119,26 +131,26 @@
 						value="student"
 						class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
 					>
-						Student
+						{m.onboard_student()}
 					</ToggleGroup.Item>
 					<ToggleGroup.Item
 						value="teacher"
 						class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
 					>
-						Staff
+						{m.onboard_staff()}
 					</ToggleGroup.Item>
 				</ToggleGroup.Root>
 				{#if values.occupation == 'student'}
 					<div class="grid grid-cols-1 gap-6">
 						<div class="flex-1">
-							<Label>College or Institute or Program</Label>
+							<Label>{m.onboard_department()}</Label>
 							<DepartmentPicker bind:value={values.department} />
 						</div>
 					</div>
 				{:else if values.occupation == 'teacher'}
 					<div class="grid grid-cols-1 gap-6">
 						<div class="flex-1">
-							<Label>College or Institute or Program</Label>
+							<Label>{m.onboard_department()}</Label>
 							<DepartmentPicker bind:value={values.department} />
 						</div>
 					</div>
@@ -153,29 +165,39 @@
 				disabled={!values.language}
 				on:click={() => (page = 1)}
 			>
-				Next <ArrowRight size="16" />
+				{m.onboard_next()}
+				<ArrowRight size="16" />
 			</Button>
 		{:else if page == 1}
 			<Button class="flex items-center gap-2" on:click={() => (page = 0)}>
-				<ArrowLeft size="16" /> Back
+				<ArrowLeft size="16" />
+				{m.onboard_back()}
 			</Button>
 			<Button
 				class="flex w-full items-center gap-2 md:w-auto"
-				disabled={!(values.name && values.username && isPhoneValid && values.email)}
+				disabled={!(
+					values.name &&
+					values.username &&
+					isPhoneValid &&
+					values.email &&
+					values.country
+				)}
 				on:click={() => (page = 2)}
 			>
-				Next <ArrowRight size="16" />
+				{m.onboard_next()}
+				<ArrowRight size="16" />
 			</Button>
 		{:else if page == 2}
 			<Button class="flex items-center gap-2" on:click={() => (page = 1)}>
-				<ArrowLeft size="16" /> Back
+				<ArrowLeft size="16" />
+				{m.onboard_back()}
 			</Button>
 			<form
 				action=""
 				method="post"
 				on:submit={() => {
 					isLoading = true;
-					toast.loading('Updating profile...');
+					toast.loading(m.onboard_updating_profile());
 				}}
 			>
 				<input type="hidden" value={values.language} name="language" />
@@ -185,10 +207,10 @@
 				<Button
 					type="submit"
 					class="flex w-full items-center gap-2 md:w-auto"
-					disabled={isLoading ||
-						!(values.occupation && (values.occupation == 'student' ? values.department : true))}
+					disabled={isLoading || !values.occupation || !values.department}
 				>
-					Finish <ArrowRight size="16" />
+					{m.onboard_finish()}
+					<ArrowRight size="16" />
 				</Button>
 			</form>
 		{/if}

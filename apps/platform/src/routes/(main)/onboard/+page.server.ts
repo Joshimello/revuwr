@@ -19,6 +19,7 @@ export const actions: Actions = {
 			await locals.apb.collection('users').update(locals.user.id, {
 				language: body.language,
 				phone: body.phone,
+				country: body.country,
 				occupation: body.occupation,
 				department: body.department,
 				init: true

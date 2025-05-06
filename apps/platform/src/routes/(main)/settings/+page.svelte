@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryPicker from '$lib/components/country-picker.svelte';
 	import DepartmentPicker from '$lib/components/department-picker.svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
@@ -43,7 +44,8 @@
 				occupation: account.occupation,
 				college: account.department,
 				language: account.language,
-				disableNotify: account.disableNotify
+				disableNotify: account.disableNotify,
+				country: account.country // Add country field
 			});
 			toast.success('Account saved.');
 			stringAccount = JSON.stringify(account);
@@ -143,6 +145,14 @@
 							placeholder={m.phone_placeholder()}
 						/>
 						<span class="text-xs text-muted-foreground">{m.phone_mandatory_note()}</span>
+					</div>
+					<div>
+						<Label>{m.label_country()}</Label>
+						<CountryPicker
+							bind:value={account.country}
+							lang={account.language || 'en'}
+							onCountryChange={saveAccount}
+						/>
 					</div>
 				</Card.Content>
 			</Card.Root>
