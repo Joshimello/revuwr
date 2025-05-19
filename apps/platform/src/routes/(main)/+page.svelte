@@ -62,7 +62,7 @@
 						<Tabs.Trigger value="active">{m.tabs_active()}</Tabs.Trigger>
 						<Tabs.Trigger value="archived">{m.tabs_archived()}</Tabs.Trigger>
 					</Tabs.List>
-					<div>
+					<div class="flex gap-2">
 						<Button
 							variant="outline"
 							size="sm"
@@ -283,7 +283,10 @@
 				{m.login_welcome({ name: PUBLIC_ACME })}
 			</h3>
 			<p class="mb-4 text-sm text-muted-foreground">{m.login_prompt()}</p>
-			<Button href="/api/auth/signin">{m.login_button()}</Button>
+			<div class="flex gap-2">
+				<Button href="/api/auth/signin">{m.login_button()}</Button>
+				<Button href="/login" variant="outline">Login with Username</Button>
+			</div>
 		</div>
 	</div>
 {/if}
