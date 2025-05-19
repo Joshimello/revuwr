@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { LogIn, User, Settings2, HelpCircle, Bell } from 'lucide-svelte';
+	import { LogIn, User, Settings2, HelpCircle, Bell, LogOut } from 'lucide-svelte';
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu"	
 	import * as Popover from "$lib/components/ui/popover"
 	import type { NotificationsResponse } from '$lib/pocketbase/pocketbase-types.js';
@@ -96,6 +96,11 @@
 							<DropdownMenu.Item href="mailto:joshualeanjw@gmail.com?subject=[Revuwr System Help] (Replace me with issue encountered)" target="_blank">
 								<HelpCircle size="16" class="mr-2" />
 								Help
+							</DropdownMenu.Item>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item href="/api/auth/signout">
+								<LogOut size="16" class="mr-2" />
+								Logout
 							</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>
