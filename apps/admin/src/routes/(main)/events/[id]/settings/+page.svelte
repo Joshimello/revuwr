@@ -192,7 +192,7 @@
 				</Label>
 				<Textarea
 					id="description"
-					class="min-h-16"
+					class="h-64 min-h-16"
 					bind:value={settings.description}
 					on:blur={handleChange}
 				/>
