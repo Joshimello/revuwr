@@ -1,94 +1,106 @@
 <script lang="ts">
-	import { Input } from "$lib/components/ui/input";
-	import { Checkbox } from "$lib/components/ui/checkbox";
-	import { Plus, Trash } from "lucide-svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Label } from "$lib/components/ui/label";
+	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as m from '$lib/paraglide/messages.js';
+	import { Plus, Trash } from 'lucide-svelte';
 
-  export let options: {
-    choices: string[],
-    isMaxSelections: boolean,
-    maxSelections: number,
-    isOthers: boolean,
-  }
+	export let options: {
+		choices: string[];
+		isMaxSelections: boolean;
+		maxSelections: number;
+		isOthers: boolean;
+	};
 
-  export let isEditing: boolean;
-  export let required: boolean;
+	export let isEditing: boolean;
+	export let required: boolean;
 </script>
 
 {#if options && isEditing}
-  
-  {#each options.choices || [] as choice, index}
-    <div class="flex items-center gap-3">
-      <Checkbox disabled class="h-5 w-5 flex items-center justify-center" />
-      <Label class="flex-1">
-        <input class="outline-none text-xl w-full bg-transparent" placeholder="Choice" bind:value={options.choices[index]}/>
-      </Label>
-      <Button class="h-5 w-5" disabled={options.choices.length < 2} variant="ghost" size="icon" on:click={() => {
-        options.choices.splice(index, 1)
-        options.choices = [...options.choices]
-      }}>
-        <Trash size="16" />
-      </Button>
-    </div>
-  {/each}
-  {#if options.isOthers}
-    <div class="flex items-center gap-3">
-      <Checkbox disabled class="h-5 w-5 flex items-center justify-center" />
-      <Label class="flex-1">
-        <span class="text-xl w-full">Others</span>
-      </Label>
-    </div>
-  {/if}
-  <Button variant="ghost" size="sm" class="px-1 w-max flex items-center gap-1" on:click={() => [
-    options.choices = options.choices ? [...options.choices, ''] : ['']
-  ]}>
-    <Plus size="16"/>
-    Add choice
-  </Button>
+	{#each options.choices || [] as choice, index}
+		<div class="flex items-center gap-3">
+			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
+			<Label class="flex-1">
+				<input
+					class="w-full bg-transparent text-xl outline-none"
+					placeholder={m.choice()}
+					bind:value={options.choices[index]}
+				/>
+			</Label>
+			<Button
+				class="h-5 w-5"
+				disabled={options.choices.length < 2}
+				variant="ghost"
+				size="icon"
+				on:click={() => {
+					options.choices.splice(index, 1);
+					options.choices = [...options.choices];
+				}}
+			>
+				<Trash size="16" />
+			</Button>
+		</div>
+	{/each}
+	{#if options.isOthers}
+		<div class="flex items-center gap-3">
+			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
+			<Label class="flex-1">
+				<span class="w-full text-xl">Others</span>
+			</Label>
+		</div>
+	{/if}
+	<Button
+		variant="ghost"
+		size="sm"
+		class="flex w-max items-center gap-1 px-1"
+		on:click={() => [(options.choices = options.choices ? [...options.choices, ''] : [''])]}
+	>
+		<Plus size="16" />
+		{m.add_choice()}
+	</Button>
 
-  <div class="mt-6">
-    <div class="flex items-center gap-2">
-      <Checkbox bind:checked={options.isOthers} />
-      <span>Others option</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <Checkbox bind:checked={options.isMaxSelections} />
-      <span>Limit selections</span>
-      {#if options.isMaxSelections}
-        <Input type="number" bind:value={options.maxSelections} class="w-32 h-6" min="0" />
-      {/if}
-    </div>
-  </div>
+	<div class="mt-6">
+		<div class="flex items-center gap-2">
+			<Checkbox bind:checked={options.isOthers} />
+			<span>{m.others_option()}</span>
+		</div>
+		<div class="flex items-center gap-2">
+			<Checkbox bind:checked={options.isMaxSelections} />
+			<span>{m.limit_selections()}</span>
+			{#if options.isMaxSelections}
+				<Input type="number" bind:value={options.maxSelections} class="h-6 w-32" min="0" />
+			{/if}
+		</div>
+	</div>
 {/if}
 
 {#if options && !isEditing}
+	{#each options.choices || [] as choice, index}
+		<div class="flex items-center gap-3">
+			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
+			<Label class="flex-1">
+				<span class="w-full text-xl">{choice}</span>
+			</Label>
+		</div>
+	{/each}
+	{#if options.isOthers}
+		<div class="flex items-center gap-3">
+			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
+			<Label class="flex-1">
+				<span class="w-full text-xl">Others</span>
+			</Label>
+		</div>
+	{/if}
 
-  {#each options.choices || [] as choice, index}
-    <div class="flex items-center gap-3">
-      <Checkbox disabled class="h-5 w-5 flex items-center justify-center" />
-      <Label class="flex-1">
-        <span class="text-xl w-full">{choice}</span>
-      </Label>
-    </div>
-  {/each}
-  {#if options.isOthers}
-    <div class="flex items-center gap-3">
-      <Checkbox disabled class="h-5 w-5 flex items-center justify-center" />
-      <Label class="flex-1">
-        <span class="text-xl w-full">Others</span>
-      </Label>
-    </div>
-  {/if}
-
-  <span class="text-muted-foreground text-xs">
-    {#if required}
-      <span class="text-destructive">Required</span>
-    {:else}
-      <span>Optional</span>
-    {/if}
-    {#if options.isMaxSelections}
-      <span>| Selection limit: {options.maxSelections}</span>  
-    {/if}
-  </span>
+	<span class="text-xs text-muted-foreground">
+		{#if required}
+			<span class="text-destructive">{m.required()}</span>
+		{:else}
+			<span>{m.optional()}</span>
+		{/if}
+		{#if options.isMaxSelections}
+			<span>| {m.selection_limit()}: {options.maxSelections}</span>
+		{/if}
+	</span>
 {/if}
