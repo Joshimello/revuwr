@@ -1,30 +1,26 @@
 <script lang="ts">
-	import { Input } from "$lib/components/ui/input";
-	import { Checkbox } from "$lib/components/ui/checkbox";
+	import { Input } from '$lib/components/ui/input';
+	import * as m from '$lib/paraglide/messages.js';
 
-  export let options: {
+	export let options: {};
 
-  }
-
-  export let isEditing: boolean;
-  export let required: boolean;
+	export let isEditing: boolean;
+	export let required: boolean;
 </script>
 
 {#if options && isEditing}
-  <Input placeholder="name@example.com" />
+	<Input placeholder="name@example.com" />
 
-  <div class="mt-6">
-
-  </div>
+	<div class="mt-6"></div>
 {/if}
 
 {#if options && !isEditing}
-  <Input placeholder="name@example.com" disabled />
-  <span class="text-muted-foreground text-xs">
-    {#if required}
-      <span class="text-destructive">Required</span>
-    {:else}
-      <span>Optional</span>
-    {/if}
-  </span>
+	<Input placeholder="name@example.com" disabled />
+	<span class="text-xs text-muted-foreground">
+		{#if required}
+			<span class="text-destructive">{m.required()}</span>
+		{:else}
+			<span>{m.optional()}</span>
+		{/if}
+	</span>
 {/if}
