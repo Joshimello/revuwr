@@ -31,7 +31,7 @@
 		table.column({
 			id: 'id',
 			accessor: (value) => value,
-			header: 'ID',
+			header: m.id(),
 			cell: ({ value }) => {
 				return createRender(DataTableDual, { a: value.username, b: value.id });
 			},
@@ -43,7 +43,7 @@
 		table.column({
 			id: 'user',
 			accessor: (value) => value,
-			header: 'User',
+			header: m.user(),
 			cell: ({ value }) => {
 				return createRender(DataTableDual, { a: value.name, b: value.nameEn });
 			},
@@ -55,7 +55,7 @@
 		table.column({
 			id: 'contact',
 			accessor: (value) => value,
-			header: 'Contact',
+			header: m.contact(),
 			cell: ({ value }) => {
 				return createRender(DataTableDual, { a: value.email, b: value.phone });
 			},
@@ -67,7 +67,7 @@
 		table.column({
 			id: 'occupation',
 			accessor: (value) => value,
-			header: 'Occupation',
+			header: m.occupation(),
 			cell: ({ value }) => {
 				return value.occupation;
 			},
@@ -80,7 +80,7 @@
 		table.column({
 			id: 'department',
 			accessor: (value) => value,
-			header: 'Department',
+			header: m.department(),
 			cell: ({ value }) => {
 				return value.department;
 			},
@@ -93,7 +93,7 @@
 		table.column({
 			id: 'applications',
 			accessor: (value) => value,
-			header: 'Applications',
+			header: m.historical_applications(),
 			cell: ({ value }) => {
 				return createRender(DataTableApplications, { record: value });
 			},
@@ -116,7 +116,7 @@
 </script>
 
 <div class="flex items-center gap-2">
-	<Input class="max-w-xs" placeholder="Search anything ..." type="text" bind:value={$filterValue} />
+	<Input class="max-w-xs" placeholder={m.search_anything()} type="text" bind:value={$filterValue} />
 	<Select.Root
 		multiple
 		onSelectedChange={(selected) => {
@@ -155,27 +155,6 @@
 			{#each allDepartments as dept}
 				<Select.Item value={dept} class="w-full">
 					{dept}
-				</Select.Item>
-			{/each}
-		</Select.Content>
-	</Select.Root>
-	<Select.Root
-		multiple
-		onSelectedChange={(selected) => {
-			if (selected?.length == 0) {
-				$filterValues.year = undefined;
-				return;
-			}
-			$filterValues.year = selected?.map((s) => s.value);
-		}}
-	>
-		<Select.Trigger class="w-min">
-			<Select.Value placeholder={m.year()} />
-		</Select.Trigger>
-		<Select.Content sameWidth={false}>
-			{#each allYears as year}
-				<Select.Item value={year} class="w-full">
-					Year {year}
 				</Select.Item>
 			{/each}
 		</Select.Content>

@@ -192,5 +192,11 @@
 	"applications": "申請",
 	"view_in_events": "在活動查看",
 	"table": "表格",
-	"budget": "預算表"
+	"budget": "預算表",
+	"refresh_list": "重新整理列表",
+	"create_new_user": "建立新使用者",
+	"search_anything": "搜尋任何內容...",
+	"id": "ID",
+	"contact": "聯絡方式",
+	"historical_applications": "歷年申請案件"
 }

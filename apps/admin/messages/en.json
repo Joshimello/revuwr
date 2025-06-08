@@ -192,5 +192,11 @@
 	"applications": "Applications",
 	"view_in_events": "View in events",
 	"table": "Table",
-	"budget": "Budget"
+	"budget": "Budget",
+	"refresh_list": "Refresh list",
+	"create_new_user": "Create new user",
+	"search_anything": "Search anything ...",
+	"id": "ID",
+	"contact": "Contact",
+	"historical_applications": "Applications"
 }
