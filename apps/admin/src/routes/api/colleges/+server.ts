@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { JSDOM } from 'jsdom';
+import * as cheerio from 'cheerio';
 
 export const GET: RequestHandler = async () => {
 	try {
@@ -8,21 +8,19 @@ export const GET: RequestHandler = async () => {
 		const response = await fetch(url);
 		const text = await response.text();
 
-		const dom = new JSDOM(text);
-		const document = dom.window.document;
-
-		const tables = document.querySelectorAll('table');
+		const $ = cheerio.load(text);
+		const tables = $('table');
 		const colleges = new Set<string>();
 		const collegeList: { en: string; zh: string }[] = [];
 
-		for (const table of tables) {
-			const rows = table.querySelectorAll('tr');
-			rows.forEach((row: HTMLTableRowElement, index: number) => {
+		tables.each((_, table) => {
+			const rows = $(table).find('tr');
+			rows.each((index, row) => {
 				if (index === 0) return; // Skip header row
-				const cells = row.querySelectorAll('td');
+				const cells = $(row).find('td');
 				if (cells.length >= 5) {
-					const zh_tw = cells[3].textContent?.trim() || '';
-					const en = cells[4].textContent?.trim() || '';
+					const zh_tw = $(cells[3]).text().trim() || '';
+					const en = $(cells[4]).text().trim() || '';
 					if (zh_tw && en && en !== 'Units to be Phased out' && zh_tw !== '無') {
 						const collegeTuple = `${en}|${zh_tw}`;
 						if (!colleges.has(collegeTuple)) {
@@ -32,7 +30,7 @@ export const GET: RequestHandler = async () => {
 					}
 				}
 			});
-		}
+		});
 
 		collegeList.sort((a, b) => a.en.localeCompare(b.en));
 
