@@ -13,6 +13,7 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { availableLanguageTags, languageTag } from '$lib/paraglide/runtime.js';
 	import { pb } from '$lib/pocketbase/client';
+	import type { EventsResponse } from '$lib/pocketbase/pocketbase-types';
 	import {
 		ALargeSmall,
 		CalendarFold,
@@ -24,34 +25,121 @@
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
-	const user = pb.authStore.model;
+	const user = pb.authStore.record;
+	let events: EventsResponse[] = [];
 
 	let nav = [
-		{ icon: PanelsTopLeft, text: m.overview(), href: `${PUBLIC_BASE_PATH}/`, badge: 0 },
-		{ icon: CalendarFold, text: m.events(), href: `${PUBLIC_BASE_PATH}/events`, badge: 0 },
-		{ icon: CircleUser, text: m.users(), href: `${PUBLIC_BASE_PATH}/users`, badge: 0 },
-		{ icon: Settings2Icon, text: m.settings(), href: `${PUBLIC_BASE_PATH}/settings`, badge: 0 }
+		{ icon: PanelsTopLeft, text: m.overview(), href: `${PUBLIC_BASE_PATH}/`, badge: 0, path: '' },
+		{
+			icon: CalendarFold,
+			text: m.events(),
+			href: `${PUBLIC_BASE_PATH}/events`,
+			badge: 0,
+			path: 'events'
+		},
+		{
+			icon: CircleUser,
+			text: m.users(),
+			href: `${PUBLIC_BASE_PATH}/users`,
+			badge: 0,
+			path: 'users'
+		},
+		{
+			icon: Settings2Icon,
+			text: m.settings(),
+			href: `${PUBLIC_BASE_PATH}/settings`,
+			badge: 0,
+			path: 'settings'
+		}
 	];
+
+	// Route to translation mapping
+	const routeTranslations = {
+		'': m.overview,
+		events: m.events,
+		users: m.users,
+		settings: m.settings,
+		admin: m.admin,
+		new: m.new_event,
+		questions: m.questions,
+		responses: m.event_responses,
+		reviews: m.reviews,
+		edit: m.edit_details,
+		overview: m.overview,
+		terms: m.terms
+	};
+
+	// Function to get event title by ID
+	const getEventTitle = (eventId: string) => {
+		const event = events.find((e) => e.id === eventId);
+		if (event && event.name) {
+			// Truncate to 30 characters and add ellipsis if needed
+			return event.name.length > 30 ? event.name.substring(0, 16) + '...' : event.name;
+		}
+		return eventId;
+	};
 
 	$: breadcrumbs = (() => {
 		if (!$page.route.id) return [];
 		const parts = $page.route.id.split('/').slice(1);
+
+		// Replace dynamic parameters with actual values
 		for (let param in $page.params) {
-			parts[parts.indexOf(`[${param}]`)] = $page.params[param];
+			const paramIndex = parts.indexOf(`[${param}]`);
+			if (paramIndex !== -1) {
+				parts[paramIndex] = $page.params[param];
+			}
 		}
-		const paths = parts.map((text, i) => ({
-			text,
-			href: `${PUBLIC_BASE_PATH}/` + parts.slice(1, i + 1).join('/')
-		}));
-		paths[0] = { text: 'admin', href: `${PUBLIC_BASE_PATH}/` };
+
+		const paths = parts.map((text, i) => {
+			const routePath = parts.slice(1, i + 1).join('/');
+
+			// Check if this is a dynamic parameter (starts with number or is an ID)
+			const isDynamicParam = /^[0-9]/.test(text) || Object.values($page.params).includes(text);
+
+			// Get translation or fallback to original text
+			let translatedText;
+			if (isDynamicParam) {
+				// Check if this is an event ID (previous part is 'events')
+				if (i > 0 && parts[i - 1] === 'events') {
+					translatedText = getEventTitle(text);
+				} else {
+					// For other dynamic parameters, keep the original value
+					translatedText = text;
+				}
+			} else if (routeTranslations[text]) {
+				translatedText = routeTranslations[text]();
+			} else {
+				// Fallback: capitalize first letter and replace hyphens/underscores with spaces
+				translatedText = text.charAt(0).toUpperCase() + text.slice(1).replace(/[-_]/g, ' ');
+			}
+
+			return {
+				text: translatedText,
+				href: `${PUBLIC_BASE_PATH}/` + routePath
+			};
+		});
+
+		// Set the first breadcrumb to "admin"
+		paths[0] = { text: routeTranslations['admin'](), href: `${PUBLIC_BASE_PATH}/` };
 		return paths;
 	})();
 
-	onMount(() => {
+	onMount(async () => {
 		document.documentElement.style.setProperty(
 			'--font-multiplier',
 			localStorage.getItem('font-multiplier') || '1'
 		);
+
+		try {
+			const eventsList = await pb.collection('events').getList(1, 50, {
+				fields: 'id,name'
+			});
+			events = eventsList.items;
+			console.log(events);
+		} catch (error) {
+			console.error('Failed to fetch events:', error);
+		}
 	});
 </script>
 
@@ -100,7 +188,7 @@
 				<Sheet.Content side="left" class="flex flex-col">
 					<nav class="grid gap-2 text-lg font-medium">
 						<a href="{PUBLIC_BASE_PATH}/" class="flex items-center gap-2 text-lg font-semibold">
-							<span>Admin</span>
+							<span>{m.admin()}</span>
 						</a>
 
 						{#each nav as { icon, text, href, badge }}
