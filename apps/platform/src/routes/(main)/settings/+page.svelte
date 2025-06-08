@@ -148,11 +148,7 @@
 					</div>
 					<div>
 						<Label>{m.label_country()}</Label>
-						<CountryPicker
-							bind:value={account.country}
-							lang={account.language || 'en'}
-							onCountryChange={saveAccount}
-						/>
+						<CountryPicker bind:value={account.country} lang={'en'} onCountryChange={saveAccount} />
 					</div>
 				</Card.Content>
 			</Card.Root>
