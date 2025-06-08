@@ -5,6 +5,7 @@
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -293,65 +294,33 @@
 					}}
 				/>
 			</div>
-			<div class="grid gap-3">
-				<Label for="description">
-					{m.before_start_date()}
-				</Label>
-				<Select.Root
-					selected={[
-						{ label: m.disallow_new_responses(), value: 'disallow' },
-						{ label: m.allow_new_responses(), value: 'allow' }
-					].find((v) => v.value === settings.beforeStartDate) || {
-						label: m.disallow_new_responses(),
-						value: 'disallow'
-					}}
-					onSelectedChange={(v) => {
-						settings.beforeStartDate = v?.value || 'disallow';
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					checked={settings.beforeStartDate === 'allow'}
+					onCheckedChange={(checked) => {
+						settings.beforeStartDate = checked ? 'allow' : 'disallow';
 						handleChange();
 					}}
+				/>
+				<Label
+					class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 				>
-					<Select.Trigger class="w-72">
-						<Select.Value />
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Item value="disallow">
-							{m.disallow_new_responses()}
-						</Select.Item>
-						<Select.Item value="allow">
-							{m.allow_new_responses()}
-						</Select.Item>
-					</Select.Content>
-				</Select.Root>
+					{m.allow_early_applications()}
+				</Label>
 			</div>
-			<div class="grid gap-3">
-				<Label for="description">
-					{m.after_end_date()}
-				</Label>
-				<Select.Root
-					selected={[
-						{ label: m.disallow_new_responses(), value: 'disallow' },
-						{ label: m.allow_new_responses(), value: 'allow' }
-					].find((v) => v.value === settings.afterStartDate) || {
-						label: m.disallow_new_responses(),
-						value: 'disallow'
-					}}
-					onSelectedChange={(v) => {
-						settings.afterStartDate = v?.value || 'disallow';
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					checked={settings.afterStartDate === 'allow'}
+					onCheckedChange={(checked) => {
+						settings.afterStartDate = checked ? 'allow' : 'disallow';
 						handleChange();
 					}}
+				/>
+				<Label
+					class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 				>
-					<Select.Trigger class="w-72">
-						<Select.Value />
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Item value="disallow">
-							{m.disallow_new_responses()}
-						</Select.Item>
-						<Select.Item value="allow">
-							{m.allow_new_responses()}
-						</Select.Item>
-					</Select.Content>
-				</Select.Root>
+					{m.allow_applications_after_dateline()}
+				</Label>
 			</div>
 		</div>
 	</Card.Content>
@@ -382,7 +351,7 @@
 			</div>
 			<div class="grid gap-3">
 				<Label for="name">
-					{m.response_serial_id_prefix()}
+					{m.response_serial_id_prefix()} （ex: 1132LE001-999）
 				</Label>
 				<Input
 					id="name"
