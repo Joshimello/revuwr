@@ -133,7 +133,8 @@
 
 		try {
 			const eventsList = await pb.collection('events').getList(1, 50, {
-				fields: 'id,name'
+				fields: 'id,name',
+				requestKey: 'breadcrumbs'
 			});
 			events = eventsList.items;
 		} catch (error) {
