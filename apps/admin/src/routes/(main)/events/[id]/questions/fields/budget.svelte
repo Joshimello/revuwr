@@ -423,7 +423,7 @@
 								<Editor class="h-64 rounded-md border p-2" bind:value={item.description} />
 								<div class="flex items-center gap-2">
 									<Checkbox bind:checked={item.requestExplaination} />
-									<span>必填用圖說明</span>
+									<span>申請者需填寫編列說明</span>
 								</div>
 							</div>
 							<Button
