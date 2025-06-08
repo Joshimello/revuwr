@@ -54,7 +54,7 @@
 	];
 
 	// Route to translation mapping
-	const routeTranslations = {
+	const routeTranslations: Record<string, () => string> = {
 		'': m.overview,
 		events: m.events,
 		users: m.users,
@@ -136,7 +136,6 @@
 				fields: 'id,name'
 			});
 			events = eventsList.items;
-			console.log(events);
 		} catch (error) {
 			console.error('Failed to fetch events:', error);
 		}

@@ -77,6 +77,8 @@
 	"this_action_cannot_be_undone": "This action cannot be undone.",
 	"type_event_name_to_confirm": "Type {name} to confirm deletion.",
 	"cancel": "Cancel",
+	"allow_early_applications": "Allow early applications",
+	"allow_applications_after_dateline": "Allow applications after dateline",
 
 	"editing_event_questions": "Editing Event Questions",
 	"page": "Page",
@@ -155,7 +157,6 @@
 	"requesting_edits_multiple_desc": "You are about to request edits for multiple applications. This will change their status to edits requested.",
 	"rejecting_applications": "Rejecting applications",
 	"rejecting_multiple_applications_desc": "You are about to reject multiple applications. This will change their status to rejected.",
-	"return_for_edits": "Return for edits",
 
 	"reviewer_email": "Reviewer email",
 	"view_review": "View review",

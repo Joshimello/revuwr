@@ -35,8 +35,8 @@
 	"after_end_date": "結束日期之後...",
 	"new_event_responses": "活動報名回復",
 	"new_event_responses_desc": "您可以在活動設定中稍後變更這些詳細資料。",
-	"response_limit_per_user": "每使用者回復限制",
-	"response_serial_id_prefix": "回復序號字首",
+	"response_limit_per_user": "可申請計劃上限",
+	"response_serial_id_prefix": "核定流水號",
 	"new_event_footnote": "您可以在建立後進一步自訂活動。",
 	"create_event": "建立活動",
 
@@ -77,6 +77,8 @@
 	"this_action_cannot_be_undone": "此操作無法撤銷。",
 	"type_event_name_to_confirm": "請輸入 {name} 以確認刪除。",
 	"cancel": "取消",
+	"allow_early_applications": "接受提早申請",
+	"allow_applications_after_dateline": "接受截止日後可申請",
 
 	"editing_event_questions": "編輯活動問題",
 	"page": "頁面",
@@ -155,7 +157,6 @@
 	"requesting_edits_multiple_desc": "您即將請求多個申請的編輯。這將更改其狀態為請求編輯。",
 	"rejecting_applications": "拒絕多個申請",
 	"rejecting_multiple_applications_desc": "您即將拒絕多個申請。這將更改其狀態為已拒絕。",
-	"return_for_edits": "退回編輯",
 
 	"reviewer_email": "評審人信箱",
 	"view_review": "查看評審",
@@ -183,7 +184,7 @@
 	"controls": "控制",
 	"no_reviews": "沒有評審",
 
-	"occupation": "職業",
+	"occupation": "職稱",
 	"department": "系所",
 	"college": "學院",
 	"year": "年",
