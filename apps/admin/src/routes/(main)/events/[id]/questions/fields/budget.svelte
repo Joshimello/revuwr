@@ -235,7 +235,7 @@
 								<Input type="number" bind:value={item.defaultPrice} />
 								<div class="flex items-center gap-2">
 									<Checkbox bind:checked={item.isLimitPrice} />
-									<span>限制範圍</span>
+									<span>範圍</span>
 								</div>
 								{#if item.isLimitPrice}
 									<div class="flex gap-1">
@@ -246,7 +246,7 @@
 								{/if}
 								<div class="flex items-center gap-2">
 									<Checkbox bind:checked={item.isConstantPrice} />
-									<span>頂值</span>
+									<span>定值</span>
 								</div>
 							</div>
 							<div class="flex flex-col gap-1">
@@ -254,7 +254,7 @@
 								<Input type="number" bind:value={item.defaultQuantity} />
 								<div class="flex items-center gap-2">
 									<Checkbox bind:checked={item.isLimitQuantity} />
-									<span>限制範圍</span>
+									<span>範圍</span>
 								</div>
 								{#if item.isLimitQuantity}
 									<div class="flex gap-1">
@@ -275,7 +275,7 @@
 								{/if}
 								<div class="flex items-center gap-2">
 									<Checkbox bind:checked={item.isConstantQuantity} />
-									<span>頂值</span>
+									<span>定值</span>
 								</div>
 							</div>
 							<div class="flex flex-col gap-1">
@@ -374,7 +374,7 @@
 									<div class="flex items-center gap-2">
 										<Select.Root
 											selected={[
-												{ value: 'none', label: '不處理' },
+												{ value: 'none', label: '保持原有數值' },
 												{ value: 'round', label: '四捨五入' },
 												{ value: 'floor', label: '無條件捨去' },
 												{ value: 'ceil', label: '無條件進位' }
@@ -387,7 +387,7 @@
 												<Select.Value placeholder="選擇四捨五入方式..." />
 											</Select.Trigger>
 											<Select.Content>
-												<Select.Item value="none">不處理</Select.Item>
+												<Select.Item value="none">保持原有數值</Select.Item>
 												<Select.Item value="round">四捨五入</Select.Item>
 												<Select.Item value="floor">無條件捨去</Select.Item>
 												<Select.Item value="ceil">無條件進位</Select.Item>
@@ -408,7 +408,7 @@
 								</div>
 								<div class="flex items-center gap-2">
 									<Checkbox bind:checked={item.isLimitTotal} />
-									<span>限制範圍</span>
+									<span>範圍</span>
 								</div>
 								{#if item.isLimitTotal}
 									<div class="flex gap-1">
