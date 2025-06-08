@@ -198,5 +198,23 @@
 	"search_anything": "搜尋任何內容...",
 	"id": "ID",
 	"contact": "聯絡方式",
-	"historical_applications": "歷年申請案件"
+	"historical_applications": "歷年申請案件",
+
+	"college_management": "學院管理",
+	"college_management_desc": "管理系統中可用的學院列表",
+	"colleges": "學院",
+	"sync_colleges": "同步學院",
+	"english_name": "英文名稱",
+	"chinese_name": "中文名稱",
+	"no_colleges_found": "找不到學院",
+	"add_new_college": "新增學院",
+	"add_college": "新增學院",
+	"del": "刪除",
+	"colleges_synced": "學院已同步",
+	"sync_failed": "同步失敗",
+	"validation_error": "驗證錯誤",
+	"college_added": "學院已新增",
+	"failed_to_add_college": "新增學院失敗",
+	"college_deleted": "學院已刪除",
+	"failed_to_delete_college": "刪除學院失敗"
 }
