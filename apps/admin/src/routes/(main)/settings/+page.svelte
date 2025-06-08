@@ -18,6 +18,7 @@
 		TableHeader,
 		TableRow
 	} from '$lib/components/ui/table';
+	import * as m from '$lib/paraglide/messages.js';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import { addCollege, deleteCollege, syncColleges } from './methods';
@@ -35,10 +36,10 @@
 		isLoading = true;
 		try {
 			await syncColleges();
-			toast.success('Colleges synced');
+			toast.success(m.colleges_synced());
 			await invalidateAll();
 		} catch (error) {
-			toast.error('Sync failed');
+			toast.error(m.sync_failed());
 		} finally {
 			isLoading = false;
 		}
@@ -46,48 +47,48 @@
 
 	async function handleAddCollege() {
 		if (!newCollege.en || !newCollege.zh) {
-			toast.error('Validation error');
+			toast.error(m.validation_error());
 			return;
 		}
 
 		try {
 			await addCollege(newCollege);
-			toast.success('College added');
+			toast.success(m.college_added());
 			newCollege = { en: '', zh: '' };
 			await invalidateAll();
 		} catch (error) {
-			toast.error('Failed to add college');
+			toast.error(m.failed_to_add_college());
 		}
 	}
 
 	async function handleDeleteCollege(id: string) {
 		try {
 			await deleteCollege(id);
-			toast.success('College deleted');
+			toast.success(m.college_deleted());
 			await invalidateAll();
 		} catch (error) {
-			toast.error('Failed to delete college');
+			toast.error(m.failed_to_delete_college());
 		}
 	}
 </script>
 
 <div class="container mx-auto space-y-8 p-6">
-	<h1 class="text-3xl font-bold">Settings</h1>
+	<h1 class="text-3xl font-bold">{m.settings()}</h1>
 
 	<Card class="w-full">
 		<CardHeader>
-			<CardTitle>College Management</CardTitle>
-			<CardDescription>Manage the list of colleges available in the system</CardDescription>
+			<CardTitle>{m.college_management()}</CardTitle>
+			<CardDescription>{m.college_management_desc()}</CardDescription>
 		</CardHeader>
 
 		<CardContent>
 			<div class="mb-4 flex items-center justify-between">
-				<h3 class="text-lg font-medium">Colleges</h3>
+				<h3 class="text-lg font-medium">{m.colleges()}</h3>
 				<Button on:click={handleSync} disabled={isLoading}>
 					{#if isLoading}
 						<span class="mr-2 animate-spin">⟳</span>
 					{/if}
-					Sync Colleges
+					{m.sync_colleges()}
 				</Button>
 			</div>
 
@@ -96,9 +97,9 @@
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead class="w-[250px]">English Name</TableHead>
-								<TableHead class="w-[250px]">Chinese Name</TableHead>
-								<TableHead class="w-[100px]">Actions</TableHead>
+								<TableHead class="w-[250px]">{m.english_name()}</TableHead>
+								<TableHead class="w-[250px]">{m.chinese_name()}</TableHead>
+								<TableHead class="w-[100px]">{m.actions()}</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -113,14 +114,14 @@
 												size="sm"
 												on:click={() => handleDeleteCollege(college.id)}
 											>
-												Delete
+												{m.del()}
 											</Button>
 										</TableCell>
 									</TableRow>
 								{/each}
 							{:else}
 								<TableRow>
-									<TableCell class="py-4 text-center">No colleges found</TableCell>
+									<TableCell class="py-4 text-center">{m.no_colleges_found()}</TableCell>
 								</TableRow>
 							{/if}
 						</TableBody>
@@ -131,18 +132,18 @@
 
 		<CardFooter class="flex flex-col space-y-4">
 			<div class="w-full">
-				<h3 class="mb-2 text-lg font-medium">Add New College</h3>
+				<h3 class="mb-2 text-lg font-medium">{m.add_new_college()}</h3>
 				<div class="mb-4 grid grid-cols-2 gap-4">
 					<div>
-						<label for="en" class="mb-1 block text-sm font-medium">English Name</label>
+						<label for="en" class="mb-1 block text-sm font-medium">{m.english_name()}</label>
 						<Input id="en" bind:value={newCollege.en} placeholder="College of Science" />
 					</div>
 					<div>
-						<label for="zh" class="mb-1 block text-sm font-medium">Chinese Name</label>
+						<label for="zh" class="mb-1 block text-sm font-medium">{m.chinese_name()}</label>
 						<Input id="zh" bind:value={newCollege.zh} placeholder="理學院" />
 					</div>
 				</div>
-				<Button variant="outline" on:click={handleAddCollege}>Add College</Button>
+				<Button variant="outline" on:click={handleAddCollege}>{m.add_college()}</Button>
 			</div>
 		</CardFooter>
 	</Card>
