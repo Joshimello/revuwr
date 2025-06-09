@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
 	import { Badge } from '$lib/components/ui/badge';
@@ -19,6 +20,7 @@
 		CalendarFold,
 		CircleUser,
 		Languages,
+		LogOutIcon,
 		Menu,
 		PanelsTopLeft,
 		Settings2Icon
@@ -280,6 +282,17 @@
 					</DropdownMenu.Group>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
+
+			<Button
+				size="icon"
+				variant="ghost"
+				on:click={() => {
+					pb.authStore.clear();
+					goto('/auth');
+				}}
+			>
+				<LogOutIcon size="16" />
+			</Button>
 		</header>
 
 		<ScrollArea class="max-h-[calc(100vh-3.5rem)] flex-1 lg:max-h-[calc(100vh-60px)]">
