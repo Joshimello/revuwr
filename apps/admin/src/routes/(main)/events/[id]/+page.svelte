@@ -22,7 +22,6 @@
 		Link2,
 		ListChecks,
 		ListPlus,
-		Mail,
 		Settings,
 		SquareArrowOutUpRight
 	} from 'lucide-svelte';
@@ -316,13 +315,13 @@
 					<ListChecks size="18" />
 					{m.terms()}
 				</Button>
-				<Button
+				<!-- <Button
 					class="flex w-full items-center justify-start gap-2"
 					href={event ? `${PUBLIC_BASE_PATH}/events/${event.id}/mailing` : ''}
 				>
 					<Mail size="18" />
 					Mailing
-				</Button>
+				</Button> -->
 				<Button
 					class="flex w-full items-center justify-start gap-2"
 					variant="secondary"

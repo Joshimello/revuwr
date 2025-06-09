@@ -13,6 +13,7 @@ export enum Collections {
 	Superusers = "_superusers",
 	Answers = "answers",
 	Applications = "applications",
+	Colleges = "colleges",
 	Events = "events",
 	Files = "files",
 	Notifications = "notifications",
@@ -119,6 +120,12 @@ export type ApplicationsRecord = {
 	updated?: IsoDateString
 }
 
+export type CollegesRecord = {
+	en?: string
+	id: string
+	zh?: string
+}
+
 export enum EventsStatusOptions {
 	"active" = "active",
 	"archived" = "archived",
@@ -179,6 +186,9 @@ export type NotificationsRecord = {
 }
 
 export type QuestionsRecord<Toptions = unknown> = {
+	conditional?: boolean
+	conditionanswer?: string
+	conditionquestion?: RecordIdString
 	count?: number
 	created?: IsoDateString
 	description?: HTMLString
@@ -228,6 +238,7 @@ export enum UsersLanguageOptions {
 export type UsersRecord = {
 	applications?: RecordIdString[]
 	avatar?: string
+	country?: string
 	created?: IsoDateString
 	department?: string
 	disableNotify?: boolean
@@ -256,6 +267,7 @@ export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemF
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type AnswersResponse<Tresponse = unknown, Texpand = unknown> = Required<AnswersRecord<Tresponse>> & BaseSystemFields<Texpand>
 export type ApplicationsResponse<Texpand = unknown> = Required<ApplicationsRecord> & BaseSystemFields<Texpand>
+export type CollegesResponse<Texpand = unknown> = Required<CollegesRecord> & BaseSystemFields<Texpand>
 export type EventsResponse<Tterms = unknown, Texpand = unknown> = Required<EventsRecord<Tterms>> & BaseSystemFields<Texpand>
 export type FilesResponse<Texpand = unknown> = Required<FilesRecord> & BaseSystemFields<Texpand>
 export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>
@@ -274,6 +286,7 @@ export type CollectionRecords = {
 	_superusers: SuperusersRecord
 	answers: AnswersRecord
 	applications: ApplicationsRecord
+	colleges: CollegesRecord
 	events: EventsRecord
 	files: FilesRecord
 	notifications: NotificationsRecord
@@ -291,6 +304,7 @@ export type CollectionResponses = {
 	_superusers: SuperusersResponse
 	answers: AnswersResponse
 	applications: ApplicationsResponse
+	colleges: CollegesResponse
 	events: EventsResponse
 	files: FilesResponse
 	notifications: NotificationsResponse
@@ -311,6 +325,7 @@ export type TypedPocketBase = PocketBase & {
 	collection(idOrName: '_superusers'): RecordService<SuperusersResponse>
 	collection(idOrName: 'answers'): RecordService<AnswersResponse>
 	collection(idOrName: 'applications'): RecordService<ApplicationsResponse>
+	collection(idOrName: 'colleges'): RecordService<CollegesResponse>
 	collection(idOrName: 'events'): RecordService<EventsResponse>
 	collection(idOrName: 'files'): RecordService<FilesResponse>
 	collection(idOrName: 'notifications'): RecordService<NotificationsResponse>
