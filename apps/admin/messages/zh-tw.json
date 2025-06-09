@@ -197,7 +197,6 @@
 	"create_new_user": "建立新使用者",
 	"search_anything": "搜尋任何內容...",
 	"id": "ID",
-	"contact": "聯絡方式",
 	"historical_applications": "歷年申請案件",
 
 	"college_management": "學院管理",
@@ -247,5 +246,12 @@
 	"time": "時間",
 	"physical": "實體",
 	"location": "位置",
-	"extra_info": "額外資訊"
+	"extra_info": "額外資訊",
+
+	"conditional_question": "條件式問題",
+	"condition_question": "條件問題",
+	"select_a_question": "選擇問題",
+	"no_title": "無標題",
+	"condition_answer": "條件答案",
+	"select_an_answer": "選擇答案"
 }

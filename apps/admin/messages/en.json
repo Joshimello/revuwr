@@ -197,7 +197,6 @@
 	"create_new_user": "Create new user",
 	"search_anything": "Search anything ...",
 	"id": "ID",
-	"contact": "Contact",
 	"historical_applications": "Applications",
 
 	"college_management": "College Management",
@@ -247,5 +246,12 @@
 	"time": "Time",
 	"physical": "Physical",
 	"location": "Location",
-	"extra_info": "Extra info"
+	"extra_info": "Extra info",
+
+	"conditional_question": "Conditional Question",
+	"condition_question": "Condition Question",
+	"select_a_question": "Select a question",
+	"no_title": "No title",
+	"condition_answer": "Condition Answer",
+	"select_an_answer": "Select an answer"
 }

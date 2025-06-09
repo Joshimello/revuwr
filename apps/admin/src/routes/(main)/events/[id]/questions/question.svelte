@@ -1,16 +1,18 @@
 <script lang="ts">
+	import { page } from '$app/stores';
+	import Editor from '$lib/components/editor.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Checkbox } from '$lib/components/ui/checkbox';
-	import Editor from '$lib/components/editor.svelte';
-	import { type EventsResponse, type QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
-	import { Copy, Edit, Save, Trash, SaveOff, MoveUp, MoveDown } from 'lucide-svelte';
-	import { pb } from '$lib/pocketbase/client';
-	import questionTypes from './question-types';
-	import { toast } from 'svelte-sonner';
-	import { page } from '$app/stores';
+	import * as Select from '$lib/components/ui/select';
 	import * as m from '$lib/paraglide/messages.js';
+	import { pb } from '$lib/pocketbase/client';
+	import { type EventsResponse, type QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
+	import { Copy, Edit, MoveDown, MoveUp, Save, SaveOff, Trash } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
 	import { refreshQuestions } from './methods';
+	import questionTypes from './question-types';
+	import { questions } from './stores';
 
 	export let question: QuestionsResponse;
 	export let editingId: string | null;
@@ -112,7 +114,10 @@
 				title: question.title,
 				description: question.description,
 				options: question.options,
-				required: question.required
+				required: question.required,
+				conditional: question.conditional,
+				conditionquestion: question.conditionquestion,
+				conditionanswer: question.conditionanswer
 			});
 			toast.success('Question saved successfully');
 			editingId = null;
@@ -271,6 +276,65 @@
 				/>
 
 				{#if isEditing && question.type != 'info'}
+					<div class="flex items-center gap-2">
+						<Checkbox bind:checked={question.conditional} />
+						<span> {m.conditional_question()} </span>
+					</div>
+					{#if question.conditional}
+						<div class="mb-2 mt-1 flex items-center gap-2">
+							<div class="flex flex-col">
+								<span class="text-xs font-bold">{m.condition_question()}</span>
+								<Select.Root
+									selected={{
+										value: question.conditionquestion,
+										label: $questions.find((q) => q.id === question.conditionquestion)?.title
+									}}
+									onSelectedChange={(value) => {
+										question.conditionquestion = value?.value || '';
+									}}
+								>
+									<Select.Trigger class="w-96 truncate">
+										{question.conditionquestion
+											? $questions
+													.find((q) => q.id === question.conditionquestion)
+													?.title.replace(/<[^>]*>/g, '') || m.no_title()
+											: m.select_a_question()}
+									</Select.Trigger>
+									<Select.Content class="max-h-64  overflow-y-auto">
+										{#each $questions.filter((q, qidx) => q.type === 'radio') as question}
+											<Select.Item class="truncate" value={question.id}>
+												{question.title.replace(/<[^>]*>/g, '') || m.no_title()}
+											</Select.Item>
+										{/each}
+									</Select.Content>
+								</Select.Root>
+							</div>
+							{#if question.conditionquestion}
+								<div class="flex flex-col">
+									<span class="text-xs font-bold">{m.condition_answer()}</span>
+									<Select.Root
+										selected={{
+											value: question.conditionanswer,
+											label: $questions.find((q) => q.id === question.conditionquestion).options
+												.choices[question.conditionanswer]
+										}}
+										onSelectedChange={(value) => {
+											question.conditionanswer = value?.value ?? '';
+										}}
+									>
+										<Select.Trigger class="w-96 truncate">
+											<Select.Value placeholder={m.select_an_answer()} />
+										</Select.Trigger>
+										<Select.Content>
+											{#each $questions.find((q) => q.id === question.conditionquestion).options.choices as answer, index}
+												<Select.Item value={index}>{answer}</Select.Item>
+											{/each}
+										</Select.Content>
+									</Select.Root>
+								</div>
+							{/if}
+						</div>
+					{/if}
 					<div class="flex items-center gap-2">
 						<Checkbox bind:checked={question.required} />
 						<span>
