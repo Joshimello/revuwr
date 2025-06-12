@@ -81,5 +81,15 @@
 	"onboard_next": "Next",
 	"onboard_back": "Back",
 	"onboard_finish": "Finish",
-	"onboard_updating_profile": "Updating profile..."
+	"onboard_updating_profile": "Updating profile...",
+	"create_event_target": "Event Target",
+	"create_event_duration": "Event Duration",
+	"create_more_info": "More info",
+	"create_event_not_started": "Event has not started yet",
+	"create_event_ended": "Event has ended",
+	"create_login_to_continue": "Login to continue",
+	"create_apply_now": "Apply now !",
+	"create_terms_title": "Terms and conditions",
+	"create_terms_description": "You have to agree to the terms and conditions to apply for this event.",
+	"create_creating_application": "Creating application..."
 }

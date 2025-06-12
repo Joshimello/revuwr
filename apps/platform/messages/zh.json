@@ -81,5 +81,15 @@
 	"onboard_next": "下一步",
 	"onboard_back": "返回",
 	"onboard_finish": "完成",
-	"onboard_updating_profile": "正在更新個人資料..."
+	"onboard_updating_profile": "正在更新個人資料...",
+	"create_event_target": "活動對象",
+	"create_event_duration": "活動期間",
+	"create_more_info": "更多資訊",
+	"create_event_not_started": "活動尚未開始",
+	"create_event_ended": "活動已結束",
+	"create_login_to_continue": "登入以繼續",
+	"create_apply_now": "立即申請！",
+	"create_terms_title": "條款與條件",
+	"create_terms_description": "您必須同意條款與條件才能申請此活動。",
+	"create_creating_application": "正在建立申請..."
 }

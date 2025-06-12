@@ -4,6 +4,7 @@
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
+	import { m } from '$lib/paraglide/messages.js';
 	import { pbImage } from '$lib/pocketbase/client';
 	import { toast } from 'svelte-sonner';
 
@@ -45,8 +46,8 @@
 		<Table.Root class="border">
 			<Table.Header>
 				<Table.Row>
-					<Table.Head>Event Target</Table.Head>
-					<Table.Head>Event Duration</Table.Head>
+					<Table.Head>{m.create_event_target()}</Table.Head>
+					<Table.Head>{m.create_event_duration()}</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
@@ -68,7 +69,7 @@
 			</Table.Body>
 		</Table.Root>
 		<div class="mt-6">
-			<span>More info &nbsp; -> &nbsp;&nbsp;</span>
+			<span>{m.create_more_info()} &nbsp; -> &nbsp;&nbsp;</span>
 			<a
 				href={event.moreInfo}
 				target="_blank"
@@ -87,13 +88,13 @@
 			}}
 		>
 			{#if notStarted && event.beforeStartDate == 'disallow'}
-				Event has not started yet
+				{m.create_event_not_started()}
 			{:else if isEnded && event.afterStartDate == 'disallow'}
-				Event has ended
+				{m.create_event_ended()}
 			{:else if !user}
-				Login to continue
+				{m.create_login_to_continue()}
 			{:else}
-				Apply now !
+				{m.create_apply_now()}
 			{/if}
 		</Button>
 	</Card.Footer>
@@ -102,9 +103,9 @@
 <Dialog.Root bind:open={termsOpen}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Terms and conditions</Dialog.Title>
+			<Dialog.Title>{m.create_terms_title()}</Dialog.Title>
 			<Dialog.Description>
-				You have to agree to the terms and conditions to apply for this event.
+				{m.create_terms_description()}
 			</Dialog.Description>
 		</Dialog.Header>
 		<div class="flex flex-col gap-2">
@@ -125,7 +126,7 @@
 				method="post"
 				on:submit={() => {
 					isCreating = true;
-					toast.loading('Creating application...', {
+					toast.loading(m.create_creating_application(), {
 						duration: Number.POSITIVE_INFINITY
 					});
 				}}
@@ -136,11 +137,11 @@
 					disabled={isCreating || !canApply || !isAllChecked || !user}
 				>
 					{#if notStarted && event.beforeStartDate == 'disallow'}
-						Event has not started yet
+						{m.create_event_not_started()}
 					{:else if isEnded && event.afterStartDate == 'disallow'}
-						Event has ended
+						{m.create_event_ended()}
 					{:else}
-						Apply now !
+						{m.create_apply_now()}
 					{/if}
 				</Button>
 			</form>
