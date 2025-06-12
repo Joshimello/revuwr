@@ -10,6 +10,7 @@
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import * as Table from '$lib/components/ui/table';
 	import { Textarea } from '$lib/components/ui/textarea';
+	import { ChevronDown, ChevronUp } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
 	export let isEditing: boolean;
@@ -140,6 +141,18 @@
 		}
 		return value;
 	};
+
+	const moveOption = (index: number, direction: 'up' | 'down') => {
+		if (!options) return;
+
+		const newIndex = direction === 'up' ? index - 1 : index + 1;
+
+		if (newIndex < 0 || newIndex >= options.length) return;
+
+		const newOptions = [...options];
+		[newOptions[index], newOptions[newIndex]] = [newOptions[newIndex], newOptions[index]];
+		options = newOptions;
+	};
 </script>
 
 {#if isInstanceofOptions && isEditing}
@@ -147,13 +160,14 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
-					<Table.Head class="w-min"></Table.Head>
-					<Table.Head>經費項目</Table.Head>
-					<Table.Head>單價（元）</Table.Head>
-					<Table.Head>數量</Table.Head>
-					<Table.Head>總價（元）</Table.Head>
-					<Table.Head>用途與編列基準說明</Table.Head>
-					<Table.Head class="text-end"></Table.Head>
+					<Table.Head class="w-min">#</Table.Head>
+					<Table.Head>名稱</Table.Head>
+					<Table.Head>預設單價</Table.Head>
+					<Table.Head>預設數量</Table.Head>
+					<Table.Head>計算方式</Table.Head>
+					<Table.Head>說明</Table.Head>
+					<Table.Head class="w-min">排序</Table.Head>
+					<Table.Head class="text-end">編輯</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
@@ -200,9 +214,31 @@
 						<Table.Cell class="max-w-48">
 							<div class="truncate break-all">
 								{#if item.requestExplaination}
-									<span class="text-muted-foreground"> (必填說明) </span>
+									<span class="text-muted-foreground">需要填寫用途說明</span>
 								{/if}
 								{item.description.replace(/<[^>]*>?/gm, '')}
+							</div>
+						</Table.Cell>
+						<Table.Cell class="w-min">
+							<div class="flex flex-col gap-1">
+								<Button
+									size="sm"
+									variant="ghost"
+									class="h-6 w-6 p-0"
+									disabled={index === 0}
+									on:click={() => moveOption(index, 'up')}
+								>
+									<ChevronUp class="h-3 w-3" />
+								</Button>
+								<Button
+									size="sm"
+									variant="ghost"
+									class="h-6 w-6 p-0"
+									disabled={index === (options?.length || 0) - 1}
+									on:click={() => moveOption(index, 'down')}
+								>
+									<ChevronDown class="h-3 w-3" />
+								</Button>
 							</div>
 						</Table.Cell>
 						<Table.Cell class="w-min text-end">
