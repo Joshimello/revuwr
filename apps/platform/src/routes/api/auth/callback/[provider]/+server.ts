@@ -137,7 +137,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	try {
 		await locals.pb.collection('users').authWithPassword(resourceData.userid, tempPassword);
-		return redirect(302, '/');
+
+		// Check for stored redirect URL and redirect there, otherwise go to root
+		const redirectUrl = url.searchParams.get('redirect') || '/';
+		return redirect(302, redirectUrl);
 	} catch (err) {
 		if (isRedirect(err)) {
 			return redirect(err.status, err.location);

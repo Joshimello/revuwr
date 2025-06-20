@@ -1,48 +1,57 @@
 <script lang="ts">
+	import { page } from '$app/stores';
+	import { PUBLIC_ACME } from '$env/static/public';
 	import { Button } from '$lib/components/ui/button';
-	import { LogIn, User, Settings2, HelpCircle, Bell, LogOut } from 'lucide-svelte';
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu"	
-	import * as Popover from "$lib/components/ui/popover"
-	import type { NotificationsResponse } from '$lib/pocketbase/pocketbase-types.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Popover from '$lib/components/ui/popover';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { pb } from '$lib/pocketbase/client';
+	import type { NotificationsResponse } from '$lib/pocketbase/pocketbase-types.js';
+	import { handleStoredRedirect, redirectToLogin } from '$lib/utils/redirect';
+	import { Bell, HelpCircle, LogIn, LogOut, Settings2, User } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { format } from 'timeago.js';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import { PUBLIC_ACME } from '$env/static/public';
 
-	export let data
-	$: ({ user } = data)
+	export let data;
+	$: ({ user } = data);
 
-	let notifications: NotificationsResponse[] = []
-	let isLoadingNotifications = false
-	const getNotifications = async () => {
-		isLoadingNotifications = true
-		try {
-			pb.authStore.loadFromCookie(document.cookie)
-			notifications = await pb.collection("notifications").getFullList<NotificationsResponse>({
-				sort: "-created"
-			})
+	// Handle redirect after login
+	onMount(() => {
+		if (user) {
+			handleStoredRedirect();
 		}
-		catch (err) {
-      if (err instanceof Error) toast.error(err.message)
-      else toast.error("An error occurred.")
-    }
-		isLoadingNotifications = false
-	}
+	});
 
+	let notifications: NotificationsResponse[] = [];
+	let isLoadingNotifications = false;
+	const getNotifications = async () => {
+		isLoadingNotifications = true;
+		try {
+			pb.authStore.loadFromCookie(document.cookie);
+			notifications = await pb.collection('notifications').getFullList<NotificationsResponse>({
+				sort: '-created'
+			});
+		} catch (err) {
+			if (err instanceof Error) toast.error(err.message);
+			else toast.error('An error occurred.');
+		}
+		isLoadingNotifications = false;
+	};
 </script>
 
-<div class="bg-muted/40 min-h-screen min-w-screen">
-	<div class="px-2 md:py-6 py-2 mx-auto max-w-4xl w-full">
-		<div class="flex items-center md:mb-6 mb-2">
-			<span class="text-lg font-semibold md:text-2xl mr-auto">
+<div class="min-w-screen min-h-screen bg-muted/40">
+	<div class="mx-auto w-full max-w-4xl px-2 py-2 md:py-6">
+		<div class="mb-2 flex items-center md:mb-6">
+			<span class="mr-auto text-lg font-semibold md:text-2xl">
 				{PUBLIC_ACME}
 			</span>
 			{#if user}
-
-				<Popover.Root onOpenChange={value => {
-					if (value) getNotifications()
-				}}>
+				<Popover.Root
+					onOpenChange={(value) => {
+						if (value) getNotifications();
+					}}
+				>
 					<Popover.Trigger let:builder asChild>
 						<Button variant="outline" size="icon" builders={[builder]} class="mr-2">
 							<Bell size="16" />
@@ -50,29 +59,23 @@
 					</Popover.Trigger>
 					<Popover.Content class="p-0">
 						{#if isLoadingNotifications}
-							<div class="text-center py-2">
-								Loading...
-							</div>
+							<div class="py-2 text-center">Loading...</div>
+						{:else if notifications.length == 0}
+							<div class="py-2 text-center">No notifications</div>
 						{:else}
-							{#if notifications.length == 0}
-								<div class="text-center py-2">
-									No notifications
-								</div>
-							{:else}
-								<ScrollArea class="h-96 py-2 px-4">
-									{#each notifications as notification}
-										<div class="border-b py-3 text-xs flex flex-col">
-											<span>{notification.message}</span>
-											<span class="text-muted-foreground">{format(notification.created)}</span>
-											{#if notification.link}
-												<Button size="sm" class="h-5 w-max mt-1" href={notification.link}>
-													View
-												</Button>
-											{/if}
-										</div>
-									{/each}
-								</ScrollArea>
-							{/if}
+							<ScrollArea class="h-96 px-4 py-2">
+								{#each notifications as notification}
+									<div class="flex flex-col border-b py-3 text-xs">
+										<span>{notification.message}</span>
+										<span class="text-muted-foreground">{format(notification.created)}</span>
+										{#if notification.link}
+											<Button size="sm" class="mt-1 h-5 w-max" href={notification.link}>
+												View
+											</Button>
+										{/if}
+									</div>
+								{/each}
+							</ScrollArea>
 						{/if}
 					</Popover.Content>
 				</Popover.Root>
@@ -93,7 +96,10 @@
 								<Settings2 size="16" class="mr-2" />
 								Settings
 							</DropdownMenu.Item>
-							<DropdownMenu.Item href="mailto:joshualeanjw@gmail.com?subject=[Revuwr System Help] (Replace me with issue encountered)" target="_blank">
+							<DropdownMenu.Item
+								href="mailto:joshualeanjw@gmail.com?subject=[Revuwr System Help] (Replace me with issue encountered)"
+								target="_blank"
+							>
 								<HelpCircle size="16" class="mr-2" />
 								Help
 							</DropdownMenu.Item>
@@ -110,13 +116,15 @@
 					Logout <LogOut size="16"/>
 				</Button> -->
 			{:else}
-				<Button size="icon" href="/api/auth/signin" class="flex items-center gap-2">
-					<LogIn size="16"/>
+				<Button
+					size="icon"
+					class="flex items-center gap-2"
+					on:click={() => redirectToLogin($page.url.pathname)}
+				>
+					<LogIn size="16" />
 				</Button>
 			{/if}
 		</div>
-		<slot>
-	
-		</slot>
+		<slot></slot>
 	</div>
 </div>

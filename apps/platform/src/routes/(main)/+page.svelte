@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import { PUBLIC_ACME } from '$env/static/public';
 	import Status from '$lib/components/status.svelte';
 	import { Badge } from '$lib/components/ui/badge';
@@ -13,6 +14,7 @@
 		ApplicationsResponse,
 		EventsResponse
 	} from '$lib/pocketbase/pocketbase-types';
+	import { redirectToLogin } from '$lib/utils/redirect';
 	import { ArrowUpRight, RefreshCcw } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -284,7 +286,7 @@
 			</h3>
 			<p class="mb-4 text-sm text-muted-foreground">{m.login_prompt()}</p>
 			<div class="flex gap-2">
-				<Button href="/api/auth/signin">{m.login_button()}</Button>
+				<Button on:click={() => redirectToLogin($page.url.pathname)}>{m.login_button()}</Button>
 				<Button href="/login" variant="outline">Login with Username</Button>
 			</div>
 		</div>
