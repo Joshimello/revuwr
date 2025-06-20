@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Checkbox } from '$lib/components/ui/checkbox';
@@ -6,6 +7,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import { m } from '$lib/paraglide/messages.js';
 	import { pbImage } from '$lib/pocketbase/client';
+	import { redirectToLogin } from '$lib/utils/redirect';
 	import { toast } from 'svelte-sonner';
 
 	export let data;
@@ -22,6 +24,10 @@
 	let checked: boolean[] = [];
 
 	$: isAllChecked = checked.every((i) => i === true);
+
+	const handleLogin = () => {
+		redirectToLogin($page.url.pathname);
+	};
 </script>
 
 <Card.Root>
@@ -84,7 +90,11 @@
 			type="submit"
 			disabled={isCreating || !canApply || !user}
 			on:click={() => {
-				termsOpen = true;
+				if (!user) {
+					handleLogin();
+				} else {
+					termsOpen = true;
+				}
 			}}
 		>
 			{#if notStarted && event.beforeStartDate == 'disallow'}
