@@ -275,7 +275,7 @@
 					required={question.required}
 				/>
 
-				{#if isEditing && question.type != 'info'}
+				{#if isEditing}
 					<div class="flex items-center gap-2">
 						<Checkbox bind:checked={question.conditional} />
 						<span> {m.conditional_question()} </span>
