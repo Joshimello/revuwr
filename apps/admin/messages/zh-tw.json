@@ -253,5 +253,7 @@
 	"select_a_question": "選擇問題",
 	"no_title": "無標題",
 	"condition_answer": "條件答案",
-	"select_an_answer": "選擇答案"
+	"select_an_answer": "選擇答案",
+	"conditions_must_be_met": "條件（必須全部符合）",
+	"add_condition": "新增條件"
 }

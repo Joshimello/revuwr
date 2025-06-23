@@ -253,5 +253,7 @@
 	"select_a_question": "Select a question",
 	"no_title": "No title",
 	"condition_answer": "Condition Answer",
-	"select_an_answer": "Select an answer"
+	"select_an_answer": "Select an answer",
+	"conditions_must_be_met": "Conditions (all must be met)",
+	"add_condition": "Add Condition"
 }

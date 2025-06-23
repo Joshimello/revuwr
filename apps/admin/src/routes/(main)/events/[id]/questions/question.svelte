@@ -8,7 +8,7 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
 	import { type EventsResponse, type QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
-	import { Copy, Edit, MoveDown, MoveUp, Save, SaveOff, Trash } from 'lucide-svelte';
+	import { Copy, Edit, MoveDown, MoveUp, Plus, Save, SaveOff, Trash, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { refreshQuestions } from './methods';
 	import questionTypes from './question-types';
@@ -22,7 +22,68 @@
 
 	const handleEdit = async () => {
 		editingId = question.id;
+		// Initialize arrays if they don't exist
+		if (!Array.isArray(question.conditionquestion)) {
+			question.conditionquestion = question.conditionquestion ? [question.conditionquestion] : [];
+		}
+		if (typeof question.conditionanswer !== 'object' || question.conditionanswer === null) {
+			question.conditionanswer = {};
+		}
 		refreshQuestions();
+	};
+
+	const addCondition = () => {
+		if (!Array.isArray(question.conditionquestion)) {
+			question.conditionquestion = [];
+		}
+		if (typeof question.conditionanswer !== 'object' || question.conditionanswer === null) {
+			question.conditionanswer = {};
+		}
+		question.conditionquestion = [...question.conditionquestion, ''];
+	};
+
+	const removeCondition = (index: number) => {
+		if (!Array.isArray(question.conditionquestion)) return;
+
+		const removedQuestionId = question.conditionquestion[index];
+		question.conditionquestion = question.conditionquestion.filter((_, i) => i !== index);
+
+		// Remove the corresponding answer
+		if (
+			removedQuestionId &&
+			question.conditionanswer &&
+			typeof question.conditionanswer === 'object'
+		) {
+			const newAnswers: Record<string, string> = { ...question.conditionanswer };
+			delete newAnswers[removedQuestionId];
+			question.conditionanswer = newAnswers;
+		}
+	};
+
+	const updateConditionQuestion = (index: number, questionId: string) => {
+		if (!Array.isArray(question.conditionquestion)) return;
+
+		const oldQuestionId = question.conditionquestion[index];
+		question.conditionquestion[index] = questionId;
+
+		// Update the answer object
+		if (question.conditionanswer && typeof question.conditionanswer === 'object') {
+			const newAnswers: Record<string, string> = { ...question.conditionanswer };
+			if (oldQuestionId && oldQuestionId !== questionId) {
+				delete newAnswers[oldQuestionId];
+			}
+			if (questionId) {
+				newAnswers[questionId] = newAnswers[questionId] || '';
+			}
+			question.conditionanswer = newAnswers;
+		}
+	};
+
+	const updateConditionAnswer = (questionId: string, answerIndex: string) => {
+		if (!question.conditionanswer || typeof question.conditionanswer !== 'object') {
+			question.conditionanswer = {};
+		}
+		question.conditionanswer = { ...question.conditionanswer, [questionId]: answerIndex };
 	};
 
 	const handleDelete = async () => {
@@ -281,58 +342,82 @@
 						<span> {m.conditional_question()} </span>
 					</div>
 					{#if question.conditional}
-						<div class="mb-2 mt-1 flex items-center gap-2">
-							<div class="flex flex-col">
-								<span class="text-xs font-bold">{m.condition_question()}</span>
-								<Select.Root
-									selected={{
-										value: question.conditionquestion,
-										label: $questions.find((q) => q.id === question.conditionquestion)?.title
-									}}
-									onSelectedChange={(value) => {
-										question.conditionquestion = value?.value || '';
-									}}
-								>
-									<Select.Trigger class="w-96 truncate">
-										{question.conditionquestion
-											? $questions
-													.find((q) => q.id === question.conditionquestion)
-													?.title.replace(/<[^>]*>/g, '') || m.no_title()
-											: m.select_a_question()}
-									</Select.Trigger>
-									<Select.Content class="max-h-64  overflow-y-auto">
-										{#each $questions.filter((q, qidx) => q.type === 'radio') as question}
-											<Select.Item class="truncate" value={question.id}>
-												{question.title.replace(/<[^>]*>/g, '') || m.no_title()}
-											</Select.Item>
-										{/each}
-									</Select.Content>
-								</Select.Root>
+						<div class="mb-2 mt-1 space-y-2">
+							<div class="flex items-center justify-between">
+								<span class="text-sm font-medium">{m.conditions_must_be_met()}</span>
+								<Button on:click={addCondition} variant="outline" size="sm" class="h-8 px-2">
+									<Plus size="14" class="mr-1" />
+									{m.add_condition()}
+								</Button>
 							</div>
-							{#if question.conditionquestion}
-								<div class="flex flex-col">
-									<span class="text-xs font-bold">{m.condition_answer()}</span>
-									<Select.Root
-										selected={{
-											value: question.conditionanswer,
-											label: $questions.find((q) => q.id === question.conditionquestion).options
-												.choices[question.conditionanswer]
-										}}
-										onSelectedChange={(value) => {
-											question.conditionanswer = value?.value ?? '';
-										}}
+
+							{#each question.conditionquestion || [] as conditionQuestionId, index}
+								<div class="flex items-start gap-2 rounded border p-2">
+									<div class="flex-1 space-y-2">
+										<div class="flex flex-col">
+											<span class="text-xs font-bold">{m.condition_question()}</span>
+											<Select.Root
+												selected={{
+													value: conditionQuestionId,
+													label: $questions.find((q) => q.id === conditionQuestionId)?.title
+												}}
+												onSelectedChange={(value) => {
+													updateConditionQuestion(index, value?.value || '');
+												}}
+											>
+												<Select.Trigger class="w-full truncate">
+													{conditionQuestionId
+														? $questions
+																.find((q) => q.id === conditionQuestionId)
+																?.title.replace(/<[^>]*>/g, '') || m.no_title()
+														: m.select_a_question()}
+												</Select.Trigger>
+												<Select.Content class="max-h-64 overflow-y-auto">
+													{#each $questions.filter((q) => q.type === 'radio') as q}
+														<Select.Item class="truncate" value={q.id}>
+															{q.title.replace(/<[^>]*>/g, '') || m.no_title()}
+														</Select.Item>
+													{/each}
+												</Select.Content>
+											</Select.Root>
+										</div>
+
+										{#if conditionQuestionId}
+											<div class="flex flex-col">
+												<span class="text-xs font-bold">{m.condition_answer()}</span>
+												<Select.Root
+													selected={{
+														value: question.conditionanswer?.[conditionQuestionId],
+														label: $questions.find((q) => q.id === conditionQuestionId)?.options
+															.choices[question.conditionanswer?.[conditionQuestionId]]
+													}}
+													onSelectedChange={(value) => {
+														updateConditionAnswer(conditionQuestionId, value?.value ?? '');
+													}}
+												>
+													<Select.Trigger class="w-full truncate">
+														<Select.Value placeholder={m.select_an_answer()} />
+													</Select.Trigger>
+													<Select.Content>
+														{#each $questions.find((q) => q.id === conditionQuestionId)?.options.choices || [] as answer, answerIndex}
+															<Select.Item value={answerIndex.toString()}>{answer}</Select.Item>
+														{/each}
+													</Select.Content>
+												</Select.Root>
+											</div>
+										{/if}
+									</div>
+
+									<Button
+										on:click={() => removeCondition(index)}
+										variant="ghost"
+										size="sm"
+										class="mt-5 h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
 									>
-										<Select.Trigger class="w-96 truncate">
-											<Select.Value placeholder={m.select_an_answer()} />
-										</Select.Trigger>
-										<Select.Content>
-											{#each $questions.find((q) => q.id === question.conditionquestion).options.choices as answer, index}
-												<Select.Item value={index}>{answer}</Select.Item>
-											{/each}
-										</Select.Content>
-									</Select.Root>
+										<X size="14" />
+									</Button>
 								</div>
-							{/if}
+							{/each}
 						</div>
 					{/if}
 					<div class="flex items-center gap-2">

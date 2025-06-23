@@ -185,10 +185,10 @@ export type NotificationsRecord = {
 	updated?: IsoDateString
 }
 
-export type QuestionsRecord<Toptions = unknown> = {
+export type QuestionsRecord<Tconditionanswer = unknown, Toptions = unknown> = {
 	conditional?: boolean
-	conditionanswer?: string
-	conditionquestion?: RecordIdString
+	conditionanswer?: null | Tconditionanswer
+	conditionquestion?: RecordIdString[]
 	count?: number
 	created?: IsoDateString
 	description?: HTMLString
@@ -271,7 +271,7 @@ export type CollegesResponse<Texpand = unknown> = Required<CollegesRecord> & Bas
 export type EventsResponse<Tterms = unknown, Texpand = unknown> = Required<EventsRecord<Tterms>> & BaseSystemFields<Texpand>
 export type FilesResponse<Texpand = unknown> = Required<FilesRecord> & BaseSystemFields<Texpand>
 export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>
-export type QuestionsResponse<Toptions = unknown, Texpand = unknown> = Required<QuestionsRecord<Toptions>> & BaseSystemFields<Texpand>
+export type QuestionsResponse<Tconditionanswer = unknown, Toptions = unknown, Texpand = unknown> = Required<QuestionsRecord<Tconditionanswer, Toptions>> & BaseSystemFields<Texpand>
 export type ReviewersResponse<Texpand = unknown> = Required<ReviewersRecord> & AuthSystemFields<Texpand>
 export type ReviewsResponse<Treview = unknown, Texpand = unknown> = Required<ReviewsRecord<Treview>> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
