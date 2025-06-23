@@ -199,6 +199,18 @@
 	"id": "ID",
 	"historical_applications": "歷年申請案件",
 
+	"admin_account": "管理員帳戶",
+	"admin_account_desc": "管理管理員帳戶設定和密碼",
+	"admin_email": "管理員信箱",
+	"change_password": "更改密碼",
+	"current_password": "目前密碼",
+	"new_password": "新密碼",
+	"confirm_password": "確認密碼",
+	"passwords_do_not_match": "密碼不符",
+	"password_too_short": "密碼必須至少8個字元",
+	"password_changed": "密碼更改成功",
+	"failed_to_change_password": "更改密碼失敗",
+
 	"college_management": "學院管理",
 	"college_management_desc": "管理系統中可用的學院列表",
 	"colleges": "學院",
