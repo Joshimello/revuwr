@@ -91,5 +91,14 @@
 	"create_apply_now": "立即申請！",
 	"create_terms_title": "條款與條件",
 	"create_terms_description": "您必須同意條款與條件才能申請此活動。",
-	"create_creating_application": "正在建立申請..."
+	"create_creating_application": "正在建立申請...",
+	"error_generic": "發生錯誤",
+	"error_user_not_logged_in": "使用者未登入",
+	"error_questions_not_fetched": "無法取得問題",
+	"error_event_not_open": "活動尚未開放申請",
+	"error_application_limit_reached": "已達申請上限",
+	"error_rollback": "發生回滾錯誤",
+	"error_unknown": "發生未知錯誤",
+	"error_unable_to_create_application": "無法建立申請",
+	"login_with_username": "使用帳號密碼登入"
 }
