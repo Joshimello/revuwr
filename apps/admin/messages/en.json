@@ -199,6 +199,18 @@
 	"id": "ID",
 	"historical_applications": "Applications",
 
+	"admin_account": "Admin Account",
+	"admin_account_desc": "Manage admin account settings and password",
+	"admin_email": "Admin Email",
+	"change_password": "Change Password",
+	"current_password": "Current Password",
+	"new_password": "New Password",
+	"confirm_password": "Confirm Password",
+	"passwords_do_not_match": "Passwords do not match",
+	"password_too_short": "Password must be at least 8 characters",
+	"password_changed": "Password changed successfully",
+	"failed_to_change_password": "Failed to change password",
+
 	"college_management": "College Management",
 	"college_management_desc": "Manage the list of colleges available in the system",
 	"colleges": "Colleges",

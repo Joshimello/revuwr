@@ -19,6 +19,7 @@
 		TableRow
 	} from '$lib/components/ui/table';
 	import * as m from '$lib/paraglide/messages.js';
+	import { pb } from '$lib/pocketbase/client';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import { addCollege, deleteCollege, syncColleges } from './methods';
@@ -31,6 +32,12 @@
 	};
 
 	let isLoading = false;
+	let isChangingPassword = false;
+	let passwordData = {
+		currentPassword: '',
+		newPassword: '',
+		confirmPassword: ''
+	};
 
 	async function handleSync() {
 		isLoading = true;
@@ -70,10 +77,110 @@
 			toast.error(m.failed_to_delete_college());
 		}
 	}
+
+	async function handleChangePassword() {
+		if (
+			!passwordData.currentPassword ||
+			!passwordData.newPassword ||
+			!passwordData.confirmPassword
+		) {
+			toast.error(m.validation_error());
+			return;
+		}
+
+		if (passwordData.newPassword !== passwordData.confirmPassword) {
+			toast.error(m.passwords_do_not_match());
+			return;
+		}
+
+		if (passwordData.newPassword.length < 8) {
+			toast.error(m.password_too_short());
+			return;
+		}
+
+		isChangingPassword = true;
+		try {
+			await pb.collection('_superusers').update(data.admin.id, {
+				oldPassword: passwordData.currentPassword,
+				password: passwordData.newPassword,
+				passwordConfirm: passwordData.confirmPassword
+			});
+
+			toast.success(m.password_changed());
+			passwordData = { currentPassword: '', newPassword: '', confirmPassword: '' };
+		} catch (error) {
+			toast.error(m.failed_to_change_password());
+		} finally {
+			isChangingPassword = false;
+		}
+	}
 </script>
 
 <div class="container mx-auto space-y-8 p-6">
 	<h1 class="text-3xl font-bold">{m.settings()}</h1>
+
+	<Card class="w-full">
+		<CardHeader>
+			<CardTitle>{m.admin_account()}</CardTitle>
+			<CardDescription>{m.admin_account_desc()}</CardDescription>
+		</CardHeader>
+
+		<CardContent>
+			<div class="space-y-6">
+				<div>
+					<label class="text-sm font-medium">{m.admin_email()}</label>
+					<div class="mt-1 text-sm text-muted-foreground">
+						{data.admin.email || 'admin@example.com'}
+					</div>
+				</div>
+
+				<div class="border-t pt-6">
+					<h3 class="mb-4 text-lg font-medium">{m.change_password()}</h3>
+					<div class="space-y-4">
+						<div>
+							<label for="current-password" class="mb-1 block text-sm font-medium"
+								>{m.current_password()}</label
+							>
+							<Input
+								id="current-password"
+								type="password"
+								bind:value={passwordData.currentPassword}
+								placeholder="Enter current password"
+							/>
+						</div>
+						<div>
+							<label for="new-password" class="mb-1 block text-sm font-medium"
+								>{m.new_password()}</label
+							>
+							<Input
+								id="new-password"
+								type="password"
+								bind:value={passwordData.newPassword}
+								placeholder="Enter new password"
+							/>
+						</div>
+						<div>
+							<label for="confirm-password" class="mb-1 block text-sm font-medium"
+								>{m.confirm_password()}</label
+							>
+							<Input
+								id="confirm-password"
+								type="password"
+								bind:value={passwordData.confirmPassword}
+								placeholder="Confirm new password"
+							/>
+						</div>
+						<Button variant="outline" on:click={handleChangePassword} disabled={isChangingPassword}>
+							{#if isChangingPassword}
+								<span class="mr-2 animate-spin">⟳</span>
+							{/if}
+							{m.change_password()}
+						</Button>
+					</div>
+				</div>
+			</div>
+		</CardContent>
+	</Card>
 
 	<Card class="w-full">
 		<CardHeader>
