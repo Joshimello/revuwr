@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Checkbox } from '$lib/components/ui/checkbox';
@@ -8,9 +9,10 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import { pbImage } from '$lib/pocketbase/client';
 	import { redirectToLogin } from '$lib/utils/redirect';
+	import { CircleAlertIcon } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
-	export let data;
+	export let data, form;
 	const { event, user } = data;
 	const notStarted = new Date(event.startDate) > new Date();
 	const isEnded = new Date(+new Date(event.endDate) + 86400000) < new Date();
@@ -29,6 +31,17 @@
 		redirectToLogin($page.url.pathname);
 	};
 </script>
+
+{#if form}
+	<Alert.Root variant="destructive">
+		<CircleAlertIcon class="size-4" />
+
+		<Alert.Title>{m.error_unable_to_create_application()}</Alert.Title>
+		<Alert.Description>
+			{form.message}
+		</Alert.Description>
+	</Alert.Root>
+{/if}
 
 <Card.Root>
 	{#if event.image}
@@ -80,8 +93,9 @@
 				href={event.moreInfo}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="text-blue-500 underline">{event.moreInfo}</a
-			>
+				class="text-blue-500 underline"
+				>{event.moreInfo}
+			</a>
 		</div>
 	</Card.Content>
 	<Card.Footer class="justify-end">

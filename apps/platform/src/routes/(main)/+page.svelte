@@ -287,7 +287,7 @@
 			<p class="mb-4 text-sm text-muted-foreground">{m.login_prompt()}</p>
 			<div class="flex gap-2">
 				<Button on:click={() => redirectToLogin($page.url.pathname)}>{m.login_button()}</Button>
-				<Button href="/login" variant="outline">Login with Username</Button>
+				<Button href="/login" variant="outline">{m.login_with_username()}</Button>
 			</div>
 		</div>
 	</div>

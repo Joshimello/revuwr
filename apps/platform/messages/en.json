@@ -91,5 +91,14 @@
 	"create_apply_now": "Apply now !",
 	"create_terms_title": "Terms and conditions",
 	"create_terms_description": "You have to agree to the terms and conditions to apply for this event.",
-	"create_creating_application": "Creating application..."
+	"create_creating_application": "Creating application...",
+	"error_generic": "An error occurred",
+	"error_user_not_logged_in": "User not logged in",
+	"error_questions_not_fetched": "Questions could not be fetched",
+	"error_event_not_open": "Event is not open for applications",
+	"error_application_limit_reached": "Application limit reached",
+	"error_rollback": "A rollback error occurred",
+	"error_unknown": "An unknown error occurred",
+	"error_unable_to_create_application": "Unable to create application",
+	"login_with_username": "Login with Username"
 }
