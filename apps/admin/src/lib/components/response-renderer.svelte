@@ -24,20 +24,22 @@
 	{:else if ['shortText', 'longText', 'email', 'phone'].includes(question.type)}
 		<span>{response}</span>
 	{:else if question.type == 'radio'}
-		{#if response.selected == question.options.choices.length}
+		{#if question.options?.choices && response.selected == question.options.choices.length}
 			<span>{response.others}</span>
-		{:else}
+		{:else if question.options?.choices}
 			<span>{question.options.choices[response.selected]}</span>
 		{/if}
 	{:else if question.type == 'checkbox'}
-		{#each [...response.selected] as selected, index}
-			{[...question.options.choices, response.others][
-				selected
-			]}{#if index < response.selected.length - 1}<span>, </span>
+		{#if question.options?.choices}
+			{#each [...response.selected] as selected, index}
+				{[...question.options.choices, response.others][
+					selected
+				]}{#if index < response.selected.length - 1}<span>, </span>
+				{/if}
+			{/each}
+			{#if response.selected.length == 0}
+				<span>No selection</span>
 			{/if}
-		{/each}
-		{#if response.selected.length == 0}
-			<span>No selection</span>
 		{/if}
 	{:else if question.type == 'budget'}
 		<Dialog.Root>
