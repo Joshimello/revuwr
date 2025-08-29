@@ -4,7 +4,8 @@ import * as cheerio from 'cheerio';
 
 export const GET: RequestHandler = async () => {
 	try {
-		const url = 'https://curricul.site.nthu.edu.tw/p/406-1208-189767,r8507.php?Lang=zh-tw';
+		const url =
+			'https://web.archive.org/web/20250512024345/https://curricul.site.nthu.edu.tw/p/406-1208-189767,r8507.php?Lang=zh-tw';
 		const response = await fetch(url);
 		const text = await response.text();
 
