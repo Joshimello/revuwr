@@ -1,6 +1,6 @@
 <script lang="ts">
+	import CollegePicker from '$lib/components/college-picker.svelte';
 	import CountryPicker from '$lib/components/country-picker.svelte';
-	import DepartmentPicker from '$lib/components/department-picker.svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -173,7 +173,7 @@
 					{#if account.occupation === 'student'}
 						<div class="col-span-2">
 							<Label>{m.label_college_program()}</Label>
-							<DepartmentPicker bind:value={account.department} onDepartmentChange={saveAccount} />
+							<CollegePicker bind:value={account.department} onCollegeChange={saveAccount} />
 						</div>
 					{/if}
 				</Card.Content>

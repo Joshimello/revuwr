@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import CollegePicker from '$lib/components/college-picker.svelte';
 	import CountryPicker from '$lib/components/country-picker.svelte';
-	import DepartmentPicker from '$lib/components/department-picker.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -85,7 +85,7 @@
 		isPhoneValid &&
 		isEmailValid;
 
-	const handleDepartmentChange = (value: string) => {
+	const handleCollegeChange = (value: string) => {
 		newMember.department = value;
 	};
 	const handleCountryChange = (value: string) => {
@@ -199,9 +199,9 @@
 						</div>
 						<div class="md:col-span-2">
 							<Label>Department</Label>
-							<DepartmentPicker
+							<CollegePicker
 								bind:value={newMember.department}
-								onDepartmentChange={handleDepartmentChange}
+								onCollegeChange={handleCollegeChange}
 							/>
 						</div>
 						<div class="md:col-span-2">

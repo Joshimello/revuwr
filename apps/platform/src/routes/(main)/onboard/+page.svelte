@@ -1,4 +1,10 @@
 <script lang="ts">
+	import {
+		PUBLIC_USER_COUNTRY,
+		PUBLIC_USER_DEPARTMENT,
+		PUBLIC_USER_OCCUPATION
+	} from '$env/static/public';
+	import CollegePicker from '$lib/components/college-picker.svelte';
 	import CountryPicker from '$lib/components/country-picker.svelte';
 	import DepartmentPicker from '$lib/components/department-picker.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -34,6 +40,10 @@
 
 	let page = 0;
 
+	$: showCountry = PUBLIC_USER_COUNTRY === 'show';
+	$: showOccupation = PUBLIC_USER_OCCUPATION === 'show';
+	$: showDepartment = PUBLIC_USER_DEPARTMENT === 'show';
+
 	let values = {
 		language: getLocale(),
 		name: user?.name,
@@ -41,8 +51,9 @@
 		email: user?.email,
 		country: '',
 		phone: '',
-		occupation: '',
-		department: ''
+		occupation: PUBLIC_USER_OCCUPATION === 'show' ? '' : 'student',
+		department: '',
+		dept: PUBLIC_USER_DEPARTMENT === 'show' ? '' : ''
 	};
 
 	let isLoading = false;
@@ -58,7 +69,11 @@
 			{stages[page].title}
 		</Card.Title>
 		<Card.Description class="max-w-md">
-			{stages[page].description}
+			{#if page == 2 && !showOccupation}
+				{m.onboard_occupation_description_general()}
+			{:else}
+				{stages[page].description}
+			{/if}
 		</Card.Description>
 	</Card.Header>
 	<Card.Content>
@@ -114,45 +129,61 @@
 					</Label>
 					<Input type="text" bind:value={values.phone} />
 				</div>
-				<div class="flex-1">
-					<Label>{m.onboard_country()}</Label>
-					<CountryPicker bind:value={values.country} lang={'en'} />
-				</div>
+				{#if showCountry}
+					<div class="flex-1">
+						<Label>{m.onboard_country()}</Label>
+						<CountryPicker bind:value={values.country} lang={'en'} />
+					</div>
+				{/if}
 			</div>
 		{:else if page == 2}
 			<div class="flex w-full flex-col gap-6">
-				<ToggleGroup.Root
-					variant="outline"
-					type="single"
-					class="grid w-full grid-cols-2"
-					bind:value={values.occupation}
-				>
-					<ToggleGroup.Item
-						value="student"
-						class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
+				{#if showOccupation}
+					<ToggleGroup.Root
+						variant="outline"
+						type="single"
+						class="grid w-full grid-cols-2"
+						bind:value={values.occupation}
 					>
-						{m.onboard_student()}
-					</ToggleGroup.Item>
-					<ToggleGroup.Item
-						value="teacher"
-						class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
-					>
-						{m.onboard_staff()}
-					</ToggleGroup.Item>
-				</ToggleGroup.Root>
+						<ToggleGroup.Item
+							value="student"
+							class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
+						>
+							{m.onboard_student()}
+						</ToggleGroup.Item>
+						<ToggleGroup.Item
+							value="teacher"
+							class="h-20 data-[state=on]:bg-foreground data-[state=on]:text-background"
+						>
+							{m.onboard_staff()}
+						</ToggleGroup.Item>
+					</ToggleGroup.Root>
+				{/if}
 				{#if values.occupation == 'student'}
 					<div class="grid grid-cols-1 gap-6">
 						<div class="flex-1">
 							<Label>{m.onboard_department()}</Label>
-							<DepartmentPicker bind:value={values.department} />
+							<CollegePicker bind:value={values.department} />
 						</div>
+						{#if showDepartment}
+							<div class="flex-1">
+								<Label>Department</Label>
+								<DepartmentPicker bind:value={values.dept} />
+							</div>
+						{/if}
 					</div>
 				{:else if values.occupation == 'teacher'}
 					<div class="grid grid-cols-1 gap-6">
 						<div class="flex-1">
 							<Label>{m.onboard_department()}</Label>
-							<DepartmentPicker bind:value={values.department} />
+							<CollegePicker bind:value={values.department} />
 						</div>
+						{#if showDepartment}
+							<div class="flex-1">
+								<Label>Department</Label>
+								<DepartmentPicker bind:value={values.dept} />
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -180,7 +211,7 @@
 					values.username &&
 					isPhoneValid &&
 					values.email &&
-					values.country
+					(showCountry ? values.country : true)
 				)}
 				on:click={() => (page = 2)}
 			>
@@ -202,12 +233,17 @@
 			>
 				<input type="hidden" value={values.language} name="language" />
 				<input type="hidden" value={values.phone} name="phone" />
+				<input type="hidden" value={values.country} name="country" />
 				<input type="hidden" value={values.occupation} name="occupation" />
 				<input type="hidden" value={values.department} name="department" />
+				<input type="hidden" value={values.dept} name="dept" />
 				<Button
 					type="submit"
 					class="flex w-full items-center gap-2 md:w-auto"
-					disabled={isLoading || !values.occupation || !values.department}
+					disabled={isLoading ||
+						(showOccupation && !values.occupation) ||
+						!values.department ||
+						(showDepartment && !values.dept)}
 				>
 					{m.onboard_finish()}
 					<ArrowRight size="16" />

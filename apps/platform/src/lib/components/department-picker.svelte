@@ -3,42 +3,22 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import { pb } from '$lib/pocketbase/client';
+	import { departments } from '$lib/consts/departments';
 	import { cn } from '$lib/utils.js';
-	import { onMount, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import CaretSort from 'svelte-radix/CaretSort.svelte';
 	import Check from 'svelte-radix/Check.svelte';
-	import { toast } from 'svelte-sonner';
 
 	let open = false;
 	export let value: string = '';
-export let lang: 'en' | 'zh' = 'en';
-export let onDepartmentChange: ((value: string) => void) | undefined = undefined;
+	export let lang: 'en' | 'zh' = 'en';
+	export let onDepartmentChange: ((value: string) => void) | undefined = undefined;
 
-// Internal ID tracking to maintain selection state
-let selectedId: string = '';
-
-	let departments: { code: string; name_en: string; name_zh: string }[] = [];
-
-	const getColleges = async () => {
-		try {
-			const collegesData = await pb.collection('colleges').getFullList();
-			return collegesData.map((college) => ({
-				code: college.id,
-				name_en: college.en,
-				name_zh: college.zh
-			}));
-		} catch (err) {
-			toast.error('Error fetching colleges');
-		}
-	};
-
-	onMount(async () => {
-		departments = (await getColleges()) || [];
-	});
+	// Internal ID tracking to maintain selection state
+	let selectedId: string = '';
 
 	$: {
-		// Initialize or update selectedId when departments load or value changes
+		// Initialize or update selectedId when value changes
 		const matchingDept = departments.find((f) => f.name_zh === value);
 		if (matchingDept) {
 			selectedId = matchingDept.code;
@@ -54,7 +34,7 @@ let selectedId: string = '';
 	}
 
 	$: selectedValue =
-		departments.find((f) => f.code === selectedId)?.[`name_${lang}`] ?? 'Select a college...';
+		departments.find((f) => f.code === selectedId)?.[`name_${lang}`] ?? 'Select a department...';
 
 	function closeAndFocusTrigger(triggerId: string) {
 		open = false;
@@ -82,8 +62,8 @@ let selectedId: string = '';
 	</Popover.Trigger>
 	<Popover.Content class="p-0">
 		<Command.Root>
-			<Command.Input placeholder="Search college..." class="h-9" />
-			<Command.Empty>No colleges found.</Command.Empty>
+			<Command.Input placeholder="Search department..." class="h-9" />
+			<Command.Empty>No departments found.</Command.Empty>
 			<Command.Group>
 				<ScrollArea class="h-48">
 					{#each departments as department}
@@ -95,10 +75,16 @@ let selectedId: string = '';
 								closeAndFocusTrigger(ids.trigger);
 							}}
 						>
-						<Check
-							class={cn('mr-2 h-4 w-4 shrink-0', selectedId !== department.code && 'text-transparent')}
-						/>
-							{department[`name_${lang}`]}
+							<Check
+								class={cn(
+									'mr-2 h-4 w-4 shrink-0',
+									selectedId !== department.code && 'text-transparent'
+								)}
+							/>
+							<div class="flex items-center gap-2">
+								<span class="text-sm font-bold">{department.code}</span>
+								<span>{department[`name_${lang}`]}</span>
+							</div>
 						</Command.Item>
 					{/each}
 				</ScrollArea>
