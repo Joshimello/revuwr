@@ -69,6 +69,7 @@
 	"onboard_basic_info_description": "我們需要一些基本資訊來幫助您開始。您稍後也可以修改這些資訊。",
 	"onboard_occupation_title": "職業狀態",
 	"onboard_occupation_description": "您是學生還是教職員工？這將幫助我們為您提供正確的資源。",
+	"onboard_occupation_description_general": "請提供您的科系資訊，以便我們為您提供正確的資源。",
 	"onboard_fullname": "全名",
 	"onboard_student_staff_id": "學號或員工編號",
 	"onboard_email": "電子郵件",

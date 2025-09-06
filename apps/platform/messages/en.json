@@ -69,6 +69,7 @@
 	"onboard_basic_info_description": "We need some basic information to get you started. You will have the options to modify this later as well.",
 	"onboard_occupation_title": "Occupation status",
 	"onboard_occupation_description": "Are you a student or a staff member? This will help us to provide you with the right resources.",
+	"onboard_occupation_description_general": "Please provide your department information so we can provide you with the right resources.",
 	"onboard_fullname": "Full Name",
 	"onboard_student_staff_id": "Student or Staff ID",
 	"onboard_email": "Email",
