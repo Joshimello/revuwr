@@ -369,5 +369,6 @@
 	"event_id": "活動 ID",
 	"view": "檢視",
 	"no_applications_found_for_user": "此使用者沒有找到申請",
-	"user_not_found_or_error": "找不到使用者或載入使用者資料時發生錯誤。"
+	"user_not_found_or_error": "找不到使用者或載入使用者資料時發生錯誤。",
+	"end_date_required_for_reviewer": "新增評審人時需要提供結束日期"
 }

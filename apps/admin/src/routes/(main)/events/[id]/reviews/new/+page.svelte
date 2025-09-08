@@ -1,48 +1,89 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import DatePicker from '$lib/components/date-picker.svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import * as Select from '$lib/components/ui/select';
-	import DatePicker from '$lib/components/date-picker.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { Switch } from '$lib/components/ui/switch';
+	import * as Table from '$lib/components/ui/table';
+	import * as m from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
-	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import type {
 		ApplicationsResponse,
 		EventsResponse,
 		QuestionsResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Trash, X } from 'lucide-svelte';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Switch } from '$lib/components/ui/switch';
-  import * as Table from "$lib/components/ui/table"
-	import { PUBLIC_BASE_PATH } from '$env/static/public';
-	import * as m from '$lib/paraglide/messages.js';
+	import { X } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
-	type ExpandedEvent = EventsResponse<any, {
-		questions: QuestionsResponse[];
-	}>;
+	type ExpandedEvent = EventsResponse<
+		Record<string, unknown>,
+		{
+			questions: QuestionsResponse[];
+		}
+	>;
 
 	let applications: ApplicationsResponse[] = [];
 	let event: ExpandedEvent | null = null;
-  
-  let shareResponder = false;
+
+	let shareResponder = false;
 	let selectedApplications = $page.url.searchParams.get('ids')?.split(',') || [];
 	let selectedQuestions: string[] = [];
-  let reviewers: {
-    email: string;
-    endDate: Date | null;
-  }[] = [];
+	let reviewerRows: {
+		email: string;
+		endDate: Date | null;
+		id: string;
+	}[] = [{ email: '', endDate: null, id: crypto.randomUUID() }];
 
-  let newReviewer = {
-    email: '',
-    endDate: null as Date | null
-  };
+	// Function to validate email format
+	const isValidEmail = (email: string): boolean => {
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return emailRegex.test(email);
+	};
+
+	// Function to check if a row is complete and valid
+	const isRowValid = (row: { email: string; endDate: Date | null }): boolean => {
+		return row.email.trim() !== '' && row.endDate !== null && isValidEmail(row.email.trim());
+	};
+
+	// Function to get valid reviewers (filters out incomplete rows)
+	const getValidReviewers = () => {
+		return reviewerRows.filter(isRowValid).map((row) => ({
+			email: row.email.trim(),
+			endDate: row.endDate
+		}));
+	};
+
+	// Function to handle input changes and manage rows
+	const handleRowChange = (index: number) => {
+		const currentRow = reviewerRows[index];
+		const isLastRow = index === reviewerRows.length - 1;
+
+		// If this is the last row and it becomes valid, add a new empty row
+		if (isLastRow && isRowValid(currentRow)) {
+			reviewerRows = [...reviewerRows, { email: '', endDate: null, id: crypto.randomUUID() }];
+		}
+	};
+
+	// Function to update email for a specific row
+	const updateRowEmail = (index: number, email: string) => {
+		reviewerRows[index].email = email;
+		reviewerRows = [...reviewerRows]; // Trigger reactivity
+		handleRowChange(index);
+	};
+
+	// Function to update end date for a specific row
+	const updateRowEndDate = (index: number, endDate: Date | null) => {
+		reviewerRows[index].endDate = endDate;
+		reviewerRows = [...reviewerRows]; // Trigger reactivity
+		handleRowChange(index);
+	};
 
 	onMount(async () => {
 		try {
@@ -64,7 +105,7 @@
 		}
 	});
 
-  const handleCreateReviews = async () => {
+	const handleCreateReviews = async () => {
 		if (selectedApplications.length === 0) {
 			toast.error('Please select at least one application');
 			return;
@@ -75,24 +116,28 @@
 			return;
 		}
 
-		if (reviewers.length === 0) {
+		const validReviewers = getValidReviewers();
+		if (validReviewers.length === 0) {
 			toast.error('Please add at least one reviewer');
 			return;
 		}
 
-		const promises = reviewers.map(async (reviewer) => 
-			pb.collection('reviews').create({
-				applications: selectedApplications,
-				questions: selectedQuestions,
-				shareResponder: shareResponder,
-				reviewerEmail: reviewer.email,
-				endDate: reviewer.endDate,
-				review: {},
-				status: 'draft',
-			}, {
-				requestKey: reviewer.email
-			})
-		)
+		const promises = validReviewers.map(async (reviewer) =>
+			pb.collection('reviews').create(
+				{
+					applications: selectedApplications,
+					questions: selectedQuestions,
+					shareResponder: shareResponder,
+					reviewerEmail: reviewer.email,
+					endDate: reviewer.endDate,
+					review: {},
+					status: 'draft'
+				},
+				{
+					requestKey: reviewer.email
+				}
+			)
+		);
 		try {
 			await Promise.all(promises);
 			toast.success('Review requests created');
@@ -104,8 +149,7 @@
 				toast.error('An error occurred');
 			}
 		}
-  };
-
+	};
 </script>
 
 <div class="flex items-center">
@@ -180,14 +224,14 @@
 		</Card.Title>
 		<Card.Description>
 			{m.reviewable_fields_desc()}
-    </Card.Description>
+		</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<div class="mb-2 flex flex-wrap gap-2">
 			{#each event?.expand?.questions || [] as question}
 				<Button
-          size="sm"
-          class="h-max py-0.5 px-1.5 overflow-hidden"
+					size="sm"
+					class="h-max overflow-hidden px-1.5 py-0.5"
 					variant={selectedQuestions.includes(question.id) ? 'default' : 'secondary'}
 					on:click={() => {
 						selectedQuestions = selectedQuestions.includes(question.id)
@@ -200,23 +244,33 @@
 			{/each}
 		</div>
 		<div>
-			<Button variant="outline" size="sm" class="mt-3" on:click={() => {
-				selectedQuestions = event?.expand?.questions.map((i) => i.id) || [];
-			}}>
+			<Button
+				variant="outline"
+				size="sm"
+				class="mt-3"
+				on:click={() => {
+					selectedQuestions = event?.expand?.questions.map((i) => i.id) || [];
+				}}
+			>
 				{m.select_all()}
 			</Button>
-			<Button variant="outline" size="sm" class="mt-3 ml-2" on:click={() => {
-				selectedQuestions = [];
-			}}>
+			<Button
+				variant="outline"
+				size="sm"
+				class="ml-2 mt-3"
+				on:click={() => {
+					selectedQuestions = [];
+				}}
+			>
 				{m.deselect_all()}
 			</Button>
 		</div>
-    <div class="flex items-center gap-2 mt-6">
-      <Switch bind:checked={shareResponder} />
-      <Label>
+		<div class="mt-6 flex items-center gap-2">
+			<Switch bind:checked={shareResponder} />
+			<Label>
 				{m.share_responder_details_with_reviewer()}
 			</Label>
-    </div>
+		</div>
 	</Card.Content>
 </Card.Root>
 
@@ -230,66 +284,42 @@
 		</Card.Description>
 	</Card.Header>
 	<Card.Content>
-
-    {#if reviewers.length > 0}
-      <Table.Root class="border mb-6">
-        <Table.Header>
-          <Table.Row>
-            <Table.Head>
-							{m.reviewer_email()}
-						</Table.Head>
-            <Table.Head>
-							{m.end_date()}
-						</Table.Head>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {#each reviewers as reviewer}
-            <Table.Row>
-              <Table.Cell>{reviewer.email}</Table.Cell>
-              <Table.Cell>
-                {#if reviewer.endDate}
-                  {reviewer.endDate.toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                {:else}
-                  -
-                {/if}
-              </Table.Cell>
-            </Table.Row>
-          {/each}
-        </Table.Body>
-      </Table.Root>
-    {/if}
-
-    <div class="flex gap-2 items-end">
-      <div class="flex flex-col gap-2 w-full">
-        <Label>
-					{m.reviewer_email()}
-				</Label>
-        <Input bind:value={newReviewer.email} class="w-full"/>
-      </div>
-      <div class="flex flex-col gap-2">
-        <Label>
-					{m.end_date()}
-				</Label>
-        <DatePicker onValueChange={v => {
-          newReviewer.endDate = v?.toDate("Asia/Singapore") || null;
-        }} />
-      </div>
-      <Button size="icon" class="shrink-0" on:click={() => {
-        reviewers = [...reviewers, newReviewer];
-        newReviewer = {
-          email: '',
-          endDate: null
-        };
-      }}>
-        +
-      </Button>
-    </div>
-
+		<Table.Root class="border">
+			<Table.Header>
+				<Table.Row>
+					<Table.Head class="w-1/2">
+						{m.reviewer_email()}
+					</Table.Head>
+					<Table.Head class="w-1/2">
+						{m.end_date()}
+					</Table.Head>
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each reviewerRows as row, index (row.id)}
+					<Table.Row>
+						<Table.Cell class="p-2">
+							<Input
+								bind:value={row.email}
+								on:input={() => updateRowEmail(index, row.email)}
+								placeholder="reviewer@example.com"
+								class="border-0 p-1 focus-visible:ring-0"
+							/>
+						</Table.Cell>
+						<Table.Cell class="p-2">
+							<div class="border-0">
+								<DatePicker
+									onValueChange={(v) => {
+										const date = v?.toDate('Asia/Singapore') || null;
+										updateRowEndDate(index, date);
+									}}
+								/>
+							</div>
+						</Table.Cell>
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
 	</Card.Content>
 </Card.Root>
 

@@ -369,5 +369,6 @@
 	"event_id": "Event ID",
 	"view": "View",
 	"no_applications_found_for_user": "No applications found for this user",
-	"user_not_found_or_error": "User not found or an error occurred while loading user data."
+	"user_not_found_or_error": "User not found or an error occurred while loading user data.",
+	"end_date_required_for_reviewer": "End date is required when adding a reviewer"
 }
