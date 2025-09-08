@@ -59,6 +59,7 @@
 					'Responder Phone',
 					'Responder Occupation',
 					'Responder College',
+					'Responder Department',
 					'Responder Year',
 					...(a.expand?.response.map((r) => r.expand?.question.title ?? r.question) ?? [])
 				];
@@ -85,6 +86,7 @@
 				row['Responder Phone'] = a.expand?.responder.phone ?? '';
 				row['Responder Occupation'] = a.expand?.responder.occupation ?? '';
 				row['Responder College'] = a.expand?.responder.department ?? '';
+				row['Responder Department'] = a.expand?.responder.dept ?? '';
 				row['Responder Year'] = a.expand?.responder.year ?? '';
 
 				a.expand?.response.forEach((r) => {

@@ -426,11 +426,9 @@
 								{m.this_action_cannot_be_undone()}
 							</p>
 							<p class="mb-4 text-sm">
-								{m.type_event_name_to_confirm({
-									name: settings.name
-								})}
+								{m.type_confirm_delete_to_confirm()}
 							</p>
-							<Input type="text" placeholder={settings.name} bind:value={deleteConfirmation} />
+							<Input type="text" placeholder="CONFIRM DELETE" bind:value={deleteConfirmation} />
 						</div>
 						<Dialog.Footer>
 							<Dialog.Close>
@@ -439,7 +437,7 @@
 							<Button
 								on:click={handleDeleteEvent}
 								variant="destructive"
-								disabled={deleteConfirmation !== settings.name}
+								disabled={deleteConfirmation !== 'CONFIRM DELETE'}
 							>
 								{m.delete_event()}
 							</Button>

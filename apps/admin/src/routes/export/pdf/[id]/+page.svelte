@@ -128,6 +128,11 @@
 		</div>
 
 		<div class="flex items-center gap-4 text-xl leading-none">
+			<span class="text-muted-foreground">DEPARTMENT</span>
+			<span class="">{responder.dept}</span>
+		</div>
+
+		<div class="flex items-center gap-4 text-xl leading-none">
 			<span class="text-muted-foreground">YEAR</span>
 			<span class="">{responder.year}</span>
 		</div>
