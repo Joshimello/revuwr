@@ -241,6 +241,7 @@ export type UsersRecord = {
 	country?: string
 	created?: IsoDateString
 	department?: string
+	dept?: string
 	disableNotify?: boolean
 	email?: string
 	emailVisibility?: boolean

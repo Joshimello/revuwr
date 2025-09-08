@@ -7,6 +7,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Table from '$lib/components/ui/table';
+	import * as m from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
 	import {
 		Building2,
@@ -35,7 +36,7 @@
 			if (err instanceof Error) {
 				toast.error(err.message);
 			} else {
-				toast.error('Unknown error');
+				toast.error(m.unknown_error());
 				console.error(err);
 			}
 		} finally {
@@ -64,15 +65,15 @@
 		}}
 	>
 		<ChevronLeft class="h-4 w-4" />
-		<span class="sr-only">Back</span>
+		<span class="sr-only">{m.back()}</span>
 	</Button>
 	<h1 class="text-lg font-semibold md:text-2xl">
 		{#if record}
-			{record.name || record.nameEn || 'Unnamed User'}
+			{record.name || record.nameEn || m.unnamed_user()}
 		{:else if loading}
-			Loading...
+			{m.loading()}
 		{:else}
-			User Not Found
+			{m.user_not_found()}
 		{/if}
 	</h1>
 </div>
@@ -82,8 +83,8 @@
 		<!-- User Information Card -->
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>User Information</Card.Title>
-				<Card.Description>Basic details about the user</Card.Description>
+				<Card.Title>{m.user_information()}</Card.Title>
+				<Card.Description>{m.basic_details_about_user()}</Card.Description>
 			</Card.Header>
 			<Card.Content class="grid gap-4">
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -91,7 +92,7 @@
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<User class="h-4 w-4" />
-							<span>Username</span>
+							<span>{m.username()}</span>
 						</div>
 						<p class="font-mono">{record.username}</p>
 					</div>
@@ -99,7 +100,7 @@
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Hash class="h-4 w-4" />
-							<span>User ID</span>
+							<span>{m.user_id()}</span>
 						</div>
 						<p class="font-mono text-xs">{record.id}</p>
 					</div>
@@ -108,9 +109,9 @@
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<User class="h-4 w-4" />
-							<span>Name</span>
+							<span>{m.name()}</span>
 						</div>
-						<p>{record.name || 'Not provided'}</p>
+						<p>{record.name || m.not_provided()}</p>
 						{#if record.nameEn}
 							<p class="text-sm text-muted-foreground">{record.nameEn}</p>
 						{/if}
@@ -120,28 +121,28 @@
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Languages class="h-4 w-4" />
-							<span>Language</span>
+							<span>{m.language()}</span>
 						</div>
-						<p>{record.language || 'Not specified'}</p>
+						<p>{record.language || m.not_specified()}</p>
 					</div>
 
 					<!-- Email -->
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Mail class="h-4 w-4" />
-							<span>Email</span>
+							<span>{m.email()}</span>
 						</div>
 						<p class="break-all">{record.email}</p>
 						<div class="flex items-center gap-2">
 							{#if record.verified}
-								<Badge variant="outline" class="bg-green-500 text-white">Verified</Badge>
+								<Badge variant="outline" class="bg-green-500 text-white">{m.verified()}</Badge>
 							{:else}
-								<Badge variant="outline" class="bg-yellow-500 text-white">Unverified</Badge>
+								<Badge variant="outline" class="bg-yellow-500 text-white">{m.unverified()}</Badge>
 							{/if}
 							{#if record.emailVisibility}
-								<Badge variant="outline">Visible</Badge>
+								<Badge variant="outline">{m.visible()}</Badge>
 							{:else}
-								<Badge variant="outline">Hidden</Badge>
+								<Badge variant="outline">{m.hidden()}</Badge>
 							{/if}
 						</div>
 					</div>
@@ -150,52 +151,61 @@
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Phone class="h-4 w-4" />
-							<span>Phone</span>
+							<span>{m.phone()}</span>
 						</div>
-						<p>{record.phone || 'Not provided'}</p>
+						<p>{record.phone || m.not_provided()}</p>
 					</div>
 
 					<!-- Occupation -->
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Building2 class="h-4 w-4" />
-							<span>Occupation</span>
+							<span>{m.occupation()}</span>
 						</div>
-						<p>{record.occupation || 'Not provided'}</p>
+						<p>{record.occupation || m.not_provided()}</p>
+					</div>
+
+					<!-- College -->
+					<div class="flex flex-col gap-1">
+						<div class="flex items-center gap-2 text-sm text-muted-foreground">
+							<Building2 class="h-4 w-4" />
+							<span>{m.college()}</span>
+						</div>
+						<p>{record.department || m.not_provided()}</p>
 					</div>
 
 					<!-- Department -->
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Building2 class="h-4 w-4" />
-							<span>Department</span>
+							<span>{m.department()}</span>
 						</div>
-						<p>{record.department || 'Not provided'}</p>
+						<p>{record.dept || m.not_provided()}</p>
 					</div>
 
 					<!-- Country -->
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Building2 class="h-4 w-4" />
-							<span>Country</span>
+							<span>{m.country()}</span>
 						</div>
-						<p>{record.country || 'Not provided'}</p>
+						<p>{record.country || m.not_provided()}</p>
 					</div>
 
 					<!-- Year -->
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Calendar class="h-4 w-4" />
-							<span>Year</span>
+							<span>{m.year()}</span>
 						</div>
-						<p>{record.year || 'Not provided'}</p>
+						<p>{record.year || m.not_provided()}</p>
 					</div>
 
 					<!-- Created Date -->
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Calendar class="h-4 w-4" />
-							<span>Created</span>
+							<span>{m.created()}</span>
 						</div>
 						<p class="text-sm">{formatDate(record.created)}</p>
 					</div>
@@ -204,7 +214,7 @@
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<Calendar class="h-4 w-4" />
-							<span>Last Updated</span>
+							<span>{m.last_updated()}</span>
 						</div>
 						<p class="text-sm">{formatDate(record.updated)}</p>
 					</div>
@@ -215,23 +225,25 @@
 				<!-- Settings -->
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div class="flex flex-col gap-1">
-						<div class="text-sm text-muted-foreground">Notifications</div>
+						<div class="text-sm text-muted-foreground">{m.notifications()}</div>
 						<div>
 							{#if record.disableNotify}
-								<Badge variant="outline" class="bg-red-500 text-white">Disabled</Badge>
+								<Badge variant="outline" class="bg-red-500 text-white">{m.disabled()}</Badge>
 							{:else}
-								<Badge variant="outline" class="bg-green-500 text-white">Enabled</Badge>
+								<Badge variant="outline" class="bg-green-500 text-white">{m.enabled()}</Badge>
 							{/if}
 						</div>
 					</div>
 
 					<div class="flex flex-col gap-1">
-						<div class="text-sm text-muted-foreground">Initialization</div>
+						<div class="text-sm text-muted-foreground">{m.initialization()}</div>
 						<div>
 							{#if record.init}
-								<Badge variant="outline" class="bg-green-500 text-white">Initialized</Badge>
+								<Badge variant="outline" class="bg-green-500 text-white">{m.initialized()}</Badge>
 							{:else}
-								<Badge variant="outline" class="bg-yellow-500 text-white">Not Initialized</Badge>
+								<Badge variant="outline" class="bg-yellow-500 text-white"
+									>{m.not_initialized()}</Badge
+								>
 							{/if}
 						</div>
 					</div>
@@ -242,14 +254,12 @@
 		<!-- Applications Card -->
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Applications</Card.Title>
+				<Card.Title>{m.applications()}</Card.Title>
 				<Card.Description>
 					{#if record.expand?.applications}
-						{record.expand.applications.length} application{record.expand.applications.length !== 1
-							? 's'
-							: ''} found
+						{m.applications_found({ count: record.expand.applications.length })}
 					{:else}
-						No applications found
+						{m.no_applications_found()}
 					{/if}
 				</Card.Description>
 			</Card.Header>
@@ -258,13 +268,13 @@
 					<Table.Root>
 						<Table.Header>
 							<Table.Row>
-								<Table.Head>Application ID</Table.Head>
-								<Table.Head>Event</Table.Head>
-								<Table.Head>Status</Table.Head>
-								<Table.Head>Serial</Table.Head>
-								<Table.Head>Created</Table.Head>
-								<Table.Head>Updated</Table.Head>
-								<Table.Head class="text-right">Actions</Table.Head>
+								<Table.Head>{m.application_id()}</Table.Head>
+								<Table.Head>{m.event()}</Table.Head>
+								<Table.Head>{m.status()}</Table.Head>
+								<Table.Head>{m.serial()}</Table.Head>
+								<Table.Head>{m.created()}</Table.Head>
+								<Table.Head>{m.updated()}</Table.Head>
+								<Table.Head class="text-right">{m.actions()}</Table.Head>
 							</Table.Row>
 						</Table.Header>
 						<Table.Body>
@@ -279,11 +289,11 @@
 												href={`${PUBLIC_BASE_PATH}/events/${application.event}`}
 												class="flex items-center gap-1 text-blue-600 hover:underline"
 											>
-												{application.expand.event.name || 'Unnamed Event'}
+												{application.expand.event.name || m.unnamed_event()}
 												<ExternalLink class="h-3 w-3" />
 											</a>
 										{:else}
-											<span class="text-muted-foreground">Event ID: {application.event}</span>
+											<span class="text-muted-foreground">{m.event_id()}: {application.event}</span>
 										{/if}
 									</Table.Cell>
 									<Table.Cell>
@@ -308,7 +318,7 @@
 											variant="outline"
 											href={`${PUBLIC_BASE_PATH}/response/${application.id}`}
 										>
-											View
+											{m.view()}
 											<ExternalLink class="ml-1 h-3 w-3" />
 										</Button>
 									</Table.Cell>
@@ -318,7 +328,7 @@
 					</Table.Root>
 				{:else}
 					<div class="py-8 text-center text-muted-foreground">
-						No applications found for this user
+						{m.no_applications_found_for_user()}
 					</div>
 				{/if}
 			</Card.Content>
@@ -328,7 +338,7 @@
 	<Card.Root>
 		<Card.Content class="pt-6">
 			<div class="py-8 text-center text-muted-foreground">
-				User not found or an error occurred while loading user data.
+				{m.user_not_found_or_error()}
 			</div>
 		</Card.Content>
 	</Card.Root>
