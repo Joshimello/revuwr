@@ -17,6 +17,7 @@
 	import { ChevronLeft } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import EndEarlyButton from './end-early-button.svelte';
 
 	let collectionId = '';
 
@@ -76,7 +77,8 @@
 	};
 
 	const handleImageRemove = async () => {
-		(settings.image = ''), handleChange();
+		settings.image = '';
+		handleChange();
 	};
 
 	const handleDeleteEvent = async () => {
@@ -143,6 +145,17 @@
 			}
 		}
 	});
+
+	const handleEventEnded = async () => {
+		// Refresh the event data after ending it early
+		try {
+			const event = await pb.collection('events').getOne($page.params.id);
+			settings.endDate = event.endDate ? new Date(event.endDate) : null;
+			prevSettings = JSON.stringify(settings);
+		} catch (err) {
+			console.error('Error refreshing event data:', err);
+		}
+	};
 </script>
 
 <div class="flex items-center gap-4">
@@ -322,6 +335,7 @@
 					{m.allow_applications_after_dateline()}
 				</Label>
 			</div>
+			<EndEarlyButton eventId={$page.params.id} onEventEnded={handleEventEnded} />
 		</div>
 	</Card.Content>
 </Card.Root>
