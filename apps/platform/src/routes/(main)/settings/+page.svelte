@@ -16,7 +16,7 @@
 		UsersOccupationOptions,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { AlertTriangle, ChevronLeft } from 'lucide-svelte';
+	import { AlertTriangle, ChevronLeft, Upload, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	export let data;
@@ -24,6 +24,7 @@
 
 	let account: UsersResponse | null = user;
 	let stringAccount: string | null = null;
+	let avatarFileInput: HTMLInputElement;
 	const phoneRegex = /^(?:\+8869\d{8}|09\d{8})$/;
 	$: isPhoneValid = account?.phone ? phoneRegex.test(account.phone) : false;
 	$: hasPhoneNumber = account?.phone && account.phone.trim() !== '';
@@ -32,7 +33,6 @@
 		if (!account) return;
 		if (JSON.stringify(account) === stringAccount) return;
 
-		// If phone number is provided but invalid, don't save
 		if (account.phone && !isPhoneValid) {
 			toast.error('Please enter a valid phone number before saving.');
 			return;
@@ -45,7 +45,7 @@
 				college: account.department,
 				language: account.language,
 				disableNotify: account.disableNotify,
-				country: account.country // Add country field
+				country: account.country
 			});
 			toast.success('Account saved.');
 			stringAccount = JSON.stringify(account);
@@ -67,7 +67,7 @@
 	const handleLanguageChange = (value: string) => {
 		if (!account) return;
 		account.language = value as UsersLanguageOptions;
-		setLocale(value);
+		setLocale(value as 'en' | 'zh');
 		saveAccount();
 	};
 
@@ -75,6 +75,57 @@
 		if (!account) return;
 		account.disableNotify = value;
 		saveAccount();
+	};
+
+	const handleAvatarChange = async (event: Event) => {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+
+		if (!file || !account) return;
+
+		// Validate file type
+		if (!file.type.startsWith('image/')) {
+			toast.error('Please select an image file.');
+			return;
+		}
+
+		// Validate file size (max 5MB)
+		if (file.size > 5 * 1024 * 1024) {
+			toast.error('File size must be less than 5MB.');
+			return;
+		}
+
+		try {
+			const formData = new FormData();
+			formData.append('avatar', file);
+
+			account = await pb.collection('users').update(account.id, formData);
+			toast.success('Avatar updated successfully');
+			stringAccount = JSON.stringify(account);
+		} catch (err) {
+			console.error('Avatar upload error:', err);
+			toast.error('Failed to update avatar');
+		}
+	};
+
+	const handleAvatarRemove = async () => {
+		if (!account) return;
+
+		try {
+			account = await pb.collection('users').update(account.id, {
+				avatar: null
+			});
+			toast.success('Avatar removed successfully');
+			stringAccount = JSON.stringify(account);
+		} catch (err) {
+			console.error('Avatar remove error:', err);
+			toast.error('Failed to remove avatar');
+		}
+	};
+
+	const getAvatarUrl = (user: UsersResponse) => {
+		if (!user.avatar) return null;
+		return pb.files.getUrl(user, user.avatar);
 	};
 </script>
 
@@ -109,7 +160,56 @@
 				<Card.Header>
 					<Card.Title>{m.section_basic_details()}</Card.Title>
 				</Card.Header>
-				<Card.Content class="grid grid-cols-2 gap-2">
+				<Card.Content class="grid grid-cols-2 gap-4">
+					<div class="col-span-2 flex flex-col items-center gap-4">
+						<div class="flex flex-col items-center gap-2">
+							<Label>Avatar</Label>
+							<div class="relative">
+								{#if account.avatar}
+									<img
+										src={getAvatarUrl(account)}
+										alt="Avatar"
+										class="h-20 w-20 rounded-full border-2 border-gray-200 object-cover"
+									/>
+								{:else}
+									<div
+										class="flex h-20 w-20 items-center justify-center rounded-full border-2 border-gray-300 bg-gray-200"
+									>
+										<span class="text-sm text-gray-500">No Avatar</span>
+									</div>
+								{/if}
+							</div>
+							<div class="flex gap-2">
+								<Button
+									variant="outline"
+									size="sm"
+									on:click={() => avatarFileInput.click()}
+									class="flex items-center gap-2"
+								>
+									<Upload class="h-4 w-4" />
+									Change Avatar
+								</Button>
+								{#if account.avatar}
+									<Button
+										variant="outline"
+										size="sm"
+										on:click={handleAvatarRemove}
+										class="flex items-center gap-2 text-destructive hover:text-destructive"
+									>
+										<X class="h-4 w-4" />
+										Remove Avatar
+									</Button>
+								{/if}
+							</div>
+							<input
+								type="file"
+								accept="image/*"
+								bind:this={avatarFileInput}
+								on:change={handleAvatarChange}
+								class="hidden"
+							/>
+						</div>
+					</div>
 					<div>
 						<Label>{m.label_name()}</Label>
 						<Input class="w-full" bind:value={account.name} on:blur={saveAccount} disabled />

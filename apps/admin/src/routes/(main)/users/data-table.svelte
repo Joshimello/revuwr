@@ -12,6 +12,7 @@
 	import DataTableAction from './data-table-action.svelte';
 	import DataTableApplications from './data-table-applications.svelte';
 	import DataTableDual from './data-table-dual.svelte';
+	import DataTableUser from './data-table-user.svelte';
 	import { users } from './stores';
 	import type { ExpandedUsersResponse } from './types';
 
@@ -63,7 +64,7 @@
 			accessor: (value) => value,
 			header: m.user(),
 			cell: ({ value }) => {
-				return createRender(DataTableDual, { a: value.name, b: value.nameEn });
+				return createRender(DataTableUser, { user: value, name: value.name, nameEn: value.nameEn });
 			},
 			plugins: {
 				sort: { getSortValue: (value) => value.name },
@@ -289,12 +290,12 @@
 								<Table.Cell {...attrs}>
 									{#if cell.id === 'select'}
 										<Checkbox
-											checked={selectedUsers.some((u) => u.id === cell.render().id)}
+											checked={selectedUsers.some((u) => u.id === row.original.id)}
 											onCheckedChange={(checked) => {
 												if (checked) {
-													selectedUsers = [...selectedUsers, cell.render()];
+													selectedUsers = [...selectedUsers, row.original];
 												} else {
-													selectedUsers = selectedUsers.filter((u) => u.id !== cell.render().id);
+													selectedUsers = selectedUsers.filter((u) => u.id !== row.original.id);
 												}
 											}}
 											aria-label={m.select_row()}

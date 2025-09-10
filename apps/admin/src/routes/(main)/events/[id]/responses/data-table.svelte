@@ -30,6 +30,7 @@
 	import DataTableCheckbox from './data-table-checkbox.svelte';
 	import DataTableControl from './data-table-control.svelte';
 	import DataTableReviews from './data-table-reviews.svelte';
+	import DataTableUser from './data-table-user.svelte';
 
 	type ExpandedApplications = ApplicationsResponse<{
 		responder: UsersResponse;
@@ -136,10 +137,10 @@
 			id: m.responder(),
 			accessor: ({ expand }) => expand?.responder,
 			header: m.user(),
-			cell: ({ value }) => createRender(DataTableCell, { a: value?.name, b: value?.username }),
+			cell: ({ value }) => createRender(DataTableUser, { user: value }),
 			plugins: {
 				sort: {
-					getSortValue: (value) => value.username
+					getSortValue: (value) => value?.username || ''
 				},
 				filter: {
 					getFilterValue: (value) => (value?.name || '') + ` ${value?.username || ''}`
