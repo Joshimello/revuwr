@@ -53,6 +53,21 @@
 			minute: '2-digit'
 		});
 	}
+
+	const getAvatarUrl = (user: ExpandedUsersResponse) => {
+		if (!user.avatar) return null;
+		return pb.files.getUrl(user, user.avatar);
+	};
+
+	const getInitials = (name: string) => {
+		if (!name) return '?';
+		return name
+			.split(' ')
+			.map((word) => word.charAt(0))
+			.join('')
+			.toUpperCase()
+			.slice(0, 2);
+	};
 </script>
 
 <div class="mb-4 flex items-center gap-4">
@@ -67,15 +82,35 @@
 		<ChevronLeft class="h-4 w-4" />
 		<span class="sr-only">{m.back()}</span>
 	</Button>
-	<h1 class="text-lg font-semibold md:text-2xl">
-		{#if record}
-			{record.name || record.nameEn || m.unnamed_user()}
-		{:else if loading}
-			{m.loading()}
-		{:else}
-			{m.user_not_found()}
-		{/if}
-	</h1>
+
+	{#if record}
+		<div class="flex items-center gap-4">
+			{#if getAvatarUrl(record)}
+				<img
+					src={getAvatarUrl(record)}
+					alt="{record.name}'s avatar"
+					class="h-12 w-12 rounded-full border-2 border-border/20 object-cover"
+				/>
+			{:else}
+				<div
+					class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-border/20 bg-gradient-to-br from-primary/20 to-primary/10 text-lg font-medium text-primary"
+				>
+					{getInitials(record.name || record.nameEn || record.username)}
+				</div>
+			{/if}
+			<h1 class="text-lg font-semibold md:text-2xl">
+				{record.name || record.nameEn || m.unnamed_user()}
+			</h1>
+		</div>
+	{:else}
+		<h1 class="text-lg font-semibold md:text-2xl">
+			{#if loading}
+				{m.loading()}
+			{:else}
+				{m.user_not_found()}
+			{/if}
+		</h1>
+	{/if}
 </div>
 
 {#if record}
@@ -83,11 +118,55 @@
 		<!-- User Information Card -->
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>{m.user_information()}</Card.Title>
-				<Card.Description>{m.basic_details_about_user()}</Card.Description>
+				<div class="flex items-center gap-4">
+					{#if getAvatarUrl(record)}
+						<img
+							src={getAvatarUrl(record)}
+							alt="{record.name}'s avatar"
+							class="h-16 w-16 rounded-full border-2 border-border/20 object-cover"
+						/>
+					{:else}
+						<div
+							class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-border/20 bg-gradient-to-br from-primary/20 to-primary/10 text-xl font-medium text-primary"
+						>
+							{getInitials(record.name || record.nameEn || record.username)}
+						</div>
+					{/if}
+					<div>
+						<Card.Title>{m.user_information()}</Card.Title>
+						<Card.Description>{m.basic_details_about_user()}</Card.Description>
+					</div>
+				</div>
 			</Card.Header>
 			<Card.Content class="grid gap-4">
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<!-- Avatar -->
+					<div class="flex flex-col gap-1">
+						<div class="flex items-center gap-2 text-sm text-muted-foreground">
+							<User class="h-4 w-4" />
+							<span>Avatar</span>
+						</div>
+						{#if record.avatar}
+							<div class="flex items-center gap-3">
+								<img
+									src={getAvatarUrl(record)}
+									alt="{record.name}'s avatar"
+									class="h-10 w-10 rounded-full border border-border/20 object-cover"
+								/>
+								<span class="text-sm text-muted-foreground">Profile picture uploaded</span>
+							</div>
+						{:else}
+							<div class="flex items-center gap-3">
+								<div
+									class="flex h-10 w-10 items-center justify-center rounded-full border border-border/20 bg-gradient-to-br from-primary/20 to-primary/10 text-sm font-medium text-primary"
+								>
+									{getInitials(record.name || record.nameEn || record.username)}
+								</div>
+								<span class="text-sm text-muted-foreground">Using initials</span>
+							</div>
+						{/if}
+					</div>
+
 					<!-- Username & ID -->
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
