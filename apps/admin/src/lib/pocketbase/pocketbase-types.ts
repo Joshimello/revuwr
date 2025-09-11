@@ -238,6 +238,7 @@ export enum UsersLanguageOptions {
 export type UsersRecord = {
 	applications?: RecordIdString[]
 	avatar?: string
+	birthday?: IsoDateString
 	country?: string
 	created?: IsoDateString
 	department?: string
