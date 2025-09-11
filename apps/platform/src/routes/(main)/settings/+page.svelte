@@ -1,6 +1,14 @@
 <script lang="ts">
+	import {
+		PUBLIC_USER_BIRTHDAY,
+		PUBLIC_USER_COUNTRY,
+		PUBLIC_USER_DEPARTMENT,
+		PUBLIC_USER_OCCUPATION
+	} from '$env/static/public';
 	import CollegePicker from '$lib/components/college-picker.svelte';
 	import CountryPicker from '$lib/components/country-picker.svelte';
+	import DatePicker from '$lib/components/date-picker.svelte';
+	import DepartmentPicker from '$lib/components/department-picker.svelte';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -16,6 +24,8 @@
 		UsersOccupationOptions,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
+	import type { DateValue } from '@internationalized/date';
+	import { parseDate } from '@internationalized/date';
 	import { AlertTriangle, ChevronLeft, Upload, X } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -29,6 +39,17 @@
 	$: isPhoneValid = account?.phone ? phoneRegex.test(account.phone) : false;
 	$: hasPhoneNumber = account?.phone && account.phone.trim() !== '';
 
+	// Environment variable checks
+	$: showCountry = PUBLIC_USER_COUNTRY === 'show';
+	$: showOccupation = PUBLIC_USER_OCCUPATION === 'show';
+	$: showDepartment = PUBLIC_USER_DEPARTMENT === 'show';
+	$: showBirthday = PUBLIC_USER_BIRTHDAY === 'show';
+
+	// Birthday handling - extract date part from ISO datetime string
+	$: birthdayValue = account?.birthday
+		? parseDate(account.birthday.split('T')[0].split(' ')[0])
+		: undefined;
+
 	const saveAccount = async () => {
 		if (!account) return;
 		if (JSON.stringify(account) === stringAccount) return;
@@ -39,14 +60,20 @@
 		}
 
 		try {
-			account = await pb.collection('users').update(account.id, {
+			const updateData: Record<string, string | boolean | undefined> = {
 				phone: account.phone,
-				occupation: account.occupation,
-				college: account.department,
 				language: account.language,
-				disableNotify: account.disableNotify,
-				country: account.country
-			});
+				disableNotify: account.disableNotify
+			};
+
+			// Only include fields that should be shown based on env vars
+			if (showCountry) updateData.country = account.country;
+			if (showOccupation) updateData.occupation = account.occupation;
+			if (showOccupation) updateData.college = account.department;
+			if (showDepartment) updateData.dept = account.dept;
+			if (showBirthday) updateData.birthday = account.birthday;
+
+			account = await pb.collection('users').update(account.id, updateData);
 			toast.success('Account saved.');
 			stringAccount = JSON.stringify(account);
 		} catch (err) {
@@ -74,6 +101,12 @@
 	const handleNotifChange = (value: boolean) => {
 		if (!account) return;
 		account.disableNotify = value;
+		saveAccount();
+	};
+
+	const handleBirthdayChange = (value: DateValue | undefined) => {
+		if (!account) return;
+		account.birthday = value ? value.toString() + 'T00:00:00.000Z' : '';
 		saveAccount();
 	};
 
@@ -125,7 +158,7 @@
 
 	const getAvatarUrl = (user: UsersResponse) => {
 		if (!user.avatar) return null;
-		return pb.files.getUrl(user, user.avatar);
+		return pb.files.getURL(user, user.avatar);
 	};
 </script>
 
@@ -246,38 +279,69 @@
 						/>
 						<span class="text-xs text-muted-foreground">{m.phone_mandatory_note()}</span>
 					</div>
-					<div>
-						<Label>{m.label_country()}</Label>
-						<CountryPicker bind:value={account.country} lang={'en'} onCountryChange={saveAccount} />
-					</div>
-				</Card.Content>
-			</Card.Root>
-
-			<Card.Root>
-				<Card.Header>
-					<Card.Title>{m.section_occupation_details()}</Card.Title>
-				</Card.Header>
-				<Card.Content class="grid grid-cols-2 gap-2">
-					<div class="col-span-2 mb-3">
-						<RadioGroup.Root value={account.occupation} onValueChange={handleOccupationChange}>
-							<div class="flex items-center space-x-2">
-								<RadioGroup.Item value="student" />
-								<Label>{m.occupation_student()}</Label>
-							</div>
-							<div class="flex items-center space-x-2">
-								<RadioGroup.Item value="teacher" />
-								<Label>{m.occupation_teacher()}</Label>
-							</div>
-						</RadioGroup.Root>
-					</div>
-					{#if account.occupation === 'student'}
-						<div class="col-span-2">
-							<Label>{m.label_college_program()}</Label>
-							<CollegePicker bind:value={account.department} onCollegeChange={saveAccount} />
+					{#if showCountry}
+						<div>
+							<Label>{m.label_country()}</Label>
+							<CountryPicker
+								bind:value={account.country}
+								lang={'en'}
+								onCountryChange={saveAccount}
+							/>
+						</div>
+					{/if}
+					{#if showBirthday}
+						<div>
+							<Label>Birthday</Label>
+							<DatePicker bind:value={birthdayValue} onValueChange={handleBirthdayChange} />
 						</div>
 					{/if}
 				</Card.Content>
 			</Card.Root>
+
+			{#if showOccupation}
+				<Card.Root>
+					<Card.Header>
+						<Card.Title>{m.section_occupation_details()}</Card.Title>
+					</Card.Header>
+					<Card.Content class="grid grid-cols-2 gap-2">
+						<div class="col-span-2 mb-3">
+							<RadioGroup.Root value={account.occupation} onValueChange={handleOccupationChange}>
+								<div class="flex items-center space-x-2">
+									<RadioGroup.Item value="student" />
+									<Label>{m.occupation_student()}</Label>
+								</div>
+								<div class="flex items-center space-x-2">
+									<RadioGroup.Item value="teacher" />
+									<Label>{m.occupation_teacher()}</Label>
+								</div>
+							</RadioGroup.Root>
+						</div>
+						{#if account.occupation === 'student'}
+							<div class="col-span-2">
+								<Label>{m.label_college_program()}</Label>
+								<CollegePicker bind:value={account.department} onCollegeChange={saveAccount} />
+							</div>
+							{#if showDepartment}
+								<div class="col-span-2">
+									<Label>Department</Label>
+									<DepartmentPicker bind:value={account.dept} onDepartmentChange={saveAccount} />
+								</div>
+							{/if}
+						{:else if account.occupation === 'teacher'}
+							<div class="col-span-2">
+								<Label>{m.label_college_program()}</Label>
+								<CollegePicker bind:value={account.department} onCollegeChange={saveAccount} />
+							</div>
+							{#if showDepartment}
+								<div class="col-span-2">
+									<Label>Department</Label>
+									<DepartmentPicker bind:value={account.dept} onDepartmentChange={saveAccount} />
+								</div>
+							{/if}
+						{/if}
+					</Card.Content>
+				</Card.Root>
+			{/if}
 
 			<Card.Root id="preferences">
 				<Card.Header>
