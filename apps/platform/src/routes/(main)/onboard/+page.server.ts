@@ -20,8 +20,10 @@ export const actions: Actions = {
 				language: body.language,
 				phone: body.phone,
 				country: body.country,
+				birthday: body.birthday,
 				occupation: body.occupation,
 				department: body.department,
+				dept: body.dept,
 				init: true
 			});
 			return redirect(303, '/');
