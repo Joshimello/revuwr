@@ -9,7 +9,6 @@
 	import * as Popover from '$lib/components/ui/popover';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import { Slider } from '$lib/components/ui/slider';
 	import { i18n } from '$lib/i18n.js';
 	import * as m from '$lib/paraglide/messages.js';
 	import { availableLanguageTags, languageTag } from '$lib/paraglide/runtime.js';
@@ -29,6 +28,7 @@
 
 	const user = pb.authStore.record;
 	let events: EventsResponse[] = [];
+	let currentFontSize: number = 1;
 
 	let nav = [
 		{ icon: PanelsTopLeft, text: m.overview(), href: `${PUBLIC_BASE_PATH}/`, badge: 0, path: '' },
@@ -127,11 +127,16 @@
 		return paths;
 	})();
 
+	function setFontSize(multiplier: number) {
+		currentFontSize = multiplier;
+		document.documentElement.style.setProperty('--font-multiplier', multiplier.toString());
+		localStorage.setItem('font-multiplier', multiplier.toString());
+	}
+
 	onMount(async () => {
-		document.documentElement.style.setProperty(
-			'--font-multiplier',
-			localStorage.getItem('font-multiplier') || '1'
-		);
+		const savedFontSize = localStorage.getItem('font-multiplier') || '1';
+		currentFontSize = parseFloat(savedFontSize);
+		document.documentElement.style.setProperty('--font-multiplier', savedFontSize);
 
 		try {
 			const eventsList = await pb.collection('events').getList(1, 50, {
@@ -244,17 +249,31 @@
 						<ALargeSmall size="16" />
 					</Button>
 				</Popover.Trigger>
-				<Popover.Content>
-					<Slider
-						value={[parseFloat(localStorage.getItem('font-multiplier') || '1')]}
-						min={0.5}
-						max={2}
-						step={0.5}
-						onValueChange={(v) => {
-							document.documentElement.style.setProperty('--font-multiplier', v[0].toString());
-							localStorage.setItem('font-multiplier', v[0].toString());
-						}}
-					/>
+				<Popover.Content class="flex w-max gap-1 p-2">
+					<Button
+						size="icon"
+						variant={currentFontSize === 1 ? 'default' : 'outline'}
+						on:click={() => setFontSize(1)}
+						class="h-8 w-8 text-xs"
+					>
+						M
+					</Button>
+					<Button
+						size="icon"
+						variant={currentFontSize === 1.25 ? 'default' : 'outline'}
+						on:click={() => setFontSize(1.25)}
+						class="h-8 w-8 text-xs"
+					>
+						L
+					</Button>
+					<Button
+						size="icon"
+						variant={currentFontSize === 1.5 ? 'default' : 'outline'}
+						on:click={() => setFontSize(1.5)}
+						class="h-8 w-8 text-xs"
+					>
+						XL
+					</Button>
 				</Popover.Content>
 			</Popover.Root>
 
