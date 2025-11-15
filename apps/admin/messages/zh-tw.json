@@ -370,5 +370,10 @@
 	"view": "檢視",
 	"no_applications_found_for_user": "此使用者沒有找到申請",
 	"user_not_found_or_error": "找不到使用者或載入使用者資料時發生錯誤。",
-	"end_date_required_for_reviewer": "新增評審人時需要提供結束日期"
+	"end_date_required_for_reviewer": "新增評審人時需要提供結束日期",
+	"adding_new_question": "新增問題中...",
+	"question_added": "問題已新增！",
+	"adding_new_page": "新增頁面中...",
+	"page_added": "頁面已新增！",
+	"error_occurred": "發生錯誤"
 }

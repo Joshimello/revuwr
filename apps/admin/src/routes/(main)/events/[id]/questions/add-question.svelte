@@ -1,13 +1,13 @@
 <script lang="ts">
-	import * as Popover from '$lib/components/ui/popover';
-	import { Button } from '$lib/components/ui/button';
-	import questionTypes from './question-types';
-	import { pb } from '$lib/pocketbase/client';
-	import { toast } from 'svelte-sonner';
-	import type { EventsResponse, QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { page } from '$app/stores';
+	import { Button } from '$lib/components/ui/button';
+	import * as Popover from '$lib/components/ui/popover';
 	import * as m from '$lib/paraglide/messages.js';
+	import { pb } from '$lib/pocketbase/client';
+	import type { EventsResponse, QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
+	import { toast } from 'svelte-sonner';
 	import { refreshQuestions } from './methods';
+	import questionTypes from './question-types';
 
 	export let currentPage: string;
 	export let editingId: string | null;
@@ -15,73 +15,82 @@
 	export let index: number | null = null;
 
 	const addQuestion = async (type: string) => {
-		let question: QuestionsResponse | null = null;
-
 		open = false;
 
-		try {
-			question = await pb.collection('questions').create({
-				type: type,
-				count: 0,
-				options: {},
-				page: parseInt(currentPage)
-			});
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-			return;
-		}
+		const promise = new Promise(async (resolve, reject) => {
+			let question: QuestionsResponse | null = null;
 
-		if (!question) return;
-
-		try {
-			const event = await pb
-				.collection('events')
-				.getOne<
-					EventsResponse<any, { questions: QuestionsResponse[] }>
-				>($page.params.id, { expand: 'questions' });
-
-			if (event.questions.length > 0) {
-				const questions = [...(event.expand?.questions || [])];
-				let pages: Record<number, string[]> = {};
-				questions.forEach((q) => {
-					if (!pages[q.page]) pages[q.page] = [];
-					pages[q.page].push(q.id);
+			try {
+				question = await pb.collection('questions').create({
+					type: type,
+					count: 0,
+					options: {},
+					page: parseInt(currentPage)
 				});
-
-				if (index != null) pages[parseInt(currentPage)].splice(index + 1, 0, question.id);
-				else pages[parseInt(currentPage)].push(question.id);
-
-				const questionsIds = Object.values(pages).flat();
-
-				await pb
-					.collection('events')
-					.update<
-						EventsResponse<{ questions: QuestionsResponse[] }>
-					>($page.params.id, { questions: questionsIds });
-			} else {
-				await pb
-					.collection('events')
-					.update<
-						EventsResponse<{ questions: QuestionsResponse[] }>
-					>($page.params.id, { 'questions+': question.id });
+			} catch (err) {
+				reject(err);
+				return;
 			}
 
-			refreshQuestions();
-			editingId = question.id;
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
+			if (!question) {
+				reject(new Error('Failed to create question'));
+				return;
 			}
-			await pb.collection('questions').delete(question.id);
-		}
+
+			try {
+				const event = await pb
+					.collection('events')
+					.getOne<
+						EventsResponse<any, { questions: QuestionsResponse[] }>
+					>($page.params.id, { expand: 'questions' });
+
+				if (event.questions.length > 0) {
+					const questions = [...(event.expand?.questions || [])];
+					let pages: Record<number, string[]> = {};
+					questions.forEach((q) => {
+						if (!pages[q.page]) pages[q.page] = [];
+						pages[q.page].push(q.id);
+					});
+
+					if (index != null) pages[parseInt(currentPage)].splice(index + 1, 0, question.id);
+					else pages[parseInt(currentPage)].push(question.id);
+
+					const questionsIds = Object.values(pages).flat();
+
+					await pb
+						.collection('events')
+						.update<
+							EventsResponse<{ questions: QuestionsResponse[] }>
+						>($page.params.id, { questions: questionsIds });
+				} else {
+					await pb
+						.collection('events')
+						.update<
+							EventsResponse<{ questions: QuestionsResponse[] }>
+						>($page.params.id, { 'questions+': question.id });
+				}
+
+				refreshQuestions();
+				editingId = question.id;
+				resolve(question);
+			} catch (err) {
+				await pb.collection('questions').delete(question.id);
+				reject(err);
+			}
+		});
+
+		toast.promise(promise, {
+			loading: m.adding_new_question(),
+			success: () => {
+				return m.question_added();
+			},
+			error: (err) => {
+				if (err instanceof Error) {
+					return err.message;
+				}
+				return m.error_occurred();
+			}
+		});
 	};
 
 	let open = false;
