@@ -162,3 +162,266 @@ export const addNewQuestion = (type: string, currentPage: string, index: number 
 
 	return promise;
 };
+
+export const deleteQuestion = (questionId: string) => {
+	const promise = new Promise<void>((resolve, reject) => {
+		(async () => {
+			try {
+				await pb.collection('questions').delete(questionId);
+				await refreshQuestions();
+				resolve();
+			} catch (err) {
+				reject(err);
+			}
+		})();
+	});
+
+	toast.promise(promise, {
+		loading: m.deleting_question ? m.deleting_question() : 'Deleting question...',
+		success: () => {
+			return m.question_deleted ? m.question_deleted() : 'Question deleted successfully';
+		},
+		error: (err) => {
+			if (err instanceof Error) {
+				return err.message;
+			}
+			return m.error_occurred();
+		}
+	});
+
+	return promise;
+};
+
+export const copyQuestion = (question: QuestionsResponse) => {
+	const promise = new Promise<QuestionsResponse>((resolve, reject) => {
+		(async () => {
+			let copied: QuestionsResponse | null = null;
+
+			try {
+				copied = await pb.collection('questions').create({
+					type: question.type,
+					title: question.title,
+					description: question.description,
+					required: question.required,
+					options: question.options,
+					page: question.page,
+					count: 0
+				});
+			} catch (err) {
+				reject(err);
+				return;
+			}
+
+			if (!copied) {
+				reject(new Error('Failed to copy question'));
+				return;
+			}
+
+			try {
+				const event = await pb
+					.collection('events')
+					.getOne<ExpandedEvent>(get(page).params.id, { expand: 'questions' });
+
+				const questionsData = [...(event.expand?.questions || [])];
+				let pages: Record<number, string[]> = {};
+				questionsData.forEach((q) => {
+					if (!pages[q.page]) pages[q.page] = [];
+					pages[q.page].push(q.id);
+				});
+
+				const index = pages[question.page].indexOf(question.id);
+				pages[question.page].splice(index + 1, 0, copied.id);
+
+				const questionsIds = Object.values(pages).flat();
+
+				await pb
+					.collection('events')
+					.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+						questions: questionsIds
+					});
+
+				await refreshQuestions();
+				resolve(copied);
+			} catch (err) {
+				await pb.collection('questions').delete(copied.id);
+				reject(err);
+			}
+		})();
+	});
+
+	toast.promise(promise, {
+		loading: m.copying_question ? m.copying_question() : 'Copying question...',
+		success: () => {
+			return m.question_copied ? m.question_copied() : 'Question copied successfully';
+		},
+		error: (err) => {
+			if (err instanceof Error) {
+				return err.message;
+			}
+			return m.error_occurred();
+		}
+	});
+
+	return promise;
+};
+
+export const saveQuestion = (question: QuestionsResponse) => {
+	const promise = new Promise<void>((resolve, reject) => {
+		(async () => {
+			try {
+				await pb.collection('questions').update(question.id, {
+					title: question.title,
+					description: question.description,
+					options: question.options,
+					required: question.required,
+					conditional: question.conditional,
+					conditionquestion: question.conditionquestion,
+					conditionanswer: question.conditionanswer
+				});
+				await refreshQuestions();
+				resolve();
+			} catch (err) {
+				reject(err);
+			}
+		})();
+	});
+
+	toast.promise(promise, {
+		loading: m.saving_question ? m.saving_question() : 'Saving question...',
+		success: () => {
+			return m.question_saved ? m.question_saved() : 'Question saved successfully';
+		},
+		error: (err) => {
+			if (err instanceof Error) {
+				return err.message;
+			}
+			return m.error_occurred();
+		}
+	});
+
+	return promise;
+};
+
+export const moveQuestionUp = (question: QuestionsResponse, index: number) => {
+	if (index === 0) return Promise.resolve();
+
+	const promise = new Promise<void>((resolve, reject) => {
+		(async () => {
+			try {
+				const event = await pb
+					.collection('events')
+					.getOne<ExpandedEvent>(get(page).params.id, { expand: 'questions' });
+
+				if (event.questions.length > 0) {
+					const questionsData = [...(event.expand?.questions || [])];
+					let pages: Record<number, string[]> = {};
+					questionsData.forEach((q) => {
+						if (!pages[q.page]) pages[q.page] = [];
+						pages[q.page].push(q.id);
+					});
+
+					const pageIndex = pages[question.page].indexOf(question.id);
+					pages[question.page].splice(pageIndex, 1);
+					pages[question.page].splice(pageIndex - 1, 0, question.id);
+
+					const questionsIds = Object.values(pages).flat();
+
+					await pb
+						.collection('events')
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+							questions: questionsIds
+						});
+				} else {
+					await pb
+						.collection('events')
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+							'questions+': question.id
+						});
+				}
+				await refreshQuestions();
+				resolve();
+			} catch (err) {
+				reject(err);
+			}
+		})();
+	});
+
+	toast.promise(promise, {
+		loading: m.moving_question ? m.moving_question() : 'Moving question...',
+		success: () => {
+			return m.question_moved ? m.question_moved() : 'Question moved successfully';
+		},
+		error: (err) => {
+			if (err instanceof Error) {
+				return err.message;
+			}
+			return m.error_occurred();
+		}
+	});
+
+	return promise;
+};
+
+export const moveQuestionDown = (question: QuestionsResponse) => {
+	const promise = new Promise<void>((resolve, reject) => {
+		(async () => {
+			try {
+				const event = await pb
+					.collection('events')
+					.getOne<ExpandedEvent>(get(page).params.id, { expand: 'questions' });
+
+				if (event.questions.length > 0) {
+					const questionsData = [...(event.expand?.questions || [])];
+					let pages: Record<number, string[]> = {};
+					questionsData.forEach((q) => {
+						if (!pages[q.page]) pages[q.page] = [];
+						pages[q.page].push(q.id);
+					});
+
+					const index = pages[question.page].indexOf(question.id);
+
+					if (index === pages[question.page].length - 1) {
+						resolve();
+						return;
+					}
+
+					pages[question.page].splice(index, 1);
+					pages[question.page].splice(index + 1, 0, question.id);
+
+					const questionsIds = Object.values(pages).flat();
+
+					await pb
+						.collection('events')
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+							questions: questionsIds
+						});
+				} else {
+					await pb
+						.collection('events')
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+							'questions+': question.id
+						});
+				}
+				await refreshQuestions();
+				resolve();
+			} catch (err) {
+				reject(err);
+			}
+		})();
+	});
+
+	toast.promise(promise, {
+		loading: m.moving_question ? m.moving_question() : 'Moving question...',
+		success: () => {
+			return m.question_moved ? m.question_moved() : 'Question moved successfully';
+		},
+		error: (err) => {
+			if (err instanceof Error) {
+				return err.message;
+			}
+			return m.error_occurred();
+		}
+	});
+
+	return promise;
+};
