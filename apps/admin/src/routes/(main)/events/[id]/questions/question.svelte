@@ -1,16 +1,20 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import Editor from '$lib/components/editor.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as Select from '$lib/components/ui/select';
 	import * as m from '$lib/paraglide/messages.js';
-	import { pb } from '$lib/pocketbase/client';
-	import { type EventsResponse, type QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
+	import { type QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { Copy, Edit, MoveDown, MoveUp, Plus, Save, SaveOff, Trash, X } from 'lucide-svelte';
-	import { toast } from 'svelte-sonner';
-	import { refreshQuestions } from './methods';
+	import {
+		copyQuestion,
+		deleteQuestion,
+		moveQuestionDown,
+		moveQuestionUp,
+		refreshQuestions,
+		saveQuestion
+	} from './methods';
 	import questionTypes from './question-types';
 	import { questions } from './stores';
 
@@ -87,80 +91,13 @@
 	};
 
 	const handleDelete = async () => {
-		try {
-			await pb.collection('questions').delete(question.id);
-			toast.success('Question deleted successfully');
-			refreshQuestions();
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-		}
+		await deleteQuestion(question.id);
 	};
 
 	const handleCopy = async () => {
-		let copied: QuestionsResponse | null = null;
-
-		try {
-			copied = await pb.collection('questions').create({
-				type: question.type,
-				title: question.title,
-				description: question.description,
-				required: question.required,
-				options: question.options,
-				page: question.page,
-				count: 0
-			});
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-			return;
-		}
-
-		if (!copied) return;
-
-		try {
-			const event = await pb
-				.collection('events')
-				.getOne<
-					EventsResponse<any, { questions: QuestionsResponse[] }>
-				>($page.params.id, { expand: 'questions' });
-
-			const questions = [...(event.expand?.questions || [])];
-			let pages: Record<number, string[]> = {};
-			questions.forEach((q) => {
-				if (!pages[q.page]) pages[q.page] = [];
-				pages[q.page].push(q.id);
-			});
-
-			const index = pages[question.page].indexOf(question.id);
-			pages[question.page].splice(index + 1, 0, copied.id);
-
-			const questionsIds = Object.values(pages).flat();
-
-			await pb
-				.collection('events')
-				.update<
-					EventsResponse<{ questions: QuestionsResponse[] }>
-				>($page.params.id, { questions: questionsIds });
-
-			refreshQuestions();
+		const copied = await copyQuestion(question);
+		if (copied) {
 			editingId = copied.id;
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-			await pb.collection('questions').delete(copied.id);
 		}
 	};
 
@@ -170,122 +107,16 @@
 	};
 
 	const handleSave = async () => {
-		try {
-			await pb.collection('questions').update(question.id, {
-				title: question.title,
-				description: question.description,
-				options: question.options,
-				required: question.required,
-				conditional: question.conditional,
-				conditionquestion: question.conditionquestion,
-				conditionanswer: question.conditionanswer
-			});
-			toast.success('Question saved successfully');
-			editingId = null;
-			refreshQuestions();
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-		}
+		await saveQuestion(question);
+		editingId = null;
 	};
 
 	const handleMoveUp = async () => {
-		if (index == 0) return;
-
-		try {
-			const event = await pb
-				.collection('events')
-				.getOne<
-					EventsResponse<any, { questions: QuestionsResponse[] }>
-				>($page.params.id, { expand: 'questions' });
-
-			if (event.questions.length > 0) {
-				const questions = [...(event.expand?.questions || [])];
-				let pages: Record<number, string[]> = {};
-				questions.forEach((q) => {
-					if (!pages[q.page]) pages[q.page] = [];
-					pages[q.page].push(q.id);
-				});
-
-				const index = pages[question.page].indexOf(question.id);
-				pages[question.page].splice(index, 1);
-				pages[question.page].splice(index - 1, 0, question.id);
-
-				const questionsIds = Object.values(pages).flat();
-
-				await pb
-					.collection('events')
-					.update<
-						EventsResponse<any, { questions: QuestionsResponse[] }>
-					>($page.params.id, { questions: questionsIds });
-			} else {
-				await pb
-					.collection('events')
-					.update<
-						EventsResponse<{ questions: QuestionsResponse[] }>
-					>($page.params.id, { 'questions+': question.id });
-			}
-			refreshQuestions();
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-		}
+		await moveQuestionUp(question, index);
 	};
 
 	const handleMoveDown = async () => {
-		try {
-			const event = await pb
-				.collection('events')
-				.getOne<
-					EventsResponse<any, { questions: QuestionsResponse[] }>
-				>($page.params.id, { expand: 'questions' });
-
-			if (event.questions.length > 0) {
-				const questions = [...(event.expand?.questions || [])];
-				let pages: Record<number, string[]> = {};
-				questions.forEach((q) => {
-					if (!pages[q.page]) pages[q.page] = [];
-					pages[q.page].push(q.id);
-				});
-
-				const index = pages[question.page].indexOf(question.id);
-
-				if (index == pages[question.page].length - 1) return;
-
-				pages[question.page].splice(index, 1);
-				pages[question.page].splice(index + 1, 0, question.id);
-
-				const questionsIds = Object.values(pages).flat();
-
-				await pb
-					.collection('events')
-					.update<
-						EventsResponse<any, { questions: QuestionsResponse[] }>
-					>($page.params.id, { questions: questionsIds });
-			} else {
-				await pb
-					.collection('events')
-					.update<
-						EventsResponse<{ questions: QuestionsResponse[] }>
-					>($page.params.id, { 'questions+': question.id });
-			}
-			refreshQuestions();
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-		}
+		await moveQuestionDown(question);
 	};
 </script>
 
