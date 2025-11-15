@@ -15,10 +15,13 @@
 
 	export let isEditing: boolean;
 	export let required: boolean;
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 </script>
 
 {#if options && isEditing}
-	{#each options.choices || [] as choice, index}
+	<!-- eslint-disable @typescript-eslint/no-unused-vars -->
+	{#each options.choices || [] as _, index}
 		<div class="flex items-center gap-3">
 			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
 			<Label class="flex-1">
@@ -46,7 +49,7 @@
 		<div class="flex items-center gap-3">
 			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
 			<Label class="flex-1">
-				<span class="w-full text-xl">Others</span>
+				<span class="w-full text-xl">{m.others()}</span>
 			</Label>
 		</div>
 	{/if}
@@ -76,7 +79,7 @@
 {/if}
 
 {#if options && !isEditing}
-	{#each options.choices || [] as choice, index}
+	{#each options.choices || [] as choice}
 		<div class="flex items-center gap-3">
 			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
 			<Label class="flex-1">
@@ -88,7 +91,7 @@
 		<div class="flex items-center gap-3">
 			<Checkbox disabled class="flex h-5 w-5 items-center justify-center" />
 			<Label class="flex-1">
-				<span class="w-full text-xl">Others</span>
+				<span class="w-full text-xl">{m.others()}</span>
 			</Label>
 		</div>
 	{/if}

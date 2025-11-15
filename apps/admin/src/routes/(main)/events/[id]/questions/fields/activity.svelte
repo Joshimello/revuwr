@@ -21,33 +21,33 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
-					<Table.Head>When</Table.Head>
-					<Table.Head>Topic</Table.Head>
-					<Table.Head>Venue</Table.Head>
-					<Table.Head>Note</Table.Head>
+					<Table.Head>{m.when()}</Table.Head>
+					<Table.Head>{m.topic()}</Table.Head>
+					<Table.Head>{m.venue()}</Table.Head>
+					<Table.Head>{m.note()}</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
 				<Table.Row>
 					<Table.Cell>
-						<div class="font-medium">Date</div>
-						<div class="hidden text-sm text-muted-foreground md:inline"> Time </div>
+						<div class="font-medium">{m.date()}</div>
+						<div class="hidden text-sm text-muted-foreground md:inline"> {m.time()} </div>
 					</Table.Cell>
 					<Table.Cell>
-						<div class="font-medium">Topic</div>
+						<div class="font-medium">{m.topic()}</div>
 					</Table.Cell>
 					<Table.Cell>
-						<div class="font-medium">Physical</div>
-						<div class="hidden text-sm text-muted-foreground md:inline"> Location </div>
+						<div class="font-medium">{m.physical()}</div>
+						<div class="hidden text-sm text-muted-foreground md:inline"> {m.location()} </div>
 					</Table.Cell>
-					<Table.Cell>Extra info</Table.Cell>
+					<Table.Cell>{m.extra_info()}</Table.Cell>
 				</Table.Row>
 			</Table.Body>
 		</Table.Root>
 		<div class="flex justify-center border-t p-1">
 			<Button variant="ghost" class="w-full" disabled>
 				<CirclePlus size="16" />
-				Add session
+				{m.add_session()}
 			</Button>
 		</div>
 	</div>
@@ -69,33 +69,33 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
-					<Table.Head>When</Table.Head>
-					<Table.Head>Topic</Table.Head>
-					<Table.Head>Venue</Table.Head>
-					<Table.Head>Note</Table.Head>
+					<Table.Head>{m.when()}</Table.Head>
+					<Table.Head>{m.topic()}</Table.Head>
+					<Table.Head>{m.venue()}</Table.Head>
+					<Table.Head>{m.note()}</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
 				<Table.Row>
 					<Table.Cell>
-						<div class="font-medium">Date</div>
-						<div class="hidden text-sm text-muted-foreground md:inline"> Time </div>
+						<div class="font-medium">{m.date()}</div>
+						<div class="hidden text-sm text-muted-foreground md:inline"> {m.time()} </div>
 					</Table.Cell>
 					<Table.Cell>
-						<div class="font-medium">Topic</div>
+						<div class="font-medium">{m.topic()}</div>
 					</Table.Cell>
 					<Table.Cell>
-						<div class="font-medium">Physical</div>
-						<div class="hidden text-sm text-muted-foreground md:inline"> Location </div>
+						<div class="font-medium">{m.physical()}</div>
+						<div class="hidden text-sm text-muted-foreground md:inline"> {m.location()} </div>
 					</Table.Cell>
-					<Table.Cell>Extra info</Table.Cell>
+					<Table.Cell>{m.extra_info()}</Table.Cell>
 				</Table.Row>
 			</Table.Body>
 		</Table.Root>
 		<div class="flex justify-center border-t p-1">
 			<Button variant="ghost" class="w-full" disabled>
 				<CirclePlus size="16" />
-				Add session
+				{m.add_session()}
 			</Button>
 		</div>
 	</div>

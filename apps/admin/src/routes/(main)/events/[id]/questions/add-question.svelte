@@ -1,12 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { Button } from '$lib/components/ui/button';
 	import * as Popover from '$lib/components/ui/popover';
 	import * as m from '$lib/paraglide/messages.js';
-	import { pb } from '$lib/pocketbase/client';
-	import type { EventsResponse, QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
-	import { toast } from 'svelte-sonner';
-	import { refreshQuestions } from './methods';
+	import { addNewQuestion } from './methods';
 	import questionTypes from './question-types';
 
 	export let currentPage: string;
@@ -17,80 +13,15 @@
 	const addQuestion = async (type: string) => {
 		open = false;
 
-		const promise = new Promise(async (resolve, reject) => {
-			let question: QuestionsResponse | null = null;
+		const promise = addNewQuestion(type, currentPage, index);
 
-			try {
-				question = await pb.collection('questions').create({
-					type: type,
-					count: 0,
-					options: {},
-					page: parseInt(currentPage)
-				});
-			} catch (err) {
-				reject(err);
-				return;
-			}
-
-			if (!question) {
-				reject(new Error('Failed to create question'));
-				return;
-			}
-
-			try {
-				const event = await pb
-					.collection('events')
-					.getOne<
-						EventsResponse<any, { questions: QuestionsResponse[] }>
-					>($page.params.id, { expand: 'questions' });
-
-				if (event.questions.length > 0) {
-					const questions = [...(event.expand?.questions || [])];
-					let pages: Record<number, string[]> = {};
-					questions.forEach((q) => {
-						if (!pages[q.page]) pages[q.page] = [];
-						pages[q.page].push(q.id);
-					});
-
-					if (index != null) pages[parseInt(currentPage)].splice(index + 1, 0, question.id);
-					else pages[parseInt(currentPage)].push(question.id);
-
-					const questionsIds = Object.values(pages).flat();
-
-					await pb
-						.collection('events')
-						.update<
-							EventsResponse<{ questions: QuestionsResponse[] }>
-						>($page.params.id, { questions: questionsIds });
-				} else {
-					await pb
-						.collection('events')
-						.update<
-							EventsResponse<{ questions: QuestionsResponse[] }>
-						>($page.params.id, { 'questions+': question.id });
-				}
-
-				refreshQuestions();
+		promise
+			.then((question) => {
 				editingId = question.id;
-				resolve(question);
-			} catch (err) {
-				await pb.collection('questions').delete(question.id);
-				reject(err);
-			}
-		});
-
-		toast.promise(promise, {
-			loading: m.adding_new_question(),
-			success: () => {
-				return m.question_added();
-			},
-			error: (err) => {
-				if (err instanceof Error) {
-					return err.message;
-				}
-				return m.error_occurred();
-			}
-		});
+			})
+			.catch(() => {
+				// Error handling is already done in the method
+			});
 	};
 
 	let open = false;
@@ -113,7 +44,7 @@
 		{/if}
 	</Popover.Trigger>
 	<Popover.Content>
-		{#each Object.entries(questionTypes) as [type, { label, icon, component }]}
+		{#each Object.entries(questionTypes) as [type, { label, icon }]}
 			<Button
 				class="flex w-full justify-start gap-2"
 				variant="outline"

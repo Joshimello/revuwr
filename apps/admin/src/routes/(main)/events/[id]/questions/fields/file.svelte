@@ -36,13 +36,13 @@
 						<Select.Value placeholder={m.select_type()} />
 					</Select.Trigger>
 					<Select.Content>
-						<Select.Item value="pdf">PDF</Select.Item>
-						<Select.Item value="image">Image</Select.Item>
-						<Select.Item value="audio">Audio</Select.Item>
-						<Select.Item value="video">Video</Select.Item>
-						<Select.Item value="document">Document</Select.Item>
-						<Select.Item value="spreadsheet">Spreadsheet</Select.Item>
-						<Select.Item value="presentation">Presentation</Select.Item>
+						<Select.Item value="pdf">{m.pdf()}</Select.Item>
+						<Select.Item value="image">{m.image()}</Select.Item>
+						<Select.Item value="audio">{m.audio()}</Select.Item>
+						<Select.Item value="video">{m.video()}</Select.Item>
+						<Select.Item value="document">{m.document()}</Select.Item>
+						<Select.Item value="spreadsheet">{m.spreadsheet()}</Select.Item>
+						<Select.Item value="presentation">{m.presentation()}</Select.Item>
 					</Select.Content>
 				</Select.Root>
 			{/if}
