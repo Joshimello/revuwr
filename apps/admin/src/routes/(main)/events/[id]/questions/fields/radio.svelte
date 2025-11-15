@@ -20,7 +20,8 @@
 
 {#if options && isEditing}
 	<RadioGroup.Root class="gap-0">
-		{#each options.choices || [] as choice, index}
+		<!-- eslint-disable @typescript-eslint/no-unused-vars -->
+		{#each options.choices || [] as _, index}
 			<div class="flex items-center gap-3">
 				<RadioGroup.Item disabled class="h-5 w-5" value="uwu" />
 				<Label class="flex-1">
@@ -80,7 +81,7 @@
 
 {#if options && !isEditing}
 	<RadioGroup.Root class="gap-0">
-		{#each options.choices || [] as choice, index}
+		{#each options.choices || [] as choice}
 			<div class="flex items-center gap-3">
 				<RadioGroup.Item disabled class="h-5 w-5" value="uwu" />
 				<Label class="flex-1">

@@ -25,14 +25,14 @@
 					<Table.Head>{m.user()}</Table.Head>
 					<Table.Head>{m.contact()}</Table.Head>
 					<Table.Head>{m.status()}</Table.Head>
-					<Table.Head>Tags</Table.Head>
+					<Table.Head>{m.tags()}</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
 				<Table.Row>
 					<Table.Cell>
-						<div class="font-medium">Name</div>
-						<div class="hidden text-sm text-muted-foreground md:inline"> Student ID </div>
+						<div class="font-medium">{m.name()}</div>
+						<div class="hidden text-sm text-muted-foreground md:inline"> {m.student_id()} </div>
 					</Table.Cell>
 					<Table.Cell>
 						<div class="font-medium">{m.email()}</div>
@@ -43,7 +43,7 @@
 						<div class="hidden text-sm text-muted-foreground md:inline"> {m.year()} </div>
 					</Table.Cell>
 					<Table.Cell>
-						<Badge variant="secondary">Foreign Student</Badge>
+						<Badge variant="secondary">{m.foreign_student()}</Badge>
 					</Table.Cell>
 				</Table.Row>
 			</Table.Body>
@@ -62,7 +62,8 @@
 			<span>{m.control_member_count()}</span>
 			{#if options.isControlCount}
 				<Input type="number" bind:value={options.minCount} class="h-6 w-16" min="0" /> to
-				<Input type="number" bind:value={options.maxCount} class="h-6 w-16" min="0" /> pax
+				<Input type="number" bind:value={options.maxCount} class="h-6 w-16" min="0" />
+				{m.pax()}
 			{/if}
 		</div>
 	</div>
@@ -76,14 +77,14 @@
 					<Table.Head>{m.user()}</Table.Head>
 					<Table.Head>{m.contact()}</Table.Head>
 					<Table.Head>{m.status()}</Table.Head>
-					<Table.Head>Tags</Table.Head>
+					<Table.Head>{m.tags()}</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
 				<Table.Row>
 					<Table.Cell>
-						<div class="font-medium">Name</div>
-						<div class="hidden text-sm text-muted-foreground md:inline"> Student ID </div>
+						<div class="font-medium">{m.name()}</div>
+						<div class="hidden text-sm text-muted-foreground md:inline"> {m.student_id()} </div>
 					</Table.Cell>
 					<Table.Cell>
 						<div class="font-medium">{m.email()}</div>
@@ -94,7 +95,7 @@
 						<div class="hidden text-sm text-muted-foreground md:inline"> {m.year()} </div>
 					</Table.Cell>
 					<Table.Cell>
-						<Badge variant="secondary">Foreign Student</Badge>
+						<Badge variant="secondary">{m.foreign_student()}</Badge>
 					</Table.Cell>
 				</Table.Row>
 			</Table.Body>

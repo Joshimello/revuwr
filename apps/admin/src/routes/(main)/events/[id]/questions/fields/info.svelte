@@ -1,5 +1,8 @@
 <script lang="ts">
-  export let options: {}; options
-  export let isEditing: boolean; isEditing
-  export let required: boolean; required
+	// svelte-ignore unused-export-let
+	export let options: Record<string, unknown>;
+	// svelte-ignore unused-export-let
+	export let isEditing: boolean;
+	// svelte-ignore unused-export-let
+	export let required: boolean;
 </script>
