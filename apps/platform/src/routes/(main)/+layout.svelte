@@ -5,6 +5,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Popover from '$lib/components/ui/popover';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import { m } from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
 	import type { NotificationsResponse, UsersResponse } from '$lib/pocketbase/pocketbase-types.js';
 	import { handleStoredRedirect, redirectToLogin } from '$lib/utils/redirect';
@@ -100,12 +101,14 @@
 						</Popover.Trigger>
 						<Popover.Content class="w-80 p-0">
 							<div class="border-b px-4 py-3">
-								<h4 class="font-medium">Notifications</h4>
+								<h4 class="font-medium">{m.section_notifications()}</h4>
 							</div>
 							{#if isLoadingNotifications}
-								<div class="py-8 text-center text-sm text-muted-foreground">Loading...</div>
+								<div class="py-8 text-center text-sm text-muted-foreground">{m.loading()}</div>
 							{:else if notifications.length == 0}
-								<div class="py-8 text-center text-sm text-muted-foreground">No notifications</div>
+								<div class="py-8 text-center text-sm text-muted-foreground">
+									{m.no_notifications()}
+								</div>
 							{:else}
 								<ScrollArea class="h-96">
 									{#each notifications as notification}
@@ -118,7 +121,7 @@
 											>
 											{#if notification.link}
 												<Button size="sm" class="mt-2 h-6 w-max text-xs" href={notification.link}>
-													View
+													{m.view()}
 												</Button>
 											{/if}
 										</div>
@@ -175,7 +178,7 @@
 								<DropdownMenu.Separator />
 								<DropdownMenu.Item href="/settings" class="cursor-pointer">
 									<Settings2 size="16" class="mr-2" />
-									Settings
+									{m.settings()}
 								</DropdownMenu.Item>
 								<!-- <DropdownMenu.Item
 									href="mailto:joshualeanjw@gmail.com?subject=[Revuwr System Help] (Replace me with issue encountered)"
@@ -191,7 +194,7 @@
 									class="cursor-pointer text-red-600 focus:text-red-600"
 								>
 									<LogOut size="16" class="mr-2" />
-									Logout
+									{m.logout()}
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 						</DropdownMenu.Content>
@@ -203,7 +206,7 @@
 					on:click={() => redirectToLogin($page.url.pathname)}
 				>
 					<LogIn size="16" />
-					<span class="hidden md:inline">Sign In</span>
+					<span class="hidden md:inline">{m.sign_in()}</span>
 				</Button>
 			{/if}
 		</div>

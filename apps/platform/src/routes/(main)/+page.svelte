@@ -97,7 +97,7 @@
 														.padStart(3, '0')}
 												</span>
 											{/if}
-											<span class="text-xl leading-4">
+											<span class="text-xl">
 												{application.expand?.event.name}
 											</span>
 											<div>
@@ -164,7 +164,7 @@
 														.padStart(3, '0')}
 												</span>
 											{/if}
-											<span class="text-xl leading-4">
+											<span class="text-xl">
 												{application.expand?.event.name}
 											</span>
 											<div>

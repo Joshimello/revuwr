@@ -3,9 +3,9 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { m } from '$lib/paraglide/messages.js';
 	import { Info } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { m } from '$lib/paraglide/messages.js';
 	import { updateAnswer } from './methods';
 	import questionTypes from './question-types';
 	import { answers, application, currentIndex, isReadOnly } from './stores';
@@ -24,9 +24,9 @@
 	{#key value}
 		<div class="flex gap-2">
 			{#if question.required}
-			<Badge variant="outline">{m.required_badge()}</Badge>
+				<Badge variant="outline">{m.required_badge()}</Badge>
 			{:else}
-			<Badge variant="secondary">{m.optional_badge()}</Badge>
+				<Badge variant="secondary">{m.optional_badge()}</Badge>
 			{/if}
 
 			{#if checkValid && !checkValid()[0]}
@@ -56,7 +56,7 @@
 
 	{#if $answers[$currentIndex].comment}
 		<Alert.Root variant="destructive">
-		<Alert.Title>{m.alert_comments_title()}</Alert.Title>
+			<Alert.Title>{m.alert_comments_title()}</Alert.Title>
 			<Alert.Description>
 				{$answers[$currentIndex].comment}
 			</Alert.Description>
@@ -67,20 +67,20 @@
 		{#key value}
 			<div class="sticky bottom-20 mt-24 flex items-center gap-2 md:bottom-24">
 				{#if $currentIndex < $answers.length - 1}
-				<Button
-										size="lg"
-										on:click={async () => {
-											const [status, res] = await updateAnswer(content.id, value);
-											if (status) {
-												$currentIndex = $currentIndex + 1;
-											} else {
-												toast.error(m.error_update_answer());
-											}
-										}}
-										disabled={checkValid && !checkValid()[0]}
-									>
-										{m.button_continue()}
-									</Button>
+					<Button
+						size="lg"
+						on:click={async () => {
+							const [status, res] = await updateAnswer(content.id, value);
+							if (status) {
+								$currentIndex = $currentIndex + 1;
+							} else {
+								toast.error(m.error_update_answer());
+							}
+						}}
+						disabled={checkValid && !checkValid()[0]}
+					>
+						{m.button_continue()}
+					</Button>
 				{:else}
 					<form
 						method="post"
@@ -99,19 +99,19 @@
 							}
 						}}
 					>
-					<Button
-												size="lg"
-												disabled={isLoading ||
-													(checkValid &&
-														!checkValid()[0] &&
-														!(
-															$currentIndex === $answers.length - 1 &&
-															$application?.status === 'editsRequested'
-														))}
-												type="submit"
-											>
-												{m.button_submit_application()}
-											</Button>
+						<Button
+							size="lg"
+							disabled={isLoading ||
+								(checkValid &&
+									!checkValid()[0] &&
+									!(
+										$currentIndex === $answers.length - 1 &&
+										$application?.status === 'editsRequested'
+									))}
+							type="submit"
+						>
+							{m.button_submit_application()}
+						</Button>
 					</form>
 				{/if}
 
@@ -129,5 +129,5 @@
 
 	<div class="h-96"></div>
 {:else}
-{m.invalid_question()}
+	{m.invalid_question()}
 {/if}
