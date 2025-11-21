@@ -26,7 +26,8 @@ export const actions: Actions = {
 				dept: body.dept,
 				init: true
 			});
-			return redirect(303, '/');
+
+			return redirect(303, '/?onboard=complete');
 		} catch (err) {
 			if (isRedirect(err)) {
 				return redirect(err.status, err.location);

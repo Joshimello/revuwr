@@ -97,6 +97,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const tempPassword = nanoid();
 	let user: UsersResponse | null = null;
+	let isNewUser = false;
 
 	try {
 		user = await locals.apb.collection('users').getFirstListItem('1=1', {
@@ -107,6 +108,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	}
 
 	if (!user) {
+		isNewUser = true;
 		try {
 			await locals.apb.collection('users').create({
 				username: resourceData.userid,
@@ -138,9 +140,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	try {
 		await locals.pb.collection('users').authWithPassword(resourceData.userid, tempPassword);
 
-		// Check for stored redirect URL and redirect there, otherwise go to root
-		const redirectUrl = url.searchParams.get('redirect') || '/';
-		return redirect(302, redirectUrl);
+		// If user is new or hasn't completed onboarding, redirect to onboard
+		if (isNewUser || user?.init === false) {
+			return redirect(302, '/onboard');
+		}
+
+		// Existing user - redirect to root
+		return redirect(302, '/');
 	} catch (err) {
 		if (isRedirect(err)) {
 			return redirect(err.status, err.location);

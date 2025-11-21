@@ -102,7 +102,7 @@
 		<Button
 			size="lg"
 			type="submit"
-			disabled={isCreating || !canApply || !user}
+			disabled={isCreating || (!canApply && user)}
 			on:click={() => {
 				if (!user) {
 					handleLogin();
