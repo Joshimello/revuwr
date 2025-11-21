@@ -16,10 +16,22 @@
 	export let data;
 	$: ({ user } = data);
 
-	// Handle redirect after login
+	// Handle redirect after login (but not on onboard page)
 	onMount(() => {
 		if (user) {
-			handleStoredRedirect();
+			// Check if we just completed onboarding
+			if ($page.url.searchParams.get('onboard') === 'complete') {
+				// Remove the parameter from URL
+				const url = new URL($page.url);
+				url.searchParams.delete('onboard');
+				window.history.replaceState({}, '', url.toString());
+
+				// Handle stored redirect
+				handleStoredRedirect();
+			} else if ($page.url.pathname !== '/onboard') {
+				// Normal redirect handling (but not on onboard page)
+				handleStoredRedirect();
+			}
 		}
 	});
 
@@ -187,7 +199,7 @@
 				</div>
 			{:else}
 				<Button
-					class="flex items-center gap-2 rounded-full border border-border/50 bg-background/80 backdrop-blur-sm transition-all duration-200 hover:bg-accent/50 hover:shadow-md"
+					class="flex items-center gap-2 rounded-full"
 					on:click={() => redirectToLogin($page.url.pathname)}
 				>
 					<LogIn size="16" />
