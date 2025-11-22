@@ -5,8 +5,10 @@
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { m } from '$lib/paraglide/messages.js';
 	import { Info } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { updateAnswer } from './methods';
+	import { shouldShowConditionalQuestion } from './conditional-utils';
+	import { updateAnswer, updateConditionalAnswers } from './methods';
 	import questionTypes from './question-types';
 	import { answers, application, currentIndex, isReadOnly } from './stores';
 	import type { ExpandedResponse } from './types';
@@ -15,9 +17,13 @@
 	const question = content.expand?.question;
 
 	let checkValid: () => [boolean, string];
-	let value: any = content.response;
+	let value: unknown = content.response;
 
 	let isLoading = false;
+
+	onMount(() => {
+		console.log(question);
+	});
 </script>
 
 {#if question && question.type in questionTypes}
@@ -70,9 +76,31 @@
 					<Button
 						size="lg"
 						on:click={async () => {
-							const [status, res] = await updateAnswer(content.id, value);
+							const [status] = await updateAnswer(content.id, value);
 							if (status) {
-								$currentIndex = $currentIndex + 1;
+								// Update conditional answers after this answer changes
+								if ($application?.expand?.response) {
+									await updateConditionalAnswers($application.expand.response);
+								}
+
+								// Find the next question that should be shown
+								let nextIndex = $currentIndex + 1;
+								while (nextIndex < $answers.length) {
+									const nextQuestion = $answers[nextIndex]?.expand?.question;
+									if (nextQuestion) {
+										const shouldShow = nextQuestion.conditional
+											? shouldShowConditionalQuestion(nextQuestion, $answers)
+											: true;
+										if (shouldShow) {
+											$currentIndex = nextIndex;
+											break;
+										}
+									}
+									nextIndex++;
+								}
+								if (nextIndex >= $answers.length) {
+									$currentIndex = $answers.length - 1;
+								}
 							} else {
 								toast.error(m.error_update_answer());
 							}
@@ -87,8 +115,13 @@
 						action="?/submit"
 						class="flex-1 md:flex-none"
 						on:submit={async (event) => {
-							const [status, res] = await updateAnswer(content.id, value);
+							const [status] = await updateAnswer(content.id, value);
 							if (status) {
+								// Update conditional answers before submitting
+								if ($application?.expand?.response) {
+									await updateConditionalAnswers($application.expand.response);
+								}
+
 								isLoading = true;
 								toast.loading(m.toast_submitting_application(), {
 									duration: Number.POSITIVE_INFINITY
