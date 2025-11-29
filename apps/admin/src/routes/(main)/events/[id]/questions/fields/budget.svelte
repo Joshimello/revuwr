@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Editor from '$lib/components/editor.svelte';
 	import Range from '$lib/components/range.svelte';
+	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -14,7 +15,6 @@
 	import { onMount } from 'svelte';
 
 	export let isEditing: boolean;
-	export let required: boolean;
 
 	type Option = {
 		name: string;
@@ -125,6 +125,7 @@
 			}
 			return value;
 		} catch (error) {
+			console.log(error);
 			return 'ERROR';
 		}
 	};
@@ -135,7 +136,7 @@
 		range: { input: number[]; output: number[] }
 	) => {
 		const parsedFormula = parseFormula(formula, data);
-		const value = range.output[range.input.findLastIndex((value, index) => parsedFormula >= value)];
+		const value = range.output[range.input.findLastIndex((value) => parsedFormula >= value)];
 		if (isNaN(value)) {
 			return 'ERROR';
 		}
@@ -152,6 +153,84 @@
 		const newOptions = [...options];
 		[newOptions[index], newOptions[newIndex]] = [newOptions[newIndex], newOptions[index]];
 		options = newOptions;
+	};
+
+	const parseFormulaDisplay = (formula: string) => {
+		if (!formula || !options) {
+			return { valid: false, display: [] };
+		}
+
+		try {
+			const parts = [];
+			let lastIndex = 0;
+			const regex = /\{(\d+)([PQT])\}/g;
+			let match;
+			let valid = true;
+
+			// Check if the formula has valid syntax by trying to parse it
+			const testFormula = formula.replace(regex, (match, index) => {
+				const arrayIndex = parseInt(index) - 1;
+				if (arrayIndex < 0 || arrayIndex >= (options || []).length) {
+					valid = false;
+					return '0';
+				}
+				return '1'; // Use 1 as test value
+			});
+
+			// Test if the formula is mathematically valid
+			try {
+				new Function(`return ${testFormula}`)();
+			} catch {
+				valid = false;
+			}
+
+			if (!valid) {
+				return { valid: false, display: [] };
+			}
+
+			// Parse the formula for display
+			while ((match = regex.exec(formula)) !== null) {
+				// Add any text before the match
+				if (match.index > lastIndex) {
+					const textBefore = formula.substring(lastIndex, match.index);
+					if (textBefore.trim()) {
+						parts.push({ type: 'text', content: textBefore });
+					}
+				}
+
+				const arrayIndex = parseInt(match[1]) - 1;
+				const type = match[2];
+
+				if (arrayIndex >= 0 && arrayIndex < (options || []).length) {
+					const option = (options || [])[arrayIndex];
+					let badgeText = '';
+
+					if (type === 'P') {
+						badgeText = `${option.name} Price`;
+					} else if (type === 'Q') {
+						badgeText = `${option.name} Quantity`;
+					} else if (type === 'T') {
+						badgeText = `${option.name} Total`;
+					}
+
+					parts.push({ type: 'badge', content: badgeText });
+				}
+
+				lastIndex = match.index + match[0].length;
+			}
+
+			// Add any remaining text after the last match
+			if (lastIndex < formula.length) {
+				const textAfter = formula.substring(lastIndex);
+				if (textAfter.trim()) {
+					parts.push({ type: 'text', content: textAfter });
+				}
+			}
+
+			return { valid: true, display: parts };
+		} catch {
+			return { valid: false, display: [] };
+		}
 	};
 </script>
 
@@ -336,6 +415,27 @@
 									</Select.Content>
 								</Select.Root>
 								{#if ['custom', 'range'].includes(item.calculationMethod)}
+									<!-- Formula Display -->
+									{#if item.customFormula}
+										{@const parsed = parseFormulaDisplay(item.customFormula)}
+										<div class="mt-2 min-h-8 overflow-x-auto rounded-md border bg-gray-50 p-2">
+											{#if parsed.valid}
+												<div class="flex items-center gap-1 whitespace-nowrap">
+													{#each parsed.display as part}
+														{#if part.type === 'badge'}
+															<Badge variant="secondary" class="text-xs">
+																{part.content}
+															</Badge>
+														{:else}
+															<span class="text-sm">{part.content}</span>
+														{/if}
+													{/each}
+												</div>
+											{:else}
+												<span class="text-sm text-red-600">Bad Formula</span>
+											{/if}
+										</div>
+									{/if}
 									<input
 										bind:value={item.customFormula}
 										bind:this={customFormulaInput}
@@ -416,7 +516,17 @@
 												{ value: 'ceil', label: '無條件進位' }
 											].find((option) => option.value === (item.roundingMethod || 'none'))}
 											onSelectedChange={(selected) => {
-												item.roundingMethod = selected ? selected.value : 'none';
+												if (
+													selected &&
+													(selected.value == 'none' ||
+														selected.value == 'round' ||
+														selected.value == 'floor' ||
+														selected.value == 'ceil')
+												) {
+													item.roundingMethod = selected.value;
+												} else {
+													item.roundingMethod = 'none';
+												}
 											}}
 										>
 											<Select.Trigger>
@@ -464,8 +574,9 @@
 							</div>
 							<Button
 								variant="destructive"
-								on:click={() => [options.splice(index, 1), (options = [...options])]}
-								>刪除
+								on:click={() => [options?.splice(index, 1), (options = [...(options || [])])]}
+							>
+								刪除
 							</Button>
 						</Sheet.Content>
 					</Sheet.Root>
@@ -479,9 +590,9 @@
 		variant="outline"
 		class="w-full"
 		on:click={() => {
-			options = [...options, { ...newItem }];
+			options = [...(options || []), { ...newItem }];
 			setTimeout(() => {
-				openIndex = options.length - 1;
+				openIndex = (options || []).length - 1;
 			}, 50);
 		}}>+ 新增</Button
 	>
@@ -489,9 +600,11 @@
 	<div class="mt-6">
 		限制總價範圍
 		<div class="flex items-center gap-2">
-			<Input type="number" bind:value={options[0].minFinalTotal} />
-			->
-			<Input type="number" bind:value={options[0].maxFinalTotal} />
+			{#if options}
+				<Input type="number" bind:value={options[0].minFinalTotal} />
+				->
+				<Input type="number" bind:value={options[0].maxFinalTotal} />
+			{/if}
 		</div>
 	</div>
 
@@ -579,6 +692,7 @@
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-96">
+							<!-- eslint-disable-next-line -->
 							{@html item.description}
 							{#if item.requestExplaination}
 								<Textarea class="mt-2" placeholder="請填寫用途説明" />
@@ -602,13 +716,13 @@
 								if (item.calculationMethod === 'default') {
 									itemValue = item.defaultPrice * item.defaultQuantity;
 								} else if (item.calculationMethod === 'custom') {
-									itemValue = parseFormula(item.customFormula, options);
+									itemValue = parseFormula(item.customFormula, options || []);
 									if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
 										hasError = true;
 										return;
 									}
 								} else if (item.calculationMethod === 'range') {
-									itemValue = parseRange(item.customFormula, options, item.rangeTable);
+									itemValue = parseRange(item.customFormula, options || [], item.rangeTable);
 									if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
 										hasError = true;
 										return;

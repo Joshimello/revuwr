@@ -32,7 +32,7 @@
 		{#if long}
 			<Button
 				builders={[builder]}
-				class="h-2 w-full text-xs text-muted-foreground opacity-0 transition-opacity duration-75 hover:opacity-100"
+				class="h-2 w-full text-xs text-muted-foreground opacity-50 transition-opacity duration-75 hover:opacity-100"
 				variant="ghost"
 			>
 				{m.add_a_new_question()}
