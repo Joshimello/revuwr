@@ -2,17 +2,104 @@
 	import { page } from '$app/stores';
 	import Status from '$lib/components/status.svelte';
 	import * as Alert from '$lib/components/ui/alert/index.js';
-	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
-	import { Progress } from '$lib/components/ui/progress';
 	import { m } from '$lib/paraglide/messages.js';
-	import { Info } from 'lucide-svelte';
+	import { ChevronLeft as ChevronLeftIcon, ChevronRight, Info } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { ChevronLeft } from 'svelte-radix';
 	import { shouldShowConditionalQuestion } from './conditional-utils';
 	import { getApplication, updateConditionalAnswers } from './methods';
 	import Question from './question.svelte';
 	import { answers, application, currentIndex, event, isReadOnly } from './stores';
+
+	function isQuestionAccessible(index: number): boolean {
+		const question = $answers[index]?.expand?.question;
+		if (!question) return false;
+
+		// Check if conditional question should be shown
+		if (question.conditional) {
+			return shouldShowConditionalQuestion(question, $answers);
+		}
+
+		return true;
+	}
+
+	function isQuestionValid(index: number): boolean {
+		const answer = $answers[index];
+		const question = answer?.expand?.question;
+
+		if (!question) return false;
+
+		// If conditional and shouldn't be shown, mark as valid
+		if (question.conditional && !shouldShowConditionalQuestion(question, $answers)) {
+			return true;
+		}
+
+		return answer.valid;
+	}
+
+	function jumpToQuestion(index: number): void {
+		if (isQuestionAccessible(index)) {
+			$currentIndex = index;
+		}
+	}
+
+	// Sliding window configuration
+	const WINDOW_SIZE = 7; // Show 7 circles total (current + 3 before + 3 after)
+	let windowStart = 0;
+
+	$: {
+		// Auto-adjust window when current question changes
+		const halfWindow = Math.floor(WINDOW_SIZE / 2);
+		windowStart = Math.max(0, Math.min($currentIndex - halfWindow, $answers.length - WINDOW_SIZE));
+		if (windowStart < 0) windowStart = 0;
+	}
+
+	function navigateQuestion(direction: 'left' | 'right'): void {
+		if (direction === 'left') {
+			// Find previous valid question to show
+			let prevIndex = $currentIndex - 1;
+			while (prevIndex >= 0) {
+				const prevQuestion = $answers[prevIndex]?.expand?.question;
+				if (prevQuestion) {
+					const shouldShow = prevQuestion.conditional
+						? shouldShowConditionalQuestion(prevQuestion, $answers)
+						: true;
+					if (shouldShow) {
+						$currentIndex = prevIndex;
+						break;
+					}
+				}
+				prevIndex--;
+			}
+			if (prevIndex < 0) {
+				$currentIndex = 0;
+			}
+		} else {
+			// Find next valid question to show
+			let nextIndex = $currentIndex + 1;
+			while (nextIndex < $answers.length) {
+				const nextQuestion = $answers[nextIndex]?.expand?.question;
+				if (nextQuestion) {
+					const shouldShow = nextQuestion.conditional
+						? shouldShowConditionalQuestion(nextQuestion, $answers)
+						: true;
+					if (shouldShow) {
+						$currentIndex = nextIndex;
+						break;
+					}
+				}
+				nextIndex++;
+			}
+			if (nextIndex >= $answers.length) {
+				$currentIndex = $answers.length - 1;
+			}
+		}
+	}
+
+	$: visibleQuestions = $answers.slice(windowStart, windowStart + WINDOW_SIZE);
+	$: canSlideLeft = windowStart > 0;
+	$: canSlideRight = windowStart + WINDOW_SIZE < $answers.length;
 
 	onMount(async () => {
 		$application = (await getApplication($page.params.id)) ?? null;
@@ -95,74 +182,135 @@
 				</Alert.Root>
 			{/if}
 
-			<div class="flex items-center justify-between">
+			<!-- Mobile: Status and progress on top row -->
+			<div class="flex items-center justify-center gap-4 sm:hidden">
+				<Status type={$application.status} />
+				{#if $answers.length > WINDOW_SIZE}
+					<div class="text-xs text-muted-foreground">
+						{windowStart + 1}-{Math.min(windowStart + WINDOW_SIZE, $answers.length)} of {$answers.length}
+					</div>
+				{/if}
+			</div>
+
+			<!-- Desktop: All in one row -->
+			<div class="hidden items-center justify-center gap-3 sm:flex">
+				<!-- Status moved to left -->
+				<Status type={$application.status} />
+
+				<!-- Previous question -->
 				<Button
+					variant="ghost"
 					size="sm"
-					variant="outline"
-					on:click={async () => {
-						// Find previous valid question to show
-						let prevIndex = $currentIndex - 1;
-						while (prevIndex >= 0) {
-							const prevQuestion = $answers[prevIndex]?.expand?.question;
-							if (prevQuestion) {
-								const shouldShow = prevQuestion.conditional
-									? shouldShowConditionalQuestion(prevQuestion, $answers)
-									: true;
-								if (shouldShow) {
-									$currentIndex = prevIndex;
-									break;
-								}
-							}
-							prevIndex--;
-						}
-						if (prevIndex < 0) {
-							$currentIndex = 0;
-						}
-					}}
+					class="h-8 w-8 p-0"
+					on:click={() => navigateQuestion('left')}
 					disabled={$currentIndex === 0}
 				>
-					{'<-'}&nbsp;{m.button_back()}
+					<ChevronLeftIcon class="h-4 w-4" />
 				</Button>
+
+				<!-- Question circles -->
 				<div class="flex gap-2">
-					<Status type={$application.status} />
-					<span class="text-sm text-muted-foreground">
-						{m.question_of({ current: $currentIndex + 1, total: $answers.length })}
-					</span>
-					{#if $answers[$currentIndex].valid}
-						<Badge variant="outline">{m.badge_valid()}</Badge>
-					{:else}
-						<Badge variant="default">{m.badge_invalid()}</Badge>
-					{/if}
+					{#each visibleQuestions as answer, relativeIndex}
+						{@const index = windowStart + relativeIndex}
+						{@const accessible = isQuestionAccessible(index)}
+						{@const valid = isQuestionValid(index)}
+						{@const current = index === $currentIndex}
+
+						<button
+							class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
+								{current
+								? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
+								: accessible
+									? valid
+										? 'border-green-500 bg-green-500 text-white hover:scale-105'
+										: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
+									: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
+							on:click={() => jumpToQuestion(index)}
+							disabled={!accessible}
+							title="Question {index + 1}{accessible
+								? valid
+									? ' - Valid'
+									: ' - Invalid'
+								: ' - Hidden'}"
+						>
+							{index + 1}
+						</button>
+					{/each}
 				</div>
+
+				<!-- Next question -->
 				<Button
+					variant="ghost"
 					size="sm"
-					variant="outline"
-					on:click={async () => {
-						// Find next valid question to show
-						let nextIndex = $currentIndex + 1;
-						while (nextIndex < $answers.length) {
-							const nextQuestion = $answers[nextIndex]?.expand?.question;
-							if (nextQuestion) {
-								const shouldShow = nextQuestion.conditional
-									? shouldShowConditionalQuestion(nextQuestion, $answers)
-									: true;
-								if (shouldShow) {
-									$currentIndex = nextIndex;
-									break;
-								}
-							}
-							nextIndex++;
-						}
-						if (nextIndex >= $answers.length) {
-							$currentIndex = $answers.length - 1;
-						}
-					}}
-					disabled={!$isReadOnly || $currentIndex === $answers.length - 1}
+					class="h-8 w-8 p-0"
+					on:click={() => navigateQuestion('right')}
+					disabled={$currentIndex === $answers.length - 1}
 				>
-					{m.button_next()}&nbsp;{'->'}
+					<ChevronRight class="h-4 w-4" />
+				</Button>
+
+				<!-- Progress indicator -->
+				{#if $answers.length > WINDOW_SIZE}
+					<div class="ml-2 text-xs text-muted-foreground">
+						{windowStart + 1}-{Math.min(windowStart + WINDOW_SIZE, $answers.length)} of {$answers.length}
+					</div>
+				{/if}
+			</div>
+
+			<!-- Mobile: Navigation circles row -->
+			<div class="flex items-center justify-center gap-2 sm:hidden">
+				<!-- Previous question -->
+				<Button
+					variant="ghost"
+					size="sm"
+					class="h-8 w-8 p-0"
+					on:click={() => navigateQuestion('left')}
+					disabled={$currentIndex === 0}
+				>
+					<ChevronLeftIcon class="h-4 w-4" />
+				</Button>
+
+				<!-- Question circles -->
+				<div class="flex gap-2">
+					{#each visibleQuestions as answer, relativeIndex}
+						{@const index = windowStart + relativeIndex}
+						{@const accessible = isQuestionAccessible(index)}
+						{@const valid = isQuestionValid(index)}
+						{@const current = index === $currentIndex}
+
+						<button
+							class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
+								{current
+								? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
+								: accessible
+									? valid
+										? 'border-green-500 bg-green-500 text-white hover:scale-105'
+										: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
+									: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
+							on:click={() => jumpToQuestion(index)}
+							disabled={!accessible}
+							title="Question {index + 1}{accessible
+								? valid
+									? ' - Valid'
+									: ' - Invalid'
+								: ' - Hidden'}"
+						>
+							{index + 1}
+						</button>
+					{/each}
+				</div>
+
+				<!-- Next question -->
+				<Button
+					variant="ghost"
+					size="sm"
+					class="h-8 w-8 p-0"
+					on:click={() => navigateQuestion('right')}
+					disabled={$currentIndex === $answers.length - 1}
+				>
+					<ChevronRight class="h-4 w-4" />
 				</Button>
 			</div>
-			<Progress value={(($answers.filter((i) => i.valid).length || 0) / $answers.length) * 100} />
 		</div>
 	</div>
 {:else}

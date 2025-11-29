@@ -4,7 +4,6 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import type { QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	export let question: QuestionsResponse;
 	let options = question.options as {
@@ -49,10 +48,46 @@
 		if (value == null || disabled) {
 			return [false, ''];
 		}
+
+		// Check for calculation errors
+		let hasError = false;
+		for (let i = 0; i < options.length; i++) {
+			const itemValue = calculateItemValue(i);
+			if (itemValue === 'ERROR') {
+				hasError = true;
+				break;
+			}
+
+			// Check row-specific total limits
+			const item = options[i];
+			if (item.isLimitTotal && typeof itemValue === 'number') {
+				if (itemValue < item.minTotal || itemValue > item.maxTotal) {
+					return [false, `項目 "${item.name}" 總價超出範圍 ${item.minTotal} -> ${item.maxTotal}`];
+				}
+			}
+
+			// Check required explanations
+			if (item.requestExplaination && typeof itemValue === 'number' && itemValue > 0) {
+				if (!item.explaination || item.explaination.trim() === '') {
+					return [false, `項目 "${item.name}" 需要填寫用途説明`];
+				}
+			}
+		}
+
+		if (hasError) {
+			return [false, '計算錯誤'];
+		}
+
 		const total = calculateTotal();
 		if (total === 'ERROR') {
 			return [false, '計算錯誤'];
 		}
+
+		// Check if total is zero
+		if (total === 0) {
+			return [false, '總價不能為零'];
+		}
+
 		if (total < options[0].minFinalTotal || total > options[0].maxFinalTotal) {
 			return [false, `總價超出範圍 ${options[0].minFinalTotal} -> ${options[0].maxFinalTotal}`];
 		}
@@ -89,12 +124,16 @@
 		if (!value) {
 			value = [...options];
 		} else {
+			// Don't overwrite options with value - keep the original question data
+			// Just sync the user input values
 			if (Array.isArray(value)) {
-				options = [...value];
-			} else if (typeof value === 'object') {
-				options = Object.values(value);
-			} else {
-				toast.error('Invalid options');
+				value.forEach((valueItem, index) => {
+					if (options[index]) {
+						options[index].defaultPrice = valueItem.defaultPrice;
+						options[index].defaultQuantity = valueItem.defaultQuantity;
+						options[index].explaination = valueItem.explaination;
+					}
+				});
 			}
 		}
 		init = true;
@@ -102,8 +141,10 @@
 
 	$: if (options && init) {
 		value = [...options];
-		console.log(value[0].defaultQuantity);
 	}
+
+	// Force reactivity for calculations
+	$: reactiveOptions = options;
 
 	const parseFormula = (formula: string, data: typeof options) => {
 		let processedFormula = formula.replace(/\{(\d+)([PQT])\}/g, (match, index, type) => {
@@ -145,44 +186,60 @@
 		return value;
 	};
 
+	const calculateItemValue = (itemIndex: number) => {
+		const item = options[itemIndex];
+		let itemValue;
+
+		if (item.calculationMethod === 'default') {
+			itemValue = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
+		} else if (item.calculationMethod === 'custom') {
+			itemValue = parseFormula(item.customFormula, options);
+			if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
+				return 'ERROR';
+			}
+		} else if (item.calculationMethod === 'range') {
+			itemValue = parseRange(item.customFormula, options, item.rangeTable);
+			if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
+				return 'ERROR';
+			}
+			// cuz rangeTable.input and rangeTable.output are both string arrays due to input
+			if (typeof itemValue === 'string') {
+				itemValue = parseInt(itemValue);
+			}
+		}
+
+		// Apply rounding if configured
+		if (typeof itemValue === 'number' && item.roundingMethod && item.roundingMethod !== 'none') {
+			const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+			if (item.roundingMethod === 'round') {
+				itemValue = Math.round(itemValue * multiplier) / multiplier;
+			} else if (item.roundingMethod === 'floor') {
+				itemValue = Math.floor(itemValue * multiplier) / multiplier;
+			} else if (item.roundingMethod === 'ceil') {
+				itemValue = Math.ceil(itemValue * multiplier) / multiplier;
+			}
+		}
+
+		return itemValue;
+	};
+
 	const calculateTotal = () => {
 		let total = 0;
+		let hasError = false;
+
 		for (let i = 0; i < options.length; i++) {
-			const item = options[i];
-			let itemValue;
-
-			if (item.calculationMethod === 'default') {
-				itemValue = item.defaultPrice * item.defaultQuantity;
-			} else if (item.calculationMethod === 'custom') {
-				itemValue = parseFormula(item.customFormula, options);
-				if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
-					return 'ERROR';
-				}
-			} else if (item.calculationMethod === 'range') {
-				itemValue = parseRange(item.customFormula, options, item.rangeTable);
-				if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
-					return 'ERROR';
-				}
-				// cuz rangeTable.input and rangeTable.output are both string arrays due to input
-				if (typeof itemValue === 'string') {
-					itemValue = parseInt(itemValue);
-				}
+			const itemValue = calculateItemValue(i);
+			if (itemValue === 'ERROR') {
+				hasError = true;
+				break;
 			}
-
-			// Apply rounding if configured
-			if (typeof itemValue === 'number' && item.roundingMethod && item.roundingMethod !== 'none') {
-				const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
-				if (item.roundingMethod === 'round') {
-					itemValue = Math.round(itemValue * multiplier) / multiplier;
-				} else if (item.roundingMethod === 'floor') {
-					itemValue = Math.floor(itemValue * multiplier) / multiplier;
-				} else if (item.roundingMethod === 'ceil') {
-					itemValue = Math.ceil(itemValue * multiplier) / multiplier;
-				}
-			}
-
 			total += itemValue;
 		}
+
+		if (hasError) {
+			return 'ERROR';
+		}
+
 		return total;
 	};
 </script>
@@ -201,119 +258,135 @@
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#each options as item, index}
+				{#each Array.isArray(options) ? options : [] as item, index}
 					<Table.Row>
 						<Table.Cell class="align-top">{index + 1}.</Table.Cell>
 						<Table.Cell class="text-nowrap align-top">{item.name}</Table.Cell>
 						<Table.Cell class="w-32 align-top">
 							{#if item.isConstantPrice}
-								<Input type="number" value={item.defaultPrice} disabled />
+								<Input type="number" value={item.defaultPrice} disabled min="0" />
 							{:else}
 								<Input
 									type="number"
-									value={item.defaultPrice}
-									on:input={(e) => {
-										// @ts-expect-error svelte 4 no inline types
-										item.defaultPrice = parseInt(e.target.value);
+									bind:value={item.defaultPrice}
+									{disabled}
+									on:input={() => {
+										// Force number conversion
+										item.defaultPrice = Number(item.defaultPrice) || 0;
+										// Trigger reactivity
+										options = [...options];
 									}}
 									{...item.isLimitPrice
 										? {
 												min: item.minPrice,
 												max: item.maxPrice
 											}
-										: {}}
+										: {
+												min: 0
+											}}
 								/>
-								{#if item.isLimitPrice}
-									{@const isValid =
-										item.defaultPrice >= item.minPrice && item.defaultPrice <= item.maxPrice}
-									<span class={`text-xs ${isValid ? 'text-muted-foreground' : 'text-destructive'}`}>
-										{item.minPrice} -> {item.maxPrice}</span
-									>
-								{/if}
+							{/if}
+							{#if item.isLimitPrice}
+								<span class="text-xs text-muted-foreground">
+									{item.minPrice} -> {item.maxPrice}
+								</span>
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-32 align-top">
 							{#if item.isConstantQuantity}
-								<Input type="number" value={item.defaultQuantity} disabled />
+								<Input type="number" value={item.defaultQuantity} disabled min="0" />
 							{:else}
 								<Input
-									value={item.defaultQuantity}
 									type="number"
-									on:input={(e) => {
-										// @ts-expect-error svelte 4 no inline types
-										item.defaultQuantity = parseInt(e.target.value);
+									bind:value={item.defaultQuantity}
+									{disabled}
+									on:input={() => {
+										// Force number conversion
+										item.defaultQuantity = Number(item.defaultQuantity) || 0;
+										// Trigger reactivity
+										options = [...options];
 									}}
 									{...item.isLimitQuantity
 										? {
 												min: item.minQuantity,
 												max: item.maxQuantity
 											}
-										: {}}
+										: {
+												min: 0
+											}}
 								/>
-								{#if item.isLimitQuantity}
-									{@const isValid =
-										item.defaultQuantity >= item.minQuantity &&
-										item.defaultQuantity <= item.maxQuantity}
-									<span class={`text-xs ${isValid ? 'text-muted-foreground' : 'text-destructive'}`}>
-										{item.minQuantity} -> {item.maxQuantity}</span
-									>
-								{/if}
+							{/if}
+							{#if item.isLimitQuantity}
+								<span class="text-xs text-muted-foreground">
+									{item.minQuantity} -> {item.maxQuantity}
+								</span>
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-48 align-top">
-							{#if item.calculationMethod === 'default'}
-								{(() => {
-									let value = item.defaultPrice * item.defaultQuantity;
-									if (item.roundingMethod && item.roundingMethod !== 'none') {
-										const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
-										if (item.roundingMethod === 'round') {
-											return Math.round(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'floor') {
-											return Math.floor(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'ceil') {
-											return Math.ceil(value * multiplier) / multiplier;
+							{#key options}
+								{#if item.calculationMethod === 'default'}
+									{(() => {
+										let value = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
+										if (item.roundingMethod && item.roundingMethod !== 'none') {
+											const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+											if (item.roundingMethod === 'round') {
+												return Math.round(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'floor') {
+												return Math.floor(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'ceil') {
+												return Math.ceil(value * multiplier) / multiplier;
+											}
 										}
-									}
-									return value;
-								})()}
-							{:else if item.calculationMethod === 'custom'}
-								{(() => {
-									let value = parseFormula(item.customFormula, options);
-									if (
-										typeof value === 'number' &&
-										item.roundingMethod &&
-										item.roundingMethod !== 'none'
-									) {
-										const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
-										if (item.roundingMethod === 'round') {
-											return Math.round(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'floor') {
-											return Math.floor(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'ceil') {
-											return Math.ceil(value * multiplier) / multiplier;
+										return value;
+									})()}
+								{:else if item.calculationMethod === 'custom'}
+									{(() => {
+										let value = parseFormula(item.customFormula, options);
+										if (
+											typeof value === 'number' &&
+											item.roundingMethod &&
+											item.roundingMethod !== 'none'
+										) {
+											const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+											if (item.roundingMethod === 'round') {
+												return Math.round(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'floor') {
+												return Math.floor(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'ceil') {
+												return Math.ceil(value * multiplier) / multiplier;
+											}
 										}
-									}
-									return value;
-								})()}
-							{:else if item.calculationMethod === 'range'}
-								{(() => {
-									let value = parseRange(item.customFormula, options, item.rangeTable);
-									if (
-										typeof value === 'number' &&
-										item.roundingMethod &&
-										item.roundingMethod !== 'none'
-									) {
-										const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
-										if (item.roundingMethod === 'round') {
-											return Math.round(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'floor') {
-											return Math.floor(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'ceil') {
-											return Math.ceil(value * multiplier) / multiplier;
+										return value;
+									})()}
+								{:else if item.calculationMethod === 'range'}
+									{(() => {
+										let value = parseRange(item.customFormula, options, item.rangeTable);
+										if (
+											typeof value === 'number' &&
+											item.roundingMethod &&
+											item.roundingMethod !== 'none'
+										) {
+											const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+											if (item.roundingMethod === 'round') {
+												return Math.round(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'floor') {
+												return Math.floor(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'ceil') {
+												return Math.ceil(value * multiplier) / multiplier;
+											}
 										}
-									}
-									return value;
-								})()}
+										return value;
+									})()}
+								{/if}
+							{/key}
+							{#if item.isLimitTotal}
+								{@const itemValue = calculateItemValue(index)}
+								<br />
+								<span
+									class={`text-xs ${typeof itemValue === 'number' && itemValue >= item.minTotal && itemValue <= item.maxTotal ? 'text-muted-foreground' : 'text-destructive'}`}
+								>
+									{item.minTotal} -> {item.maxTotal}
+								</span>
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-96 align-top">
@@ -323,34 +396,38 @@
 									class="mt-2"
 									placeholder="請填寫用途説明"
 									bind:value={item.explaination}
+									{disabled}
+									on:input={() => {
+										// Trigger reactivity for validation
+										options = [...options];
+									}}
 								/>
 							{/if}
 							{#if item.comment}
-								<span class="text-destructive">{item.comment}</span>
+								<div class="mt-2 text-xs text-destructive">{item.comment}</div>
 							{/if}
 						</Table.Cell>
 					</Table.Row>
 				{/each}
 				<Table.Row>
 					<Table.Cell></Table.Cell>
-					<Table.Cell>總價</Table.Cell>
+					<Table.Cell class="font-semibold">總價</Table.Cell>
 					<Table.Cell></Table.Cell>
 					<Table.Cell></Table.Cell>
-					<Table.Cell>
-						{#key options}
+					<Table.Cell class="font-semibold">
+						{#key reactiveOptions}
 							{calculateTotal()}
 						{/key}
 					</Table.Cell>
 					<Table.Cell>
-						{#key options}
-							{#if options}
+						{#key reactiveOptions}
+							{#if options && options[0]}
 								{@const total = calculateTotal()}
 								{#if total === 'ERROR'}
-									<span class="text-destructive">計算錯誤</span>
+									<span class="text-xs text-destructive">計算錯誤</span>
 								{:else if total < options[0].minFinalTotal || total > options[0].maxFinalTotal}
-									<span class="text-destructive"
-										>總價超出範圍
-										{options[0].minFinalTotal} -> {options[0].maxFinalTotal}
+									<span class="text-xs text-destructive">
+										總價超出範圍 {options[0].minFinalTotal} -> {options[0].maxFinalTotal}
 									</span>
 								{/if}
 							{/if}

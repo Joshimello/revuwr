@@ -21,6 +21,19 @@
 
 	let isLoading = false;
 
+	// Check if all questions are valid (including conditional logic)
+	$: allQuestionsValid = $answers.every((answer) => {
+		const answerQuestion = answer.expand?.question;
+		if (!answerQuestion) return false;
+
+		// If conditional and shouldn't be shown, consider it valid
+		if (answerQuestion.conditional && !shouldShowConditionalQuestion(answerQuestion, $answers)) {
+			return true;
+		}
+
+		return answer.valid;
+	});
+
 	onMount(() => {
 		console.log(question);
 	});
@@ -55,8 +68,8 @@
 				if ($currentIndex < $answers.length - 1) {
 					// Continue to next question
 					handleContinue();
-				} else {
-					// Submit application
+				} else if (allQuestionsValid) {
+					// Submit application only if all questions are valid
 					handleSubmit();
 				}
 			}
@@ -164,7 +177,7 @@
 
 	{#if !$isReadOnly || ($currentIndex === $answers.length - 1 && $application?.status === 'editsRequested')}
 		{#key value}
-			<div class="sticky bottom-20 mt-24 flex items-center gap-2 md:bottom-24">
+			<div class="mt-24 flex items-center gap-2 md:bottom-24">
 				{#if $currentIndex < $answers.length - 1}
 					<Button size="lg" on:click={handleContinue} disabled={checkValid && !checkValid()[0]}>
 						{m.button_continue()}
@@ -195,6 +208,7 @@
 						<Button
 							size="lg"
 							disabled={isLoading ||
+								!allQuestionsValid ||
 								(checkValid &&
 									!checkValid()[0] &&
 									!(
