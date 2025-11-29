@@ -24,8 +24,101 @@
 	onMount(() => {
 		console.log(question);
 	});
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (
+			event.key === 'Enter' &&
+			!event.shiftKey &&
+			!event.ctrlKey &&
+			!event.altKey &&
+			!event.metaKey
+		) {
+			// Check if we're not in a textarea or other multiline input
+			const target = event.target as HTMLElement;
+			if (target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+				event.preventDefault();
+
+				// Check if validation passes
+				if (checkValid && !checkValid()[0]) {
+					return;
+				}
+
+				// If read-only, don't submit
+				if (
+					$isReadOnly &&
+					!($currentIndex === $answers.length - 1 && $application?.status === 'editsRequested')
+				) {
+					return;
+				}
+
+				// Trigger the appropriate button click
+				if ($currentIndex < $answers.length - 1) {
+					// Continue to next question
+					handleContinue();
+				} else {
+					// Submit application
+					handleSubmit();
+				}
+			}
+		}
+	}
+
+	async function handleContinue() {
+		const [status] = await updateAnswer(content.id, value);
+		if (status) {
+			// Update conditional answers after this answer changes
+			if ($application?.expand?.response) {
+				await updateConditionalAnswers($application.expand.response);
+			}
+
+			// Find the next question that should be shown
+			let nextIndex = $currentIndex + 1;
+			while (nextIndex < $answers.length) {
+				const nextQuestion = $answers[nextIndex]?.expand?.question;
+				if (nextQuestion) {
+					const shouldShow = nextQuestion.conditional
+						? shouldShowConditionalQuestion(nextQuestion, $answers)
+						: true;
+					if (shouldShow) {
+						$currentIndex = nextIndex;
+						break;
+					}
+				}
+				nextIndex++;
+			}
+			if (nextIndex >= $answers.length) {
+				$currentIndex = $answers.length - 1;
+			}
+		} else {
+			toast.error(m.error_update_answer());
+		}
+	}
+
+	async function handleSubmit() {
+		const [status] = await updateAnswer(content.id, value);
+		if (status) {
+			// Update conditional answers before submitting
+			if ($application?.expand?.response) {
+				await updateConditionalAnswers($application.expand.response);
+			}
+
+			isLoading = true;
+			toast.loading(m.toast_submitting_application(), {
+				duration: Number.POSITIVE_INFINITY
+			});
+
+			// Submit the form
+			const form = document.querySelector('form[action="?/submit"]') as HTMLFormElement;
+			if (form) {
+				form.submit();
+			}
+		} else {
+			toast.error('Failed to update answer');
+		}
+	}
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 {#if question && question.type in questionTypes}
 	{#key value}
 		<div class="flex gap-2">
@@ -73,40 +166,7 @@
 		{#key value}
 			<div class="sticky bottom-20 mt-24 flex items-center gap-2 md:bottom-24">
 				{#if $currentIndex < $answers.length - 1}
-					<Button
-						size="lg"
-						on:click={async () => {
-							const [status] = await updateAnswer(content.id, value);
-							if (status) {
-								// Update conditional answers after this answer changes
-								if ($application?.expand?.response) {
-									await updateConditionalAnswers($application.expand.response);
-								}
-
-								// Find the next question that should be shown
-								let nextIndex = $currentIndex + 1;
-								while (nextIndex < $answers.length) {
-									const nextQuestion = $answers[nextIndex]?.expand?.question;
-									if (nextQuestion) {
-										const shouldShow = nextQuestion.conditional
-											? shouldShowConditionalQuestion(nextQuestion, $answers)
-											: true;
-										if (shouldShow) {
-											$currentIndex = nextIndex;
-											break;
-										}
-									}
-									nextIndex++;
-								}
-								if (nextIndex >= $answers.length) {
-									$currentIndex = $answers.length - 1;
-								}
-							} else {
-								toast.error(m.error_update_answer());
-							}
-						}}
-						disabled={checkValid && !checkValid()[0]}
-					>
+					<Button size="lg" on:click={handleContinue} disabled={checkValid && !checkValid()[0]}>
 						{m.button_continue()}
 					</Button>
 				{:else}
