@@ -633,63 +633,87 @@
 							{#if item.isConstantPrice}
 								<Input type="number" bind:value={item.defaultPrice} disabled />
 							{:else}
-								<Input type="number" bind:value={item.defaultPrice} />
+								<Input
+									type="number"
+									bind:value={item.defaultPrice}
+									on:input={() => {
+										item.defaultPrice = Number(item.defaultPrice) || 0;
+										options = [...options];
+									}}
+								/>
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-32">
 							{#if item.isConstantQuantity}
 								<Input type="number" bind:value={item.defaultQuantity} disabled />
 							{:else}
-								<Input type="number" bind:value={item.defaultQuantity} />
+								<Input
+									type="number"
+									bind:value={item.defaultQuantity}
+									on:input={() => {
+										item.defaultQuantity = Number(item.defaultQuantity) || 0;
+										options = [...options];
+									}}
+								/>
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-48">
-							{#if item.calculationMethod === 'default'}
-								{(() => {
-									let value = item.defaultPrice * item.defaultQuantity;
-									if (item.roundingMethod !== 'none') {
-										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
-										if (item.roundingMethod === 'round') {
-											return Math.round(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'floor') {
-											return Math.floor(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'ceil') {
-											return Math.ceil(value * multiplier) / multiplier;
+							{#key options}
+								{#if item.calculationMethod === 'default'}
+									{(() => {
+										let value = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
+										if (item.roundingMethod && item.roundingMethod !== 'none') {
+											const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+											if (item.roundingMethod === 'round') {
+												return Math.round(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'floor') {
+												return Math.floor(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'ceil') {
+												return Math.ceil(value * multiplier) / multiplier;
+											}
 										}
-									}
-									return value;
-								})()}
-							{:else if item.calculationMethod === 'custom'}
-								{(() => {
-									let value = parseFormula(item.customFormula, options);
-									if (typeof value === 'number' && item.roundingMethod !== 'none') {
-										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
-										if (item.roundingMethod === 'round') {
-											return Math.round(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'floor') {
-											return Math.floor(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'ceil') {
-											return Math.ceil(value * multiplier) / multiplier;
+										return value;
+									})()}
+								{:else if item.calculationMethod === 'custom'}
+									{(() => {
+										let value = parseFormula(item.customFormula, options);
+										if (
+											typeof value === 'number' &&
+											item.roundingMethod &&
+											item.roundingMethod !== 'none'
+										) {
+											const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+											if (item.roundingMethod === 'round') {
+												return Math.round(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'floor') {
+												return Math.floor(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'ceil') {
+												return Math.ceil(value * multiplier) / multiplier;
+											}
 										}
-									}
-									return value;
-								})()}
-							{:else if item.calculationMethod === 'range'}
-								{(() => {
-									let value = parseRange(item.customFormula, options, item.rangeTable);
-									if (typeof value === 'number' && item.roundingMethod !== 'none') {
-										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
-										if (item.roundingMethod === 'round') {
-											return Math.round(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'floor') {
-											return Math.floor(value * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'ceil') {
-											return Math.ceil(value * multiplier) / multiplier;
+										return value;
+									})()}
+								{:else if item.calculationMethod === 'range'}
+									{(() => {
+										let value = parseRange(item.customFormula, options, item.rangeTable);
+										if (
+											typeof value === 'number' &&
+											item.roundingMethod &&
+											item.roundingMethod !== 'none'
+										) {
+											const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+											if (item.roundingMethod === 'round') {
+												return Math.round(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'floor') {
+												return Math.floor(value * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'ceil') {
+												return Math.ceil(value * multiplier) / multiplier;
+											}
 										}
-									}
-									return value;
-								})()}
-							{/if}
+										return value;
+									})()}
+								{/if}
+							{/key}
 						</Table.Cell>
 						<Table.Cell class="w-96">
 							<!-- eslint-disable-next-line -->
@@ -706,51 +730,53 @@
 					<Table.Cell></Table.Cell>
 					<Table.Cell></Table.Cell>
 					<Table.Cell>
-						{(() => {
-							let total = 0;
-							let hasError = false;
+						{#key options}
+							{(() => {
+								let total = 0;
+								let hasError = false;
 
-							(Array.isArray(options) ? options : []).forEach((item) => {
-								let itemValue;
+								(Array.isArray(options) ? options : []).forEach((item) => {
+									let itemValue;
 
-								if (item.calculationMethod === 'default') {
-									itemValue = item.defaultPrice * item.defaultQuantity;
-								} else if (item.calculationMethod === 'custom') {
-									itemValue = parseFormula(item.customFormula, options || []);
-									if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
-										hasError = true;
-										return;
-									}
-								} else if (item.calculationMethod === 'range') {
-									itemValue = parseRange(item.customFormula, options || [], item.rangeTable);
-									if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
-										hasError = true;
-										return;
-									}
-									// cuz rangeTable.input and rangeTable.output are both string arrays due to input
-									if (typeof itemValue === 'string') {
-										itemValue = parseInt(itemValue);
-									}
-								}
-
-								// Apply rounding if configured
-								if (typeof itemValue === 'number') {
-									if (item.roundingMethod !== 'none') {
-										const multiplier = Math.pow(10, item.roundingDecimalPlaces);
-										if (item.roundingMethod === 'round') {
-											itemValue = Math.round(itemValue * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'floor') {
-											itemValue = Math.floor(itemValue * multiplier) / multiplier;
-										} else if (item.roundingMethod === 'ceil') {
-											itemValue = Math.ceil(itemValue * multiplier) / multiplier;
+									if (item.calculationMethod === 'default') {
+										itemValue = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
+									} else if (item.calculationMethod === 'custom') {
+										itemValue = parseFormula(item.customFormula, options || []);
+										if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
+											hasError = true;
+											return;
+										}
+									} else if (item.calculationMethod === 'range') {
+										itemValue = parseRange(item.customFormula, options || [], item.rangeTable);
+										if (Number.isNaN(itemValue) || itemValue === 'ERROR') {
+											hasError = true;
+											return;
+										}
+										// cuz rangeTable.input and rangeTable.output are both string arrays due to input
+										if (typeof itemValue === 'string') {
+											itemValue = parseInt(itemValue);
 										}
 									}
-									total += itemValue;
-								}
-							});
 
-							return hasError ? 'ERROR' : total;
-						})()}
+									// Apply rounding if configured
+									if (typeof itemValue === 'number') {
+										if (item.roundingMethod && item.roundingMethod !== 'none') {
+											const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+											if (item.roundingMethod === 'round') {
+												itemValue = Math.round(itemValue * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'floor') {
+												itemValue = Math.floor(itemValue * multiplier) / multiplier;
+											} else if (item.roundingMethod === 'ceil') {
+												itemValue = Math.ceil(itemValue * multiplier) / multiplier;
+											}
+										}
+										total += itemValue;
+									}
+								});
+
+								return hasError ? 'ERROR' : total;
+							})()}
+						{/key}
 					</Table.Cell>
 					<Table.Cell></Table.Cell>
 				</Table.Row>
