@@ -156,5 +156,16 @@
 	"activity_update_session_button": "Update session",
 	"activity_time_validation_error": "(Start time must be before end time)",
 	"activity_sessions_required": "Please add {min}-{max} sessions",
-	"activity_please_fill_field": "Please fill in this field"
+	"activity_please_fill_field": "Please fill in this field",
+	"draft": "Draft",
+	"approved": "Approved",
+	"submitted": "Submitted",
+	"resubmitted": "Resubmitted",
+	"edits_requested": "Edits Requested",
+	"follow_up_requested": "Follow-up Requested",
+	"rejected": "Rejected",
+	"withdrawn": "Withdrawn",
+	"unknown": "Unknown",
+	"updated": "Updated",
+	"completed": "Completed"
 }

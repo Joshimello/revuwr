@@ -156,5 +156,16 @@
 	"activity_update_session_button": "更新場次",
 	"activity_time_validation_error": "（開始時間必須早於結束時間）",
 	"activity_sessions_required": "請新增 {min}-{max} 個場次",
-	"activity_please_fill_field": "請填寫此欄位"
+	"activity_please_fill_field": "請填寫此欄位",
+	"draft": "草稿",
+	"approved": "已核准",
+	"submitted": "已提交",
+	"resubmitted": "已重新提交",
+	"edits_requested": "需要修改",
+	"follow_up_requested": "需要後續追蹤",
+	"rejected": "已拒絕",
+	"withdrawn": "已撤回",
+	"unknown": "未知",
+	"updated": "更新於",
+	"completed": "已完成"
 }

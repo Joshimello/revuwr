@@ -8,6 +8,7 @@
 	import { Progress } from '$lib/components/ui/progress';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { m } from '$lib/paraglide/messages.js';
+	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { pb } from '$lib/pocketbase/client';
 	import type {
 		AnswersResponse,
@@ -18,7 +19,10 @@
 	import { ArrowUpRight, RefreshCcw } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { format } from 'timeago.js';
+	import { format, register } from 'timeago.js';
+	import zh_TW from 'timeago.js/lib/lang/zh_TW';
+
+	register('zh_TW', zh_TW);
 
 	type ExpandedApplications = ApplicationsResponse<{
 		response: AnswersResponse[];
@@ -103,7 +107,12 @@
 											<div>
 												<Status type={application.status} />
 												<Badge variant="outline"
-													>{m.badge_updated({ time: format(application.updated) })}</Badge
+													>{m.badge_updated({
+														time: format(
+															application.updated,
+															getLocale() === 'zh' ? 'zh_TW' : 'en_US'
+														)
+													})}</Badge
 												>
 											</div>
 										</Card.Header>
@@ -169,7 +178,13 @@
 											</span>
 											<div>
 												<Status type={application.status} />
-												<Badge variant="outline">Updated {format(application.updated)}</Badge>
+												<Badge variant="outline"
+													>{m.updated()}
+													{format(
+														application.updated,
+														getLocale() === 'zh' ? 'zh_TW' : 'en_US'
+													)}</Badge
+												>
 											</div>
 										</Card.Header>
 										<Card.Content>
@@ -222,7 +237,13 @@
 											</span>
 											<div>
 												<Status type={application.status} />
-												<Badge variant="outline">Updated {format(application.updated)}</Badge>
+												<Badge variant="outline"
+													>{m.updated()}
+													{format(
+														application.updated,
+														getLocale() === 'zh' ? 'zh_TW' : 'en_US'
+													)}</Badge
+												>
 											</div>
 										</Card.Header>
 										<Card.Content>
@@ -233,7 +254,7 @@
 															<span class="text-foreground"
 																>{application.expand?.response.filter((i) => i.valid).length}</span
 															>/{application.response.length}
-															Completed
+															{m.completed()}
 														</Badge>
 													</div>
 													<Progress

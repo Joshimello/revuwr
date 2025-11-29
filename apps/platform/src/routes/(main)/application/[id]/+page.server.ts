@@ -59,7 +59,7 @@ export const actions: Actions = {
 				html: submissionEmail
 			});
 
-			return redirect(303, `/application/${params.id}/complete`);
+			return redirect(303, `/`);
 		} catch (err) {
 			if (isRedirect(err)) {
 				return redirect(err.status, err.location);
