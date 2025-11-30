@@ -3,6 +3,8 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import * as m from '$lib/paraglide/messages.js';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { pb } from '$lib/pocketbase/client';
 	import { cn } from '$lib/utils.js';
 	import { onMount, tick } from 'svelte';
@@ -12,7 +14,7 @@
 
 	let open = false;
 	export let value: string = '';
-	export let lang: 'en' | 'zh' = 'en';
+	export let lang: 'en' | 'zh' = getLocale();
 	export let onCollegeChange: ((value: string) => void) | undefined = undefined;
 
 	// Internal ID tracking to maintain selection state
@@ -29,7 +31,7 @@
 				name_zh: college.zh
 			}));
 		} catch (err) {
-			toast.error('Error fetching colleges');
+			toast.error(m.college_picker_error_fetching());
 		}
 	};
 
@@ -54,7 +56,8 @@
 	}
 
 	$: selectedValue =
-		colleges.find((f) => f.code === selectedId)?.[`name_${lang}`] ?? 'Select a college...';
+		colleges.find((f) => f.code === selectedId)?.[`name_${lang}`] ??
+		m.college_picker_select_placeholder();
 
 	function closeAndFocusTrigger(triggerId: string) {
 		open = false;
@@ -82,8 +85,8 @@
 	</Popover.Trigger>
 	<Popover.Content class="p-0">
 		<Command.Root>
-			<Command.Input placeholder="Search college..." class="h-9" />
-			<Command.Empty>No colleges found.</Command.Empty>
+			<Command.Input placeholder={m.college_picker_search_placeholder()} class="h-9" />
+			<Command.Empty>{m.college_picker_no_colleges_found()}</Command.Empty>
 			<Command.Group>
 				<ScrollArea class="h-48">
 					{#each colleges as college}

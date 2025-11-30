@@ -3,6 +3,7 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import * as m from '$lib/paraglide/messages.js';
 	import { cn } from '$lib/utils.js';
 	import { onMount, tick } from 'svelte';
 	import CaretSort from 'svelte-radix/CaretSort.svelte';
@@ -23,8 +24,8 @@
 			code: country.cca2,
 			name:
 				lang === 'en'
-					? country.name.common
-					: country.translations.zho?.common || country.name.common,
+					? country.name.common || 'Unknown Country'
+					: country.translations.zho?.common || country.name.common || 'Unknown Country',
 			flag: country.flag
 		}));
 
@@ -41,8 +42,10 @@
 					...country,
 					name:
 						lang === 'en'
-							? countryData?.name.common
-							: countryData?.translations.zho?.common || countryData?.name.common
+							? countryData?.name.common || 'Unknown Country'
+							: countryData?.translations.zho?.common ||
+								countryData?.name.common ||
+								'Unknown Country'
 				};
 			});
 			formattedCountries.sort((a, b) => a.name.localeCompare(b.name));
@@ -54,7 +57,7 @@
 		? showFlag
 			? `${selectedCountry.flag} ${selectedCountry.name}`
 			: selectedCountry.name
-		: 'Select a country...';
+		: m.country_picker_select_placeholder();
 
 	function closeAndFocusTrigger(triggerId: string) {
 		open = false;
@@ -82,8 +85,8 @@
 	</Popover.Trigger>
 	<Popover.Content class="w-[300px] p-0">
 		<Command.Root>
-			<Command.Input placeholder="Search country..." class="h-9" />
-			<Command.Empty>No countries found.</Command.Empty>
+			<Command.Input placeholder={m.country_picker_search_placeholder()} class="h-9" />
+			<Command.Empty>{m.country_picker_no_countries_found()}</Command.Empty>
 			<Command.Group>
 				<ScrollArea class="h-72">
 					{#each formattedCountries as country}

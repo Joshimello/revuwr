@@ -167,5 +167,12 @@
 	"withdrawn": "Withdrawn",
 	"unknown": "Unknown",
 	"updated": "Updated",
-	"completed": "Completed"
+	"completed": "Completed",
+	"college_picker_select_placeholder": "Select a college...",
+	"college_picker_search_placeholder": "Search college...",
+	"college_picker_no_colleges_found": "No colleges found.",
+	"college_picker_error_fetching": "Error fetching colleges",
+	"country_picker_select_placeholder": "Select a country...",
+	"country_picker_search_placeholder": "Search country...",
+	"country_picker_no_countries_found": "No countries found."
 }
