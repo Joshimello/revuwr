@@ -26,9 +26,33 @@
 	let checked: boolean[] = [];
 
 	$: isAllChecked = checked.every((i) => i === true);
+	$: hasTerms = event.terms && event.terms.length > 0;
 
 	const handleLogin = () => {
 		redirectToLogin($page.url.pathname);
+	};
+
+	const submitApplication = () => {
+		isCreating = true;
+		toast.loading(m.create_creating_application(), {
+			duration: Number.POSITIVE_INFINITY
+		});
+		// Create a form element and submit it
+		const form = document.createElement('form');
+		form.method = 'post';
+		form.action = '';
+		document.body.appendChild(form);
+		form.submit();
+	};
+
+	const handleApplyClick = () => {
+		if (!user) {
+			handleLogin();
+		} else if (hasTerms) {
+			termsOpen = true;
+		} else {
+			submitApplication();
+		}
 	};
 </script>
 
@@ -103,13 +127,7 @@
 			size="lg"
 			type="submit"
 			disabled={isCreating || (!canApply && !!user)}
-			on:click={() => {
-				if (!user) {
-					handleLogin();
-				} else {
-					termsOpen = true;
-				}
-			}}
+			on:click={handleApplyClick}
 		>
 			{#if notStarted && event.beforeStartDate == 'disallow'}
 				{m.create_event_not_started()}
@@ -144,31 +162,20 @@
 			{/each}
 		</div>
 		<Dialog.Footer>
-			<form
+			<Button
 				class="mt-6"
-				action=""
-				method="post"
-				on:submit={() => {
-					isCreating = true;
-					toast.loading(m.create_creating_application(), {
-						duration: Number.POSITIVE_INFINITY
-					});
-				}}
+				size="lg"
+				disabled={isCreating || !canApply || !isAllChecked || !user}
+				on:click={submitApplication}
 			>
-				<Button
-					size="lg"
-					type="submit"
-					disabled={isCreating || !canApply || !isAllChecked || !user}
-				>
-					{#if notStarted && event.beforeStartDate == 'disallow'}
-						{m.create_event_not_started()}
-					{:else if isEnded && event.afterStartDate == 'disallow'}
-						{m.create_event_ended()}
-					{:else}
-						{m.create_apply_now()}
-					{/if}
-				</Button>
-			</form>
+				{#if notStarted && event.beforeStartDate == 'disallow'}
+					{m.create_event_not_started()}
+				{:else if isEnded && event.afterStartDate == 'disallow'}
+					{m.create_event_ended()}
+				{:else}
+					{m.create_apply_now()}
+				{/if}
+			</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
