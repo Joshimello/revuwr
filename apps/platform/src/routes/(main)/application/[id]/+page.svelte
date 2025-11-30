@@ -3,6 +3,7 @@
 	import Status from '$lib/components/status.svelte';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { Button } from '$lib/components/ui/button';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { m } from '$lib/paraglide/messages.js';
 	import { ChevronLeft as ChevronLeftIcon, ChevronRight, Info } from 'lucide-svelte';
 	import { onMount } from 'svelte';
@@ -11,6 +12,8 @@
 	import { getApplication, updateConditionalAnswers } from './methods';
 	import Question from './question.svelte';
 	import { answers, application, currentIndex, event, isReadOnly } from './stores';
+
+	let loading = true;
 
 	function isQuestionAccessible(index: number): boolean {
 		const question = $answers[index]?.expand?.question;
@@ -102,29 +105,33 @@
 	$: canSlideRight = windowStart + WINDOW_SIZE < $answers.length;
 
 	onMount(async () => {
-		$application = (await getApplication($page.params.id)) ?? null;
+		try {
+			$application = (await getApplication($page.params.id)) ?? null;
 
-		// Process conditional questions after loading
-		if ($application?.expand?.response) {
-			await updateConditionalAnswers($application.expand.response);
-		}
-
-		// Find the first question that should be shown and is invalid
-		const firstInvalidIndex = $answers.findIndex((answer) => {
-			const question = answer.expand?.question;
-			if (!question) return false;
-
-			// If question is conditional, check if it should be shown
-			if (question.conditional) {
-				const shouldShow = shouldShowConditionalQuestion(question, $answers);
-				return shouldShow && !answer.valid;
+			// Process conditional questions after loading
+			if ($application?.expand?.response) {
+				await updateConditionalAnswers($application.expand.response);
 			}
 
-			// For non-conditional questions, just check validity
-			return !answer.valid;
-		});
+			// Find the first question that should be shown and is invalid
+			const firstInvalidIndex = $answers.findIndex((answer) => {
+				const question = answer.expand?.question;
+				if (!question) return false;
 
-		$currentIndex = firstInvalidIndex === -1 ? $answers.length - 1 : firstInvalidIndex;
+				// If question is conditional, check if it should be shown
+				if (question.conditional) {
+					const shouldShow = shouldShowConditionalQuestion(question, $answers);
+					return shouldShow && !answer.valid;
+				}
+
+				// For non-conditional questions, just check validity
+				return !answer.valid;
+			});
+
+			$currentIndex = firstInvalidIndex === -1 ? $answers.length - 1 : firstInvalidIndex;
+		} finally {
+			loading = false;
+		}
 	});
 </script>
 
@@ -313,6 +320,57 @@
 			</div>
 		</div>
 	</div>
+{:else if loading}
+	<!-- Skeleton loading state -->
+	<div class="mt-24 md:flex">
+		<div class="flex w-full flex-col gap-4 md:max-w-xl">
+			<!-- Question header skeleton -->
+			<div class="flex flex-col gap-2">
+				<Skeleton class="h-6 w-32" />
+				<Skeleton class="h-8 w-full max-w-md" />
+			</div>
+
+			<!-- Question content skeleton -->
+			<div class="space-y-4">
+				<Skeleton class="h-4 w-full" />
+				<Skeleton class="h-4 w-3/4" />
+				<Skeleton class="h-10 w-full" />
+			</div>
+		</div>
+	</div>
+
+	<!-- Bottom navigation skeleton -->
+	<div class="fixed bottom-0 left-0 right-0 bg-muted">
+		<div class="mx-auto flex max-w-4xl flex-col gap-2 px-2 py-2 md:py-3">
+			<div class="hidden items-center justify-center gap-3 sm:flex">
+				<Skeleton class="h-6 w-16" />
+				<Skeleton class="h-8 w-8 rounded-full" />
+				<div class="flex gap-2">
+					{#each Array(7) as _}
+						<Skeleton class="h-8 w-8 rounded-full" />
+					{/each}
+				</div>
+				<Skeleton class="h-8 w-8 rounded-full" />
+			</div>
+
+			<div class="flex items-center justify-center gap-2 sm:hidden">
+				<Skeleton class="h-6 w-16" />
+			</div>
+			<div class="flex items-center justify-center gap-2 sm:hidden">
+				<Skeleton class="h-8 w-8 rounded-full" />
+				<div class="flex gap-2">
+					{#each Array(5) as _}
+						<Skeleton class="h-8 w-8 rounded-full" />
+					{/each}
+				</div>
+				<Skeleton class="h-8 w-8 rounded-full" />
+			</div>
+		</div>
+	</div>
 {:else}
-	<div>{m.loading_or_not_found()}</div>
+	<div class="mt-24 flex items-center justify-center">
+		<div class="text-center">
+			<h3 class="text-2xl font-bold tracking-tight">Not Found</h3>
+		</div>
+	</div>
 {/if}
