@@ -101,8 +101,6 @@
 	}
 
 	$: visibleQuestions = $answers.slice(windowStart, windowStart + WINDOW_SIZE);
-	$: canSlideLeft = windowStart > 0;
-	$: canSlideRight = windowStart + WINDOW_SIZE < $answers.length;
 
 	onMount(async () => {
 		try {
@@ -113,22 +111,39 @@
 				await updateConditionalAnswers($application.expand.response);
 			}
 
-			// Find the first question that should be shown and is invalid
-			const firstInvalidIndex = $answers.findIndex((answer) => {
-				const question = answer.expand?.question;
-				if (!question) return false;
+			// If application status is editsRequested, find first question with status 'edit'
+			if ($application.status === 'editsRequested') {
+				const firstEditIndex = $answers.findIndex((answer) => {
+					const question = answer.expand?.question;
+					if (!question) return false;
 
-				// If question is conditional, check if it should be shown
-				if (question.conditional) {
-					const shouldShow = shouldShowConditionalQuestion(question, $answers);
-					return shouldShow && !answer.valid;
-				}
+					// Check if question should be shown and has edit status
+					const shouldShow = question.conditional
+						? shouldShowConditionalQuestion(question, $answers)
+						: true;
 
-				// For non-conditional questions, just check validity
-				return !answer.valid;
-			});
+					return shouldShow && answer.status === 'edit';
+				});
 
-			$currentIndex = firstInvalidIndex === -1 ? $answers.length - 1 : firstInvalidIndex;
+				$currentIndex = firstEditIndex === -1 ? $answers.length - 1 : firstEditIndex;
+			} else {
+				// Find the first question that should be shown and is invalid
+				const firstInvalidIndex = $answers.findIndex((answer) => {
+					const question = answer.expand?.question;
+					if (!question) return false;
+
+					// If question is conditional, check if it should be shown
+					if (question.conditional) {
+						const shouldShow = shouldShowConditionalQuestion(question, $answers);
+						return shouldShow && !answer.valid;
+					}
+
+					// For non-conditional questions, just check validity
+					return !answer.valid;
+				});
+
+				$currentIndex = firstInvalidIndex === -1 ? $answers.length - 1 : firstInvalidIndex;
+			}
 		} finally {
 			loading = false;
 		}
@@ -185,7 +200,10 @@
 				<Alert.Root>
 					<Info class="h-4 w-4" />
 					<Alert.Title class="font-bold">{m.app_readonly_title()}</Alert.Title>
-					<Alert.Description>{@html m.app_readonly_description()}</Alert.Description>
+					<Alert.Description>
+						<!-- eslint-disable-next-line -->
+						{@html m.app_readonly_description()}
+					</Alert.Description>
 				</Alert.Root>
 			{/if}
 
@@ -217,11 +235,13 @@
 
 				<!-- Question circles -->
 				<div class="flex gap-2">
+					<!-- eslint-disable-next-line -->
 					{#each visibleQuestions as answer, relativeIndex}
 						{@const index = windowStart + relativeIndex}
 						{@const accessible = isQuestionAccessible(index)}
 						{@const valid = isQuestionValid(index)}
 						{@const current = index === $currentIndex}
+						{@const status = answer.status}
 
 						<button
 							class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
@@ -229,7 +249,9 @@
 								? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
 								: accessible
 									? valid
-										? 'border-green-500 bg-green-500 text-white hover:scale-105'
+										? status === 'edit'
+											? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
+											: 'border-green-500 bg-green-500 text-white hover:scale-105'
 										: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
 									: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
 							on:click={() => jumpToQuestion(index)}
@@ -279,11 +301,13 @@
 
 				<!-- Question circles -->
 				<div class="flex gap-2">
+					<!-- eslint-disable-next-line -->
 					{#each visibleQuestions as answer, relativeIndex}
 						{@const index = windowStart + relativeIndex}
 						{@const accessible = isQuestionAccessible(index)}
 						{@const valid = isQuestionValid(index)}
 						{@const current = index === $currentIndex}
+						{@const status = answer.status}
 
 						<button
 							class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
@@ -291,7 +315,9 @@
 								? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
 								: accessible
 									? valid
-										? 'border-green-500 bg-green-500 text-white hover:scale-105'
+										? status === 'edit'
+											? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
+											: 'border-green-500 bg-green-500 text-white hover:scale-105'
 										: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
 									: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
 							on:click={() => jumpToQuestion(index)}
@@ -346,6 +372,7 @@
 				<Skeleton class="h-6 w-16" />
 				<Skeleton class="h-8 w-8 rounded-full" />
 				<div class="flex gap-2">
+					<!-- eslint-disable-next-line -->
 					{#each Array(7) as _}
 						<Skeleton class="h-8 w-8 rounded-full" />
 					{/each}
@@ -359,6 +386,7 @@
 			<div class="flex items-center justify-center gap-2 sm:hidden">
 				<Skeleton class="h-8 w-8 rounded-full" />
 				<div class="flex gap-2">
+					<!-- eslint-disable-next-line -->
 					{#each Array(5) as _}
 						<Skeleton class="h-8 w-8 rounded-full" />
 					{/each}

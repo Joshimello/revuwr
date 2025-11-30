@@ -35,7 +35,9 @@
 	});
 
 	onMount(() => {
+		console.log($application);
 		console.log(question);
+		console.log(content);
 	});
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -84,23 +86,44 @@
 				await updateConditionalAnswers($application.expand.response);
 			}
 
-			// Find the next question that should be shown
-			let nextIndex = $currentIndex + 1;
-			while (nextIndex < $answers.length) {
-				const nextQuestion = $answers[nextIndex]?.expand?.question;
-				if (nextQuestion) {
-					const shouldShow = nextQuestion.conditional
-						? shouldShowConditionalQuestion(nextQuestion, $answers)
-						: true;
-					if (shouldShow) {
-						$currentIndex = nextIndex;
-						break;
+			// If application status is editsRequested, find next question with status 'edit'
+			if ($application?.status === 'editsRequested') {
+				let nextIndex = $currentIndex + 1;
+				while (nextIndex < $answers.length) {
+					const nextAnswer = $answers[nextIndex];
+					const nextQuestion = nextAnswer?.expand?.question;
+					if (nextQuestion) {
+						const shouldShow = nextQuestion.conditional
+							? shouldShowConditionalQuestion(nextQuestion, $answers)
+							: true;
+						if (shouldShow && nextAnswer.status === 'edit') {
+							$currentIndex = nextIndex;
+							return;
+						}
 					}
+					nextIndex++;
 				}
-				nextIndex++;
-			}
-			if (nextIndex >= $answers.length) {
+				// No more edit questions found, jump to end
 				$currentIndex = $answers.length - 1;
+			} else {
+				// Find the next question that should be shown
+				let nextIndex = $currentIndex + 1;
+				while (nextIndex < $answers.length) {
+					const nextQuestion = $answers[nextIndex]?.expand?.question;
+					if (nextQuestion) {
+						const shouldShow = nextQuestion.conditional
+							? shouldShowConditionalQuestion(nextQuestion, $answers)
+							: true;
+						if (shouldShow) {
+							$currentIndex = nextIndex;
+							break;
+						}
+					}
+					nextIndex++;
+				}
+				if (nextIndex >= $answers.length) {
+					$currentIndex = $answers.length - 1;
+				}
 			}
 		} else {
 			toast.error(m.error_update_answer());
@@ -151,9 +174,11 @@
 
 	<div class="flex w-full flex-col gap-2 px-3">
 		<span class="text-2xl font-bold">
+			<!-- eslint-disable-next-line -->
 			{@html question.title}
 		</span>
 		<span class="text-justify text-sm text-muted-foreground">
+			<!-- eslint-disable-next-line -->
 			{@html question.description}
 		</span>
 
