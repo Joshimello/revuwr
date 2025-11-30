@@ -1,16 +1,15 @@
 import { fail, redirect, isRedirect } from '@sveltejs/kit';
 import type { ExpandedApplication } from './types.js';
 import type { Actions } from '@sveltejs/kit';
-import { render } from 'svelty-email';
-import SubmissionEmail from '$lib/emails/submission.svelte';
+import { PUBLIC_ACME } from '$env/static/public';
 
 // this code is haram
 
 export const actions: Actions = {
 	async submit({ params, locals }) {
-		// if (!params.id) {
-		// 	return fail(400, { message: 'Invalid application ID' });
-		// }
+		if (!params.id) {
+			return fail(400, { message: 'Invalid application ID' });
+		}
 
 		try {
 			const application = await locals.pb
@@ -45,19 +44,12 @@ export const actions: Actions = {
 				status: application.status == 'editsRequested' ? 'resubmitted' : 'submitted'
 			});
 
-			const submissionEmail = render({
-				template: SubmissionEmail,
-				props: {
-					application: application
-				}
-			});
-
-			await locals.rs.emails.send({
-				from: 'Revuwr <revuwr@mail.nthumods.com>',
-				to: [locals.user.email],
-				subject: '[REVUWR] Application Submitted',
-				html: submissionEmail
-			});
+			// await locals.rs.emails.send({
+			// 	from: `${PUBLIC_ACME} <notification@mail.nthumods.com>`,
+			// 	to: [locals.user.email],
+			// 	subject: 'Application Submitted',
+			// 	text: ''
+			// });
 
 			return redirect(303, `/`);
 		} catch (err) {
@@ -77,6 +69,10 @@ export const actions: Actions = {
 		}
 	},
 	async delete({ params, locals }) {
+		if (!params.id) {
+			return fail(400, { message: 'Invalid application ID' });
+		}
+
 		try {
 			const application = await locals.pb
 				.collection('applications')
@@ -122,6 +118,10 @@ export const actions: Actions = {
 		}
 	},
 	async withdraw({ params, locals }) {
+		if (!params.id) {
+			return fail(400, { message: 'Invalid application ID' });
+		}
+
 		try {
 			const application = await locals.apb.collection('applications').getOne(params.id);
 

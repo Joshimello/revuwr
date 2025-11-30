@@ -51,31 +51,24 @@
 			</Dialog.Content>
 		</Dialog.Root>
 	{:else if ['member', 'activity'].includes(question.type)}
-		<Dialog.Root>
-			<Dialog.Trigger let:builder asChild>
-				<Button builders={[builder]} variant="outline">Open Table</Button>
-			</Dialog.Trigger>
-			<Dialog.Content class="max-w-screen">
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							{#each Object.keys(response[0] ?? {}) as key}
-								<Table.Head>{key}</Table.Head>
-							{/each}
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#each response as row}
-							<Table.Row>
-								{#each Object.values(row ?? {}) as value}
-									<Table.Cell>{value}</Table.Cell>
-								{/each}
-							</Table.Row>
+		<Table.Root>
+			<Table.Header>
+				<Table.Row>
+					{#each Object.keys(response[0] ?? {}) as key}
+						<Table.Head>{key}</Table.Head>
+					{/each}
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each response as row}
+					<Table.Row>
+						{#each Object.values(row ?? {}) as value}
+							<Table.Cell>{value}</Table.Cell>
 						{/each}
-					</Table.Body>
-				</Table.Root>
-			</Dialog.Content>
-		</Dialog.Root>
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
 	{:else if question.type == 'file'}
 		{#if response}
 			<div class="flex flex-col">
