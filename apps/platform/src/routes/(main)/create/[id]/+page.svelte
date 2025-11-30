@@ -111,16 +111,18 @@
 				</Table.Row>
 			</Table.Body>
 		</Table.Root>
-		<div class="mt-6">
-			<span>{m.create_more_info()} &nbsp; -> &nbsp;&nbsp;</span>
-			<a
-				href={event.moreInfo}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="text-blue-500 underline"
-				>{event.moreInfo}
-			</a>
-		</div>
+		{#if event.moreInfo}
+			<div class="mt-6">
+				<span>{m.create_more_info()} &nbsp; -> &nbsp;&nbsp;</span>
+				<a
+					href={event.moreInfo}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="text-blue-500 underline"
+					>{event.moreInfo}
+				</a>
+			</div>
+		{/if}
 	</Card.Content>
 	<Card.Footer class="justify-end">
 		<Button

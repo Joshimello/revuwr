@@ -6,6 +6,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Progress } from '$lib/components/ui/progress';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { m } from '$lib/paraglide/messages.js';
 	import { getLocale } from '$lib/paraglide/runtime.js';
@@ -30,7 +31,10 @@
 	}>;
 
 	let applications: ExpandedApplications[] = [];
+	let loading = true;
+
 	const getApplications = async () => {
+		loading = true;
 		pb.authStore.loadFromCookie(document.cookie);
 		try {
 			applications = await pb.collection('applications').getFullList<ExpandedApplications>({
@@ -42,6 +46,8 @@
 			} else {
 				toast.error('An error occurred.');
 			}
+		} finally {
+			loading = false;
 		}
 	};
 
@@ -203,7 +209,37 @@
 						</div>
 					{/if}
 
-					{#if activeApplications.length == 0}
+					{#if loading}
+						<div class="flex flex-col pb-6">
+							<div class="mx-2 mb-4 mt-2 flex flex-col">
+								<Skeleton class="mb-2 h-8 w-64" />
+								<Skeleton class="h-4 w-96" />
+							</div>
+							<div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+								{#each Array(2) as _}
+									<Card.Root>
+										<Card.Header class="space-y-3">
+											<Skeleton class="h-4 w-20" />
+											<Skeleton class="h-5 w-48" />
+											<div class="flex gap-2">
+												<Skeleton class="h-6 w-16" />
+												<Skeleton class="h-6 w-24" />
+											</div>
+										</Card.Header>
+										<Card.Content>
+											<div class="flex items-end gap-2">
+												<div class="flex w-full flex-col gap-2">
+													<Skeleton class="h-4 w-20" />
+													<Skeleton class="h-2 w-full" />
+												</div>
+												<Skeleton class="size-9 shrink-0" />
+											</div>
+										</Card.Content>
+									</Card.Root>
+								{/each}
+							</div>
+						</div>
+					{:else if activeApplications.length == 0}
 						<div class="flex flex-col items-center gap-1">
 							<h3 class="text-2xl font-bold tracking-tight">{m.no_applications_found_title()}</h3>
 							<p class="text-sm text-muted-foreground">
@@ -283,7 +319,37 @@
 						</div>
 					{/if}
 
-					{#if archivedApplications.length == 0}
+					{#if loading}
+						<div class="flex flex-col pb-6">
+							<div class="mx-2 mb-4 mt-2 flex flex-col">
+								<Skeleton class="mb-2 h-8 w-64" />
+								<Skeleton class="h-4 w-80" />
+							</div>
+							<div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+								{#each Array(4) as _}
+									<Card.Root>
+										<Card.Header class="space-y-3">
+											<Skeleton class="h-4 w-20" />
+											<Skeleton class="h-5 w-48" />
+											<div class="flex gap-2">
+												<Skeleton class="h-6 w-16" />
+												<Skeleton class="h-6 w-24" />
+											</div>
+										</Card.Header>
+										<Card.Content>
+											<div class="flex items-end gap-2">
+												<div class="flex w-full flex-col gap-2">
+													<Skeleton class="h-4 w-20" />
+													<Skeleton class="h-2 w-full" />
+												</div>
+												<Skeleton class="size-9 shrink-0" />
+											</div>
+										</Card.Content>
+									</Card.Root>
+								{/each}
+							</div>
+						</div>
+					{:else if archivedApplications.length == 0}
 						<div class="flex flex-col items-center gap-1">
 							<h3 class="text-2xl font-bold tracking-tight">
 								{m.no_archived_applications_found_title()}
