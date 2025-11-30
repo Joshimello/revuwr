@@ -196,7 +196,7 @@
 				<Card.Content class="grid grid-cols-2 gap-4">
 					<div class="col-span-2 flex flex-col items-center gap-4">
 						<div class="flex flex-col items-center gap-2">
-							<Label>Avatar</Label>
+							<Label>{m.label_avatar()}</Label>
 							<div class="relative">
 								{#if account.avatar}
 									<img
@@ -208,7 +208,7 @@
 									<div
 										class="flex h-20 w-20 items-center justify-center rounded-full border-2 border-gray-300 bg-gray-200"
 									>
-										<span class="text-sm text-gray-500">No Avatar</span>
+										<span class="text-sm text-gray-500">{m.avatar_no_avatar()}</span>
 									</div>
 								{/if}
 							</div>
@@ -220,7 +220,7 @@
 									class="flex items-center gap-2"
 								>
 									<Upload class="h-4 w-4" />
-									Change Avatar
+									{m.avatar_change()}
 								</Button>
 								{#if account.avatar}
 									<Button
@@ -230,7 +230,7 @@
 										class="flex items-center gap-2 text-destructive hover:text-destructive"
 									>
 										<X class="h-4 w-4" />
-										Remove Avatar
+										{m.avatar_remove()}
 									</Button>
 								{/if}
 							</div>

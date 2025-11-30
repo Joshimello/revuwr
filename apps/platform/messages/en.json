@@ -174,5 +174,9 @@
 	"college_picker_error_fetching": "Error fetching colleges",
 	"country_picker_select_placeholder": "Select a country...",
 	"country_picker_search_placeholder": "Search country...",
-	"country_picker_no_countries_found": "No countries found."
+	"country_picker_no_countries_found": "No countries found.",
+	"label_avatar": "Avatar",
+	"avatar_no_avatar": "No Avatar",
+	"avatar_change": "Change Avatar",
+	"avatar_remove": "Remove Avatar"
 }

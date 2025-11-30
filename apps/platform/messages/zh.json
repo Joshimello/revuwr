@@ -174,5 +174,9 @@
 	"college_picker_error_fetching": "取得學院資料時發生錯誤",
 	"country_picker_select_placeholder": "選擇國家...",
 	"country_picker_search_placeholder": "搜尋國家...",
-	"country_picker_no_countries_found": "找不到國家。"
+	"country_picker_no_countries_found": "找不到國家。",
+	"label_avatar": "頭像",
+	"avatar_no_avatar": "無頭像",
+	"avatar_change": "更換頭像",
+	"avatar_remove": "移除頭像"
 }
