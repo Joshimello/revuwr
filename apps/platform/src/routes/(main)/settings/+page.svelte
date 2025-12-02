@@ -74,6 +74,7 @@
 			if (showBirthday) updateData.birthday = account.birthday;
 
 			account = await pb.collection('users').update(account.id, updateData);
+
 			toast.success('Account saved.');
 			stringAccount = JSON.stringify(account);
 		} catch (err) {
@@ -91,11 +92,19 @@
 		saveAccount();
 	};
 
-	const handleLanguageChange = (value: string) => {
+	const handleLanguageChange = async (value: string) => {
 		if (!account) return;
+
 		account.language = value as UsersLanguageOptions;
-		setLocale(value as 'en' | 'zh');
-		saveAccount();
+
+		try {
+			// Save first, then update locale only if successful
+			await saveAccount();
+			setLocale(value as 'en' | 'zh');
+		} catch (err) {
+			// Save failed - the error toast will be shown by saveAccount
+			console.error('Failed to save language change:', err);
+		}
 	};
 
 	const handleNotifChange = (value: boolean) => {
