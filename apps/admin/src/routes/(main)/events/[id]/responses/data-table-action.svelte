@@ -155,9 +155,11 @@
 						</DropdownMenu.Item>
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
-				<DropdownMenu.Item href={`mailto:${record.expand?.responder.email}`} target="_blank">
-					{m.mail_user()}
-				</DropdownMenu.Item>
+				{#if record.expand?.responder?.email}
+					<DropdownMenu.Item href={`mailto:${record.expand.responder.email}`} target="_blank">
+						{m.mail_user()}
+					</DropdownMenu.Item>
+				{/if}
 				<DropdownMenu.Item on:click={() => (addNotesOpen = true)}>
 					{m.add_note()}
 				</DropdownMenu.Item>

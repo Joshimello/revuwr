@@ -68,9 +68,9 @@
 	$: selectedIds = Object.keys(selectedRecords || {}).map(
 		(index) => applications[parseInt(index)].id
 	);
-	$: selectedEmails = Object.keys(selectedRecords || {}).map(
-		(index) => applications[parseInt(index)].expand?.responder.email
-	);
+	$: selectedEmails = Object.keys(selectedRecords || {})
+		.map((index) => applications[parseInt(index)].expand?.responder?.email)
+		.filter(Boolean);
 	// Dialog states
 	let batchApproveOpen = false;
 	let batchRequestEditOpen = false;
