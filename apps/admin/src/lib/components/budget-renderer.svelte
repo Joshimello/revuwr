@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table';
+	import { getResponseRepresentation, type ExpandedAnswer } from '$lib/response-repr';
 
 	type Option = {
 		name: string;
@@ -36,9 +37,30 @@
 	};
 
 	export let data: Record<number, Option>;
+	export let headless: boolean = false;
+	export let repr: string = '';
 
 	// Convert to array for easier processing
 	$: arrayData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+
+	// Calculate total for headless mode using utility function
+	$: if (headless) {
+		// Create mock data structure to match ExpandedAnswer format expected by utility
+		const mockData = {
+			response: data,
+			expand: {
+				question: { type: 'budget' }
+			},
+			// Add required fields to satisfy ExpandedAnswer type
+			application: '',
+			comment: '',
+			created: '',
+			id: '',
+			question: '',
+			updated: ''
+		} as ExpandedAnswer;
+		repr = getResponseRepresentation(mockData);
+	}
 
 	const parseFormula = (formula: string, data: Option[]) => {
 		let processedFormula = formula.replace(/\{(\d+)([PQT])\}/g, (match, index, type) => {
@@ -142,85 +164,87 @@
 	};
 </script>
 
-{#if arrayData.length > 0}
-	<Table.Root>
-		<Table.Header>
-			<Table.Row>
-				<Table.Head class="w-min">#</Table.Head>
-				<Table.Head>Item</Table.Head>
-				<Table.Head>Price</Table.Head>
-				<Table.Head>Quantity</Table.Head>
-				<Table.Head>Total</Table.Head>
-				<Table.Head class="w-96">Description</Table.Head>
-			</Table.Row>
-		</Table.Header>
-		<Table.Body>
-			{#each arrayData as item, index}
+{#if !headless}
+	{#if arrayData.length > 0}
+		<Table.Root>
+			<Table.Header>
 				<Table.Row>
-					<Table.Cell class="font-mono text-sm">{index + 1}</Table.Cell>
-					<Table.Cell class="text-nowrap">{item.name}</Table.Cell>
-					<Table.Cell class="w-32">
-						{Number(item.defaultPrice || 0)}
-						{#if item.isLimitPrice}
-							<span class="text-xs text-muted-foreground">
-								({item.minPrice}-{item.maxPrice})
-							</span>
-						{/if}
-					</Table.Cell>
-					<Table.Cell class="w-32">
-						{Number(item.defaultQuantity || 0)}
-						{#if item.isLimitQuantity}
-							<span class="text-xs text-muted-foreground">
-								({item.minQuantity}-{item.maxQuantity})
-							</span>
-						{/if}
-					</Table.Cell>
-					<Table.Cell class="w-48">
-						{#key arrayData}
-							{calculateItemValue(item)}
-						{/key}
-						{#if item.calculationMethod !== 'default'}
-							<span class="block text-xs text-muted-foreground">
-								{item.calculationMethod}
-							</span>
-						{/if}
-						{#if item.isLimitTotal}
-							<span class="block text-xs text-muted-foreground">
-								Limit: {item.minTotal}-{item.maxTotal}
-							</span>
-						{/if}
-					</Table.Cell>
-					<Table.Cell class="w-96">
-						{#if item.description}
-							<div class="text-xs text-muted-foreground">
-								<!-- eslint-disable-next-line -->
-								{@html item.description}
-							</div>
-						{/if}
-						{#if item.requestExplaination && item.explaination}
-							<div class="mt-2">
-								{item.explaination}
-							</div>
-						{/if}
-					</Table.Cell>
+					<Table.Head class="w-min">#</Table.Head>
+					<Table.Head>Item</Table.Head>
+					<Table.Head>Price</Table.Head>
+					<Table.Head>Quantity</Table.Head>
+					<Table.Head>Total</Table.Head>
+					<Table.Head class="w-96">Description</Table.Head>
 				</Table.Row>
-			{/each}
-			<Table.Row class="font-semibold">
-				<Table.Cell></Table.Cell>
-				<Table.Cell>總價 (Total)</Table.Cell>
-				<Table.Cell></Table.Cell>
-				<Table.Cell></Table.Cell>
-				<Table.Cell>
-					{#key arrayData}
-						{calculateTotal()}
-					{/key}
-				</Table.Cell>
-				<Table.Cell></Table.Cell>
-			</Table.Row>
-		</Table.Body>
-	</Table.Root>
-{:else}
-	<div class="rounded-md border p-8 text-center text-muted-foreground">
-		<p>No budget items to display</p>
-	</div>
+			</Table.Header>
+			<Table.Body>
+				{#each arrayData as item, index}
+					<Table.Row>
+						<Table.Cell class="font-mono text-sm">{index + 1}</Table.Cell>
+						<Table.Cell class="text-nowrap">{item.name}</Table.Cell>
+						<Table.Cell class="w-32">
+							{Number(item.defaultPrice || 0)}
+							{#if item.isLimitPrice}
+								<span class="text-xs text-muted-foreground">
+									({item.minPrice}-{item.maxPrice})
+								</span>
+							{/if}
+						</Table.Cell>
+						<Table.Cell class="w-32">
+							{Number(item.defaultQuantity || 0)}
+							{#if item.isLimitQuantity}
+								<span class="text-xs text-muted-foreground">
+									({item.minQuantity}-{item.maxQuantity})
+								</span>
+							{/if}
+						</Table.Cell>
+						<Table.Cell class="w-48">
+							{#key arrayData}
+								{calculateItemValue(item)}
+							{/key}
+							{#if item.calculationMethod !== 'default'}
+								<span class="block text-xs text-muted-foreground">
+									{item.calculationMethod}
+								</span>
+							{/if}
+							{#if item.isLimitTotal}
+								<span class="block text-xs text-muted-foreground">
+									Limit: {item.minTotal}-{item.maxTotal}
+								</span>
+							{/if}
+						</Table.Cell>
+						<Table.Cell class="w-96">
+							{#if item.description}
+								<div class="text-xs text-muted-foreground">
+									<!-- eslint-disable-next-line -->
+									{@html item.description}
+								</div>
+							{/if}
+							{#if item.requestExplaination && item.explaination}
+								<div class="mt-2">
+									{item.explaination}
+								</div>
+							{/if}
+						</Table.Cell>
+					</Table.Row>
+				{/each}
+				<Table.Row class="font-semibold">
+					<Table.Cell></Table.Cell>
+					<Table.Cell>總價 (Total)</Table.Cell>
+					<Table.Cell></Table.Cell>
+					<Table.Cell></Table.Cell>
+					<Table.Cell>
+						{#key arrayData}
+							{calculateTotal()}
+						{/key}
+					</Table.Cell>
+					<Table.Cell></Table.Cell>
+				</Table.Row>
+			</Table.Body>
+		</Table.Root>
+	{:else}
+		<div class="rounded-md border p-8 text-center text-muted-foreground">
+			<p>No budget items to display</p>
+		</div>
+	{/if}
 {/if}
