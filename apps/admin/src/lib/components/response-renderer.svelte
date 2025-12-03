@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
 	import { pbImage } from '$lib/pocketbase/client';
 	import type { AnswersResponse, QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
@@ -42,14 +40,7 @@
 			{/if}
 		{/if}
 	{:else if question.type == 'budget'}
-		<Dialog.Root>
-			<Dialog.Trigger let:builder asChild>
-				<Button builders={[builder]} variant="outline">Open Table</Button>
-			</Dialog.Trigger>
-			<Dialog.Content class="max-w-screen">
-				<BudgetRenderer data={response} />
-			</Dialog.Content>
-		</Dialog.Root>
+		<BudgetRenderer data={response} />
 	{:else if ['member', 'activity'].includes(question.type)}
 		<Table.Root>
 			<Table.Header>

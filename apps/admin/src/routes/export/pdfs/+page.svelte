@@ -1,7 +1,4 @@
 <script lang="ts">
-	import ActivityTable from '$lib/components/activity-table.svelte';
-	import BudgetRenderer from '$lib/components/budget-renderer.svelte';
-	import MemberTable from '$lib/components/member-table.svelte';
 	import ResponseRenderer from '$lib/components/response-renderer.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table';
@@ -96,44 +93,12 @@
 					</Table.Header>
 					<Table.Body>
 						{#each application?.expand?.response || [] as response}
-							{#if response.expand?.question && ['member'].includes(response.expand?.question.type)}
+							{#if response.expand?.question}
 								<Table.Row>
-									<Table.Cell class="font-medium"
-										>{@html response.expand?.question.title}</Table.Cell
-									>
-									<Table.Cell>
-										<div class="py-2">
-											<MemberTable value={response.response} />
-										</div>
+									<Table.Cell class="font-medium">
+										<!-- eslint-disable-next-line -->
+										{@html response.expand?.question.title}
 									</Table.Cell>
-								</Table.Row>
-							{:else if response.expand?.question && ['activity'].includes(response.expand?.question.type)}
-								<Table.Row>
-									<Table.Cell class="font-medium"
-										>{@html response.expand?.question.title}</Table.Cell
-									>
-									<Table.Cell>
-										<div class="py-2">
-											<ActivityTable value={response.response} />
-										</div>
-									</Table.Cell>
-								</Table.Row>
-							{:else if response.expand?.question && ['budget'].includes(response.expand?.question.type)}
-								<Table.Row>
-									<Table.Cell class="font-medium"
-										>{@html response.expand?.question.title}</Table.Cell
-									>
-									<Table.Cell>
-										<div class="border py-2">
-											<BudgetRenderer data={response.response} />
-										</div>
-									</Table.Cell>
-								</Table.Row>
-							{:else if response.expand?.question}
-								<Table.Row>
-									<Table.Cell class="font-medium"
-										>{@html response.expand?.question.title}</Table.Cell
-									>
 									<Table.Cell>
 										<ResponseRenderer data={response} />
 									</Table.Cell>
@@ -153,7 +118,6 @@
 {/if}
 
 <style>
-	/* A4 is approximately 210mm x 297mm */
 	.application-container {
 		width: 100%;
 		height: auto;
@@ -176,15 +140,6 @@
 			padding: 10mm;
 			margin: 0;
 			box-sizing: border-box;
-		}
-
-		button {
-			display: none !important;
-		}
-
-		/* Ensure tables don't break across pages */
-		table {
-			page-break-inside: avoid;
 		}
 
 		/* Set print margins */

@@ -459,7 +459,7 @@
 								variant="secondary"
 								size="sm"
 								class="h-7"
-								href={`${PUBLIC_BASE_PATH}/export/pdf/${record.id}`}
+								href={`${PUBLIC_BASE_PATH}/export/pdfs?${record.id}`}
 								target="_blank"
 							>
 								<Download size="14" class="mr-1" />
