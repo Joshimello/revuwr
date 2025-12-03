@@ -13,9 +13,9 @@ export type ExpandedApplication = ApplicationsResponse<{
 }>;
 
 export type ExpandedResponse = AnswersResponse<
-	any,
+	unknown,
 	{
-		question: QuestionsResponse;
+		question: QuestionsResponse<unknown>;
 	}
 >;
 
@@ -38,9 +38,9 @@ export type ExpandedReviewsResponse = ReviewsResponse<
 		applications: ApplicationsResponse<{
 			event: EventsResponse;
 			response: AnswersResponse<
-				any,
+				unknown,
 				{
-					question: QuestionsResponse<any>;
+					question: QuestionsResponse<unknown>;
 				}
 			>[];
 			responder: UsersResponse;

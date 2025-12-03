@@ -2,6 +2,7 @@ import { fail, redirect, isRedirect } from '@sveltejs/kit';
 import type { ExpandedApplication } from './types.js';
 import type { Actions } from '@sveltejs/kit';
 import { PUBLIC_ACME } from '$env/static/public';
+import { generateApplicationSummaryEmail } from '$lib/emails/application-summary';
 
 // this code is haram
 
@@ -44,12 +45,16 @@ export const actions: Actions = {
 				status: application.status == 'editsRequested' ? 'resubmitted' : 'submitted'
 			});
 
-			// await locals.rs.emails.send({
-			// 	from: `${PUBLIC_ACME} <notification@mail.nthumods.com>`,
-			// 	to: [locals.user.email],
-			// 	subject: 'Application Submitted',
-			// 	text: ''
-			// });
+			// Send confirmation email to the user
+			const emailHtml = generateApplicationSummaryEmail(application);
+			const eventName = application.expand?.event?.name || 'Event';
+
+			await locals.rs.emails.send({
+				from: `${PUBLIC_ACME} <notification@mail.nthumods.com>`,
+				to: [locals.user.email],
+				subject: `Application Submitted - ${eventName}`,
+				html: emailHtml
+			});
 
 			return redirect(303, `/`);
 		} catch (err) {
