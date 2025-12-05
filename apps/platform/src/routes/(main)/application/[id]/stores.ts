@@ -19,9 +19,12 @@ export const isReadOnly = derived(
 		) {
 			return false;
 		}
-		if (!['draft'].includes($application.status)) {
-			return true;
+		if (['draft'].includes($application.status)) {
+			return false;
 		}
-		return false;
+		if (['approved', 'rejected'].includes($application.status)) {
+			return true; // Allow viewing but read-only
+		}
+		return true;
 	}
 );

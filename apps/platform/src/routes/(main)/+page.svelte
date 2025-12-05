@@ -198,9 +198,16 @@
 												<!-- <Button size="icon" variant="outline" class="shrink-0">
                       <Ellipsis size="16" />
                     </Button> -->
-												<!-- <Button size="icon" variant="default" class="shrink-0" href={`/application/${application.id}`}>
-                      <ArrowUpRight size="16" />
-                    </Button> -->
+												{#if ['approved', 'rejected'].includes(application.status)}
+													<Button
+														size="icon"
+														variant="default"
+														class="shrink-0"
+														href={`/application/${application.id}`}
+													>
+														<ArrowUpRight size="16" />
+													</Button>
+												{/if}
 											</div>
 										</Card.Content>
 									</Card.Root>

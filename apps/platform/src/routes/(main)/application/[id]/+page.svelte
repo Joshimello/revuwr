@@ -112,7 +112,7 @@
 			}
 
 			// If application status is editsRequested, find first question with status 'edit'
-			if ($application.status === 'editsRequested') {
+			if ($application?.status === 'editsRequested') {
 				const firstEditIndex = $answers.findIndex((answer) => {
 					const question = answer.expand?.question;
 					if (!question) return false;
