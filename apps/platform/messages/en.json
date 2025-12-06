@@ -199,5 +199,14 @@
 	"create_closes": "Closes {date}",
 	"create_closed": "Closed {date}",
 	"create_badge_open": "Open",
-	"create_badge_closed": "Closed"
+	"create_badge_closed": "Closed",
+	"create_your_applications": "Your Applications",
+	"create_your_applications_description": "Applications you have submitted for this event",
+	"create_no_applications": "No applications found",
+	"create_no_applications_description": "You have not submitted any applications for this event yet.",
+	"create_application_status": "Status",
+	"create_application_created": "Created",
+	"create_application_updated": "Updated",
+	"create_application_actions": "Actions",
+	"create_application_view": "View"
 }

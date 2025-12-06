@@ -5,8 +5,18 @@ import type { Event } from './types';
 export const load = async ({ locals, params }) => {
 	try {
 		const event = await locals.pb.collection('events').getOne<Event>(params.id);
+
+		// Fetch user applications for this event if user is logged in
+		let applications = [];
+		if (locals.user) {
+			applications = await locals.apb.collection('applications').getFullList({
+				filter: `responder = "${locals.user.id}" && event = "${event.id}"`
+			});
+		}
+
 		return {
-			event: event
+			event: event,
+			applications: applications
 		};
 	} catch (err) {
 		if (err instanceof Error) {

@@ -199,5 +199,14 @@
 	"create_closes": "截止於 {date}",
 	"create_closed": "關閉於 {date}",
 	"create_badge_open": "開放",
-	"create_badge_closed": "關閉"
+	"create_badge_closed": "關閉",
+	"create_your_applications": "您的申請",
+	"create_your_applications_description": "您為此活動提交的申請",
+	"create_no_applications": "沒有找到申請",
+	"create_no_applications_description": "您尚未為此活動提交任何申請。",
+	"create_application_status": "狀態",
+	"create_application_created": "創建時間",
+	"create_application_updated": "更新時間",
+	"create_application_actions": "操作",
+	"create_application_view": "檢視"
 }
