@@ -1,9 +1,7 @@
 import type { EventsResponse, QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 import { pb } from '$lib/pocketbase/client';
 import { toast } from 'svelte-sonner';
-import { page } from '$app/stores';
-import { questions } from './stores';
-import { get } from 'svelte/store';
+import { invalidateAll } from '$app/navigation';
 import * as m from '$lib/paraglide/messages.js';
 
 type ExpandedEvent = EventsResponse<
@@ -13,29 +11,19 @@ type ExpandedEvent = EventsResponse<
 	}
 >;
 
-export const refreshQuestions = async () => {
-	try {
-		const event = await pb.collection('events').getOne<ExpandedEvent>(get(page).params.id, {
-			expand: 'questions'
-		});
-		questions.set(event.expand?.questions || []);
-	} catch (err) {
-		if (err instanceof Error) {
-			toast.error(err.message);
-		} else {
-			toast.error('An error occurred');
-			console.error(err);
-		}
-	}
-};
-
-export const createNewPage = () => {
+export const createNewPage = (eventId: string) => {
 	const promise = new Promise<QuestionsResponse>((resolve, reject) => {
 		(async () => {
 			let question: QuestionsResponse | null = null;
-			const currentQuestions = get(questions);
+			let currentQuestions: QuestionsResponse[] = [];
 
 			try {
+				// Fetch current event with questions to determine next page number
+				const event = await pb.collection('events').getOne<ExpandedEvent>(eventId, {
+					expand: 'questions'
+				});
+				currentQuestions = event.expand?.questions || [];
+
 				question = await pb.collection('questions').create({
 					type: 'info',
 					count: 0,
@@ -56,11 +44,11 @@ export const createNewPage = () => {
 			try {
 				await pb
 					.collection('events')
-					.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+					.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 						'questions+': question.id
 					});
 
-				questions.update((prev) => [...prev, question!]);
+				await invalidateAll();
 				resolve(question);
 			} catch (err) {
 				await pb.collection('questions').delete(question.id);
@@ -85,7 +73,12 @@ export const createNewPage = () => {
 	return promise;
 };
 
-export const addNewQuestion = (type: string, currentPage: string, index: number | null = null) => {
+export const addNewQuestion = (
+	eventId: string,
+	type: string,
+	currentPage: string,
+	index: number | null = null
+) => {
 	const promise = new Promise<QuestionsResponse>((resolve, reject) => {
 		(async () => {
 			let question: QuestionsResponse | null = null;
@@ -110,7 +103,7 @@ export const addNewQuestion = (type: string, currentPage: string, index: number 
 			try {
 				const event = await pb
 					.collection('events')
-					.getOne<ExpandedEvent>(get(page).params.id, { expand: 'questions' });
+					.getOne<ExpandedEvent>(eventId, { expand: 'questions' });
 
 				if (event.questions.length > 0) {
 					const questionsData = [...(event.expand?.questions || [])];
@@ -127,18 +120,18 @@ export const addNewQuestion = (type: string, currentPage: string, index: number 
 
 					await pb
 						.collection('events')
-						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 							questions: questionsIds
 						});
 				} else {
 					await pb
 						.collection('events')
-						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 							'questions+': question.id
 						});
 				}
 
-				refreshQuestions();
+				await invalidateAll();
 				resolve(question);
 			} catch (err) {
 				await pb.collection('questions').delete(question.id);
@@ -168,7 +161,7 @@ export const deleteQuestion = (questionId: string) => {
 		(async () => {
 			try {
 				await pb.collection('questions').delete(questionId);
-				await refreshQuestions();
+				await invalidateAll();
 				resolve();
 			} catch (err) {
 				reject(err);
@@ -177,9 +170,9 @@ export const deleteQuestion = (questionId: string) => {
 	});
 
 	toast.promise(promise, {
-		loading: m.deleting_question ? m.deleting_question() : 'Deleting question...',
+		loading: 'Deleting question...',
 		success: () => {
-			return m.question_deleted ? m.question_deleted() : 'Question deleted successfully';
+			return 'Question deleted successfully';
 		},
 		error: (err) => {
 			if (err instanceof Error) {
@@ -192,7 +185,7 @@ export const deleteQuestion = (questionId: string) => {
 	return promise;
 };
 
-export const copyQuestion = (question: QuestionsResponse) => {
+export const copyQuestion = (eventId: string, question: QuestionsResponse) => {
 	const promise = new Promise<QuestionsResponse>((resolve, reject) => {
 		(async () => {
 			let copied: QuestionsResponse | null = null;
@@ -220,10 +213,10 @@ export const copyQuestion = (question: QuestionsResponse) => {
 			try {
 				const event = await pb
 					.collection('events')
-					.getOne<ExpandedEvent>(get(page).params.id, { expand: 'questions' });
+					.getOne<ExpandedEvent>(eventId, { expand: 'questions' });
 
 				const questionsData = [...(event.expand?.questions || [])];
-				let pages: Record<number, string[]> = {};
+				const pages: Record<number, string[]> = {};
 				questionsData.forEach((q) => {
 					if (!pages[q.page]) pages[q.page] = [];
 					pages[q.page].push(q.id);
@@ -236,11 +229,11 @@ export const copyQuestion = (question: QuestionsResponse) => {
 
 				await pb
 					.collection('events')
-					.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+					.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 						questions: questionsIds
 					});
 
-				await refreshQuestions();
+				await invalidateAll();
 				resolve(copied);
 			} catch (err) {
 				await pb.collection('questions').delete(copied.id);
@@ -250,9 +243,9 @@ export const copyQuestion = (question: QuestionsResponse) => {
 	});
 
 	toast.promise(promise, {
-		loading: m.copying_question ? m.copying_question() : 'Copying question...',
+		loading: 'Copying question...',
 		success: () => {
-			return m.question_copied ? m.question_copied() : 'Question copied successfully';
+			return 'Question copied successfully';
 		},
 		error: (err) => {
 			if (err instanceof Error) {
@@ -278,7 +271,7 @@ export const saveQuestion = (question: QuestionsResponse) => {
 					conditionquestion: question.conditionquestion,
 					conditionanswer: question.conditionanswer
 				});
-				await refreshQuestions();
+				await invalidateAll();
 				resolve();
 			} catch (err) {
 				reject(err);
@@ -287,9 +280,9 @@ export const saveQuestion = (question: QuestionsResponse) => {
 	});
 
 	toast.promise(promise, {
-		loading: m.saving_question ? m.saving_question() : 'Saving question...',
+		loading: 'Saving question...',
 		success: () => {
-			return m.question_saved ? m.question_saved() : 'Question saved successfully';
+			return 'Question saved successfully';
 		},
 		error: (err) => {
 			if (err instanceof Error) {
@@ -302,7 +295,7 @@ export const saveQuestion = (question: QuestionsResponse) => {
 	return promise;
 };
 
-export const moveQuestionUp = (question: QuestionsResponse, index: number) => {
+export const moveQuestionUp = (eventId: string, question: QuestionsResponse, index: number) => {
 	if (index === 0) return Promise.resolve();
 
 	const promise = new Promise<void>((resolve, reject) => {
@@ -310,11 +303,11 @@ export const moveQuestionUp = (question: QuestionsResponse, index: number) => {
 			try {
 				const event = await pb
 					.collection('events')
-					.getOne<ExpandedEvent>(get(page).params.id, { expand: 'questions' });
+					.getOne<ExpandedEvent>(eventId, { expand: 'questions' });
 
 				if (event.questions.length > 0) {
 					const questionsData = [...(event.expand?.questions || [])];
-					let pages: Record<number, string[]> = {};
+					const pages: Record<number, string[]> = {};
 					questionsData.forEach((q) => {
 						if (!pages[q.page]) pages[q.page] = [];
 						pages[q.page].push(q.id);
@@ -328,17 +321,17 @@ export const moveQuestionUp = (question: QuestionsResponse, index: number) => {
 
 					await pb
 						.collection('events')
-						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 							questions: questionsIds
 						});
 				} else {
 					await pb
 						.collection('events')
-						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 							'questions+': question.id
 						});
 				}
-				await refreshQuestions();
+				await invalidateAll();
 				resolve();
 			} catch (err) {
 				reject(err);
@@ -347,9 +340,9 @@ export const moveQuestionUp = (question: QuestionsResponse, index: number) => {
 	});
 
 	toast.promise(promise, {
-		loading: m.moving_question ? m.moving_question() : 'Moving question...',
+		loading: 'Moving question...',
 		success: () => {
-			return m.question_moved ? m.question_moved() : 'Question moved successfully';
+			return 'Question moved successfully';
 		},
 		error: (err) => {
 			if (err instanceof Error) {
@@ -362,17 +355,17 @@ export const moveQuestionUp = (question: QuestionsResponse, index: number) => {
 	return promise;
 };
 
-export const moveQuestionDown = (question: QuestionsResponse) => {
+export const moveQuestionDown = (eventId: string, question: QuestionsResponse) => {
 	const promise = new Promise<void>((resolve, reject) => {
 		(async () => {
 			try {
 				const event = await pb
 					.collection('events')
-					.getOne<ExpandedEvent>(get(page).params.id, { expand: 'questions' });
+					.getOne<ExpandedEvent>(eventId, { expand: 'questions' });
 
 				if (event.questions.length > 0) {
 					const questionsData = [...(event.expand?.questions || [])];
-					let pages: Record<number, string[]> = {};
+					const pages: Record<number, string[]> = {};
 					questionsData.forEach((q) => {
 						if (!pages[q.page]) pages[q.page] = [];
 						pages[q.page].push(q.id);
@@ -392,17 +385,17 @@ export const moveQuestionDown = (question: QuestionsResponse) => {
 
 					await pb
 						.collection('events')
-						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 							questions: questionsIds
 						});
 				} else {
 					await pb
 						.collection('events')
-						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(get(page).params.id, {
+						.update<EventsResponse<{ questions: QuestionsResponse[] }>>(eventId, {
 							'questions+': question.id
 						});
 				}
-				await refreshQuestions();
+				await invalidateAll();
 				resolve();
 			} catch (err) {
 				reject(err);
@@ -411,9 +404,9 @@ export const moveQuestionDown = (question: QuestionsResponse) => {
 	});
 
 	toast.promise(promise, {
-		loading: m.moving_question ? m.moving_question() : 'Moving question...',
+		loading: 'Moving question...',
 		success: () => {
-			return m.question_moved ? m.question_moved() : 'Question moved successfully';
+			return 'Question moved successfully';
 		},
 		error: (err) => {
 			if (err instanceof Error) {

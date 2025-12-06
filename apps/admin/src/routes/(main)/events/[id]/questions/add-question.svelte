@@ -7,13 +7,14 @@
 
 	export let currentPage: string;
 	export let editingId: string | null;
+	export let eventId: string;
 	export let long: boolean = false;
 	export let index: number | null = null;
 
 	const addQuestion = async (type: string) => {
 		open = false;
 
-		const promise = addNewQuestion(type, currentPage, index);
+		const promise = addNewQuestion(eventId, type, currentPage, index);
 
 		promise
 			.then((question) => {

@@ -5,22 +5,22 @@
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as Select from '$lib/components/ui/select';
 	import * as m from '$lib/paraglide/messages.js';
-	import { type QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { Copy, Edit, MoveDown, MoveUp, Plus, Save, SaveOff, Trash, X } from 'lucide-svelte';
 	import {
 		copyQuestion,
 		deleteQuestion,
 		moveQuestionDown,
 		moveQuestionUp,
-		refreshQuestions,
 		saveQuestion
 	} from './methods';
 	import questionTypes from './question-types';
-	import { questions } from './stores';
+	import type { Question } from './types';
 
-	export let question: QuestionsResponse;
+	export let question: Question;
 	export let editingId: string | null;
 	export let index: number;
+	export let eventId: string;
+	export let questions: Question[];
 
 	$: isEditing = editingId == question.id;
 
@@ -33,7 +33,6 @@
 		if (typeof question.conditionanswer !== 'object' || question.conditionanswer === null) {
 			question.conditionanswer = {};
 		}
-		refreshQuestions();
 	};
 
 	const addCondition = () => {
@@ -87,7 +86,11 @@
 		if (!question.conditionanswer || typeof question.conditionanswer !== 'object') {
 			question.conditionanswer = {};
 		}
-		question.conditionanswer = { ...question.conditionanswer, [questionId]: answerIndex };
+		if (question.conditionanswer && typeof question.conditionanswer === 'object') {
+			question.conditionanswer = { ...question.conditionanswer, [questionId]: answerIndex };
+		} else {
+			question.conditionanswer = { [questionId]: answerIndex };
+		}
 	};
 
 	const handleDelete = async () => {
@@ -95,7 +98,7 @@
 	};
 
 	const handleCopy = async () => {
-		const copied = await copyQuestion(question);
+		const copied = await copyQuestion(eventId, question);
 		if (copied) {
 			editingId = copied.id;
 		}
@@ -103,7 +106,6 @@
 
 	const handleCancel = async () => {
 		editingId = null;
-		refreshQuestions();
 	};
 
 	const handleSave = async () => {
@@ -112,11 +114,11 @@
 	};
 
 	const handleMoveUp = async () => {
-		await moveQuestionUp(question, index);
+		await moveQuestionUp(eventId, question, index);
 	};
 
 	const handleMoveDown = async () => {
-		await moveQuestionDown(question);
+		await moveQuestionDown(eventId, question);
 	};
 </script>
 
@@ -144,6 +146,7 @@
 					{#if isEditing}
 						<Editor bind:value={question.title} placeholder="Question" class="outline-none" />
 					{:else}
+						<!-- eslint-disable-next-line -->
 						{@html question.title}
 					{/if}
 				</Card.Title>
@@ -155,6 +158,7 @@
 							class="outline-none"
 						/>
 					{:else}
+						<!-- eslint-disable-next-line -->
 						{@html question.description}
 					{/if}
 				</Card.Description>
@@ -190,7 +194,7 @@
 											<Select.Root
 												selected={{
 													value: conditionQuestionId,
-													label: $questions.find((q) => q.id === conditionQuestionId)?.title
+													label: questions.find((q) => q.id === conditionQuestionId)?.title
 												}}
 												onSelectedChange={(value) => {
 													updateConditionQuestion(index, value?.value || '');
@@ -198,13 +202,13 @@
 											>
 												<Select.Trigger class="w-full truncate">
 													{conditionQuestionId
-														? $questions
+														? questions
 																.find((q) => q.id === conditionQuestionId)
 																?.title.replace(/<[^>]*>/g, '') || m.no_title()
 														: m.select_a_question()}
 												</Select.Trigger>
 												<Select.Content class="max-h-64 overflow-y-auto">
-													{#each $questions.filter((q) => q.type === 'radio') as q}
+													{#each questions.filter((q) => q.type === 'radio') as q}
 														<Select.Item class="truncate" value={q.id}>
 															{q.title.replace(/<[^>]*>/g, '') || m.no_title()}
 														</Select.Item>
@@ -214,28 +218,38 @@
 										</div>
 
 										{#if conditionQuestionId}
-											<div class="flex flex-col">
-												<span class="text-xs font-bold">{m.condition_answer()}</span>
-												<Select.Root
-													selected={{
-														value: question.conditionanswer?.[conditionQuestionId],
-														label: $questions.find((q) => q.id === conditionQuestionId)?.options
-															.choices[question.conditionanswer?.[conditionQuestionId]]
-													}}
-													onSelectedChange={(value) => {
-														updateConditionAnswer(conditionQuestionId, value?.value ?? '');
-													}}
-												>
-													<Select.Trigger class="w-full truncate">
-														<Select.Value placeholder={m.select_an_answer()} />
-													</Select.Trigger>
-													<Select.Content>
-														{#each $questions.find((q) => q.id === conditionQuestionId)?.options.choices || [] as answer, answerIndex}
-															<Select.Item value={answerIndex.toString()}>{answer}</Select.Item>
-														{/each}
-													</Select.Content>
-												</Select.Root>
-											</div>
+											{#each questions.filter((q) => q.id === conditionQuestionId) as selectedQuestion}
+												{@const questionOptions = selectedQuestion.options}
+												{@const hasChoices =
+													questionOptions && Array.isArray(questionOptions.choices)}
+												<div class="flex flex-col">
+													<span class="text-xs font-bold">{m.condition_answer()}</span>
+													{#if hasChoices}
+														{@const choices = questionOptions.choices}
+														<Select.Root
+															selected={{
+																value: question.conditionanswer?.[conditionQuestionId] || '',
+																label:
+																	choices[
+																		parseInt(question.conditionanswer?.[conditionQuestionId] || '0')
+																	] || ''
+															}}
+															onSelectedChange={(value) => {
+																updateConditionAnswer(conditionQuestionId, value?.value ?? '');
+															}}
+														>
+															<Select.Trigger class="w-full truncate">
+																<Select.Value placeholder={m.select_an_answer()} />
+															</Select.Trigger>
+															<Select.Content>
+																{#each choices as answer, answerIndex}
+																	<Select.Item value={answerIndex.toString()}>{answer}</Select.Item>
+																{/each}
+															</Select.Content>
+														</Select.Root>
+													{/if}
+												</div>
+											{/each}
 										{/if}
 									</div>
 
