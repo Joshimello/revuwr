@@ -1,8 +1,11 @@
 import { PUBLIC_PB_URL } from '$env/static/public';
-import PocketBase from 'pocketbase';
+import PocketBase, { LocalAuthStore } from 'pocketbase';
 import { type TypedPocketBase } from './pocketbase-types';
 
-export const pb = new PocketBase(PUBLIC_PB_URL) as TypedPocketBase;
+const customAuthStore = new LocalAuthStore('admin_auth');
+
+export const pb = new PocketBase(PUBLIC_PB_URL, customAuthStore) as TypedPocketBase;
+
 export const pbImage = (collectionID: string, recordID: string, file: string) => {
-  return `${PUBLIC_PB_URL}/api/files/${collectionID}/${recordID}/${file}`;
-}
+	return `${PUBLIC_PB_URL}/api/files/${collectionID}/${recordID}/${file}`;
+};
