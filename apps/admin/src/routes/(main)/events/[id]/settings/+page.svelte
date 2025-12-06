@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -116,6 +117,24 @@
 			}
 		});
 	};
+
+	// Set breadcrumbs reactively based on event data
+	$: if (settings.name) {
+		setBreadcrumbs([
+			{
+				text: m.events(),
+				href: `${PUBLIC_BASE_PATH}/events`
+			},
+			{
+				text: settings.name,
+				href: `${PUBLIC_BASE_PATH}/events/${$page.params.id}`
+			},
+			{
+				text: m.settings(),
+				href: `${PUBLIC_BASE_PATH}/events/${$page.params.id}/settings`
+			}
+		]);
+	}
 
 	onMount(async () => {
 		try {

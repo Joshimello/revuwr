@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -23,6 +24,14 @@
 
 	let events: EventsResponse[] = [];
 	let isLoading: boolean = true;
+
+	// Set breadcrumbs for events list page
+	setBreadcrumbs([
+		{
+			text: m.events(),
+			href: `${PUBLIC_BASE_PATH}/events`
+		}
+	]);
 
 	onMount(async () => {
 		try {

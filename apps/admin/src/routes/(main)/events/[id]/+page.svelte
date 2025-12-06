@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import Status from '$lib/components/status.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -44,6 +45,18 @@
 		navigator.clipboard.writeText(formURL);
 		toast.success('Form URL copied to clipboard');
 	};
+
+	// Set breadcrumbs reactively based on event data
+	$: setBreadcrumbs([
+		{
+			text: m.events(),
+			href: `${PUBLIC_BASE_PATH}/events`
+		},
+		{
+			text: event?.name || 'Loading...',
+			href: `${PUBLIC_BASE_PATH}/events/${id}`
+		}
+	]);
 
 	onMount(async () => {
 		try {

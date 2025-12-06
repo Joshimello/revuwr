@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import DateRangePicker from '$lib/components/date-range-picker.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -11,6 +12,18 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
 	import { toast } from 'svelte-sonner';
+
+	// Set breadcrumbs for new event page
+	setBreadcrumbs([
+		{
+			text: m.events(),
+			href: `${PUBLIC_BASE_PATH}/events`
+		},
+		{
+			text: m.new_event(),
+			href: `${PUBLIC_BASE_PATH}/events/new`
+		}
+	]);
 
 	let settings = {
 		status: 'active',

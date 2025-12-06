@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		Card,
@@ -25,6 +27,14 @@
 	import { addCollege, deleteCollege, syncColleges } from './methods';
 
 	export let data: PageData;
+
+	// Set breadcrumbs for settings page
+	setBreadcrumbs([
+		{
+			text: m.settings(),
+			href: `${PUBLIC_BASE_PATH}/settings`
+		}
+	]);
 
 	let newCollege = {
 		en: '',

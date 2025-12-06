@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -28,6 +29,28 @@
 			questions: QuestionsResponse[];
 		}
 	>;
+
+	// Set breadcrumbs reactively based on event data
+	$: if (event) {
+		setBreadcrumbs([
+			{
+				text: m.events(),
+				href: `${PUBLIC_BASE_PATH}/events`
+			},
+			{
+				text: event.name,
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}`
+			},
+			{
+				text: m.reviews(),
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}/reviews`
+			},
+			{
+				text: m.new_review(),
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}/reviews/new`
+			}
+		]);
+	}
 
 	let applications: ApplicationsResponse[] = [];
 	let event: ExpandedEvent | null = null;

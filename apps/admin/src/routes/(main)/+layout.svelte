@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { breadcrumbs } from '$lib/breadcrumbs.js';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
 	import { Button } from '$lib/components/ui/button';
@@ -13,7 +14,6 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { availableLanguageTags, languageTag } from '$lib/paraglide/runtime.js';
 	import { pb } from '$lib/pocketbase/client';
-	import type { EventsResponse } from '$lib/pocketbase/pocketbase-types';
 	import {
 		ALargeSmall,
 		CalendarFold,
@@ -24,8 +24,6 @@
 		Settings2Icon
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
-
-	export let data: { events: EventsResponse[] };
 
 	const user = pb.authStore.record;
 	let currentFontSize: number = 1;
@@ -53,81 +51,6 @@
 			path: 'settings'
 		}
 	];
-
-	// Route to translation mapping
-	const routeTranslations: Record<string, () => string> = {
-		events: m.events,
-		users: m.users,
-		settings: m.settings,
-		admin: m.admin,
-		new: m.new_event,
-		questions: m.questions,
-		responses: m.event_responses,
-		reviews: m.reviews,
-		edit: m.edit_details,
-		terms: m.terms
-	};
-
-	// Utility functions
-	function getEventTitle(eventId: string): string {
-		const event = data.events.find((e) => e.id === eventId);
-		if (event?.name) {
-			return event.name.length > 30 ? event.name.substring(0, 16) + '...' : event.name;
-		}
-		return eventId;
-	}
-
-	function isDynamicParam(text: string): boolean {
-		return /^[0-9]/.test(text) || Object.values($page.params).includes(text);
-	}
-
-	function getTranslatedText(text: string, index: number, parts: string[]): string {
-		if (isDynamicParam(text)) {
-			// Check if this is an event ID (previous part is 'events')
-			if (index > 0 && parts[index - 1] === 'events') {
-				return getEventTitle(text);
-			}
-			return text;
-		}
-
-		if (routeTranslations[text]) {
-			return routeTranslations[text]();
-		}
-
-		// Fallback: capitalize first letter and replace hyphens/underscores with spaces
-		return text.charAt(0).toUpperCase() + text.slice(1).replace(/[-_]/g, ' ');
-	}
-
-	function createBreadcrumbs() {
-		if (!$page.route.id) return [];
-
-		const parts = $page.route.id.split('/').slice(1);
-
-		// Replace dynamic parameters with actual values
-		for (const param in $page.params) {
-			const paramIndex = parts.indexOf(`[${param}]`);
-			if (paramIndex !== -1) {
-				parts[paramIndex] = $page.params[param];
-			}
-		}
-
-		const paths = parts.map((text, i) => {
-			const routePath = parts.slice(1, i + 1).join('/');
-			return {
-				text: getTranslatedText(text, i, parts),
-				href: `${PUBLIC_BASE_PATH}/` + routePath
-			};
-		});
-
-		// Set the first breadcrumb to "admin"
-		if (paths.length > 0) {
-			paths[0] = { text: routeTranslations['admin'](), href: `${PUBLIC_BASE_PATH}/events` };
-		}
-
-		return paths;
-	}
-
-	$: breadcrumbs = createBreadcrumbs();
 
 	function setFontSize(multiplier: number) {
 		currentFontSize = multiplier;
@@ -216,14 +139,16 @@
 			</Sheet.Root>
 
 			<div class="hidden w-full flex-1 sm:block">
-				{#if breadcrumbs.length > 0}
+				{#if $breadcrumbs.length > 0}
 					<Breadcrumb.Root>
 						<Breadcrumb.List>
-							{#each breadcrumbs as { text, href }, i}
+							{#each $breadcrumbs as { text, href }, i}
 								<Breadcrumb.Item>
-									<Breadcrumb.Link {href}>{text}</Breadcrumb.Link>
+									<Breadcrumb.Link {href} class="max-w-[200px] truncate" title={text}
+										>{text}</Breadcrumb.Link
+									>
 								</Breadcrumb.Item>
-								{#if i !== breadcrumbs.length - 1}
+								{#if i !== $breadcrumbs.length - 1}
 									<Breadcrumb.Separator />
 								{/if}
 							{/each}

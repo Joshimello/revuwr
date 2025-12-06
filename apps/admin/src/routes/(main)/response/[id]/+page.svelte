@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import ResponseRenderer from '$lib/components/response-renderer.svelte';
 	import Status, { statuses } from '$lib/components/status.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -57,6 +58,23 @@
 	let response: AnswersResponse<any, { question: QuestionsResponse<Toptions> }>[] = [];
 	let prevNote: string | null = null;
 	let prevSerial: number | null = null;
+
+	// Set special breadcrumbs for response detail page
+	// "Responses" should link back to the event's responses page
+	$: if (record && event) {
+		setBreadcrumbs([
+			{
+				text: m.event_responses(),
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}/responses`
+			},
+			{
+				text: record.serial
+					? `${event.responsePrefix}${record.serial.toString().padStart(3, '0')}`
+					: record.id,
+				href: `${PUBLIC_BASE_PATH}/response/${record.id}`
+			}
+		]);
+	}
 
 	onMount(async () => {
 		try {

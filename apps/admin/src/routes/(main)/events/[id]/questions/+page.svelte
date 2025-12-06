@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as m from '$lib/paraglide/messages.js';
+	import type { EventsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { ChevronLeft, CirclePlus } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import AddQuestion from './add-question.svelte';
@@ -12,6 +14,25 @@
 	import { questions } from './stores';
 
 	let editingId: string | null = null;
+	let event: EventsResponse | null = null;
+
+	// Set breadcrumbs reactively based on event data
+	$: if (event) {
+		setBreadcrumbs([
+			{
+				text: m.events(),
+				href: `${PUBLIC_BASE_PATH}/events`
+			},
+			{
+				text: event.name,
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}`
+			},
+			{
+				text: m.questions(),
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}/questions`
+			}
+		]);
+	}
 
 	const handleNewPage = async () => {
 		const promise = createNewPage();
@@ -28,6 +49,16 @@
 
 	onMount(async () => {
 		refreshQuestions();
+
+		// Fetch event data for breadcrumbs
+		try {
+			const { pb } = await import('$lib/pocketbase/client');
+			event = await pb.collection('events').getOne($page.params.id, {
+				fields: 'id,name'
+			});
+		} catch (err) {
+			console.error('Failed to fetch event for breadcrumbs:', err);
+		}
 	});
 
 	let currentPage = '1';

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import { statuses } from '$lib/components/status.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages.js';
@@ -38,6 +39,24 @@
 	>;
 
 	let event: ExpandedEvents | null = null;
+
+	// Set breadcrumbs reactively based on event data
+	$: if (event) {
+		setBreadcrumbs([
+			{
+				text: m.events(),
+				href: `${PUBLIC_BASE_PATH}/events`
+			},
+			{
+				text: event.name,
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}`
+			},
+			{
+				text: m.event_responses(),
+				href: `${PUBLIC_BASE_PATH}/events/${event.id}/responses`
+			}
+		]);
+	}
 
 	onMount(async () => {
 		try {

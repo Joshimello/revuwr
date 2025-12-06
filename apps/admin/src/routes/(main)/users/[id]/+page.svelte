@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
 	import Status from '$lib/components/status.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -26,6 +27,18 @@
 
 	let record: ExpandedUsersResponse | null = null;
 	let loading = true;
+
+	// Set breadcrumbs reactively based on user data
+	$: setBreadcrumbs([
+		{
+			text: m.users(),
+			href: `${PUBLIC_BASE_PATH}/users`
+		},
+		{
+			text: record?.name || record?.email || 'Loading...',
+			href: `${PUBLIC_BASE_PATH}/users/${$page.params.id}`
+		}
+	]);
 
 	onMount(async () => {
 		try {
