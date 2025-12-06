@@ -1,19 +1,10 @@
-import type {
-	EventsResponse,
-	QuestionsResponse,
-	TypedPocketBase
-} from '$lib/pocketbase/pocketbase-types.js';
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit';
-import { m } from '$lib/paraglide/messages.js';
-
-type Tterms = {
-	title: string;
-	description: string;
-}[];
+import { m } from '$lib/paraglide/messages';
+import type { Event } from './types';
 
 export const load = async ({ locals, params }) => {
 	try {
-		const event = await locals.pb.collection('events').getOne<EventsResponse<Tterms>>(params.id);
+		const event = await locals.pb.collection('events').getOne<Event>(params.id);
 		return {
 			event: event
 		};
@@ -26,29 +17,26 @@ export const load = async ({ locals, params }) => {
 	}
 };
 
-type ExpandedEventsResponse = EventsResponse<
-	Tterms,
-	{
-		questions: QuestionsResponse[];
-	}
->;
-
 export const actions = {
-	async default({ params, request, locals }) {
+	async default({ params, locals }) {
 		const createdRecords = {
 			applicationId: null as string | null,
 			answersIds: [] as string[]
 		};
+
 		try {
+			// user auth check
+			if (!locals.user) return fail(400, { message: m.error_user_not_logged_in() });
+
+			// fetch event
 			const event = await locals.apb
 				.collection('events')
-				.getOne<ExpandedEventsResponse>(params.id, { expand: 'questions' });
-
-			if (!locals.user) return fail(400, { message: m.error_user_not_logged_in() });
+				.getOne<Event>(params.id, { expand: 'questions' });
 
 			if (!event.expand?.questions) return fail(400, { message: m.error_questions_not_fetched() });
 			const questions = event.expand.questions;
 
+			// date check
 			const notStarted = new Date(event.startDate) > new Date();
 			const isEnded = new Date(+new Date(event.endDate) + 86400000) < new Date();
 			const canApply =
@@ -60,6 +48,7 @@ export const actions = {
 				return fail(400, { message: m.error_event_not_open() });
 			}
 
+			// user responses check
 			const userResponses = await locals.apb.collection('applications').getFullList({
 				filter: `responder = "${locals.user.id}" && event = "${event.id}"`
 			});
@@ -68,6 +57,7 @@ export const actions = {
 				return fail(400, { message: m.error_application_limit_reached() });
 			}
 
+			// create base application
 			const application = await locals.apb.collection('applications').create({
 				event: event.id,
 				status: 'draft',
@@ -76,22 +66,27 @@ export const actions = {
 
 			createdRecords.applicationId = application.id;
 
+			// create answers
 			let answersIds: string[] = [];
+
+			const batch = locals.apb.createBatch();
 			for (const question of questions) {
-				const answer = await locals.apb.collection('answers').create({
+				batch.collection('answers').create({
 					application: application.id,
 					question: question.id,
 					valid: question.type == 'info' ? true : false
 				});
-				answersIds = [...answersIds, answer.id];
 			}
-
+			const answers = await batch.send();
+			answersIds = answers.map((answer) => answer.body.id);
 			createdRecords.answersIds = [...answersIds];
 
+			// update application with answers
 			await locals.apb.collection('applications').update(application.id, {
 				response: answersIds
 			});
 
+			// update user with application
 			await locals.apb.collection('users').update(locals.user.id, {
 				'applications+': application.id
 			});
