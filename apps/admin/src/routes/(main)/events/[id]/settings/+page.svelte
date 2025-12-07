@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
 	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
@@ -16,109 +16,17 @@
 	import { pb, pbImage } from '$lib/pocketbase/client';
 	import { fromDate } from '@internationalized/date';
 	import { ChevronLeft } from 'lucide-svelte';
-	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import type { PageData } from './$types';
+	import type { EventSettings } from './+page.ts';
 	import EndEarlyButton from './end-early-button.svelte';
 
-	let collectionId = '';
+	export let data: PageData;
 
-	let settings: {
-		status: string;
-		name: string;
-		description: string;
-		image: string;
-		moreInfo: string;
-		targetAudience: string;
-		startDate: Date | null;
-		endDate: Date | null;
-		beforeStartDate: string;
-		afterStartDate: string;
-		responseLimit: number;
-		responsePrefix: string;
-	} = {
-		status: 'active',
-		name: '',
-		description: '',
-		image: '',
-		moreInfo: '',
-		targetAudience: 'all',
-		startDate: null,
-		endDate: null,
-		beforeStartDate: 'disallow',
-		afterStartDate: 'disallow',
-		responseLimit: 1,
-		responsePrefix: ''
-	};
-
+	let settings: EventSettings = { ...data.event };
 	let prevSettings = JSON.stringify(settings);
 	let deleteConfirmation = '';
 
-	const handleNumberInput = (event: InputEvent) => {
-		const target = event.target as HTMLInputElement;
-		const value = Number(target.value);
-		settings.responseLimit = value;
-	};
-
-	const handleFileInput = async (event: InputEvent) => {
-		const target = event.target as HTMLInputElement;
-		if (!target.files || target.files.length <= 0) return;
-		const file = target.files[0];
-		try {
-			const event = await pb.collection('events').update($page.params.id, { image: file });
-			toast.success('Image uploaded successfully');
-			settings.image = event.image;
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-		}
-	};
-
-	const handleImageRemove = async () => {
-		settings.image = '';
-		handleChange();
-	};
-
-	const handleDeleteEvent = async () => {
-		try {
-			await pb.collection('events').delete($page.params.id);
-			toast.success('Event deleted successfully');
-			goto(`${PUBLIC_BASE_PATH}/events`);
-		} catch (err) {
-			if (err instanceof Error) {
-				toast.error(err.message);
-			} else {
-				toast.error('An error occurred');
-				console.error(err);
-			}
-		}
-	};
-
-	const handleChange = () => {
-		if (prevSettings == JSON.stringify(settings)) {
-			return;
-		}
-		toast.promise(pb.collection('events').update($page.params.id, settings), {
-			loading: 'Saving changes...',
-			success: () => {
-				prevSettings = JSON.stringify(settings);
-				return 'Saved successfully';
-			},
-			error: (err) => {
-				if (err instanceof Error) {
-					return err.message;
-				} else {
-					console.error(err);
-					return 'An error occurred';
-				}
-			}
-		});
-	};
-
-	// Set breadcrumbs reactively based on event data
 	$: if (settings.name) {
 		setBreadcrumbs([
 			{
@@ -136,25 +44,21 @@
 		]);
 	}
 
-	onMount(async () => {
+	const handleNumberInput = (event: InputEvent) => {
+		const target = event.target as HTMLInputElement;
+		const value = Number(target.value);
+		settings.responseLimit = value;
+	};
+
+	const handleFileInput = async (event: InputEvent) => {
+		const target = event.target as HTMLInputElement;
+		if (!target.files || target.files.length <= 0) return;
+		const file = target.files[0];
 		try {
-			const event = await pb.collection('events').getOne($page.params.id);
-			collectionId = event.collectionId;
-			settings = {
-				status: event.status,
-				name: event.name,
-				description: event.description,
-				image: event.image,
-				moreInfo: event.moreInfo,
-				targetAudience: event.targetAudience,
-				startDate: event.startDate ? new Date(event.startDate) : null,
-				endDate: event.endDate ? new Date(event.endDate) : null,
-				beforeStartDate: event.beforeStartDate,
-				afterStartDate: event.afterStartDate,
-				responseLimit: event.responseLimit,
-				responsePrefix: event.responsePrefix
-			};
-			prevSettings = JSON.stringify(settings);
+			const updatedEvent = await pb.collection('events').update($page.params.id, { image: file });
+			toast.success('Image uploaded successfully');
+			settings.image = updatedEvent.image;
+			await invalidateAll();
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);
@@ -163,17 +67,58 @@
 				console.error(err);
 			}
 		}
-	});
+	};
+
+	const handleImageRemove = async () => {
+		settings.image = '';
+		await handleChange();
+	};
+
+	const handleDeleteEvent = async () => {
+		try {
+			await pb.collection('events').delete($page.params.id);
+			toast.success('Event deleted successfully');
+			goto(`${PUBLIC_BASE_PATH}/events`);
+		} catch (err) {
+			if (err instanceof Error) {
+				toast.error(err.message);
+			} else {
+				toast.error('An error occurred');
+				console.error(err);
+			}
+		}
+	};
+
+	const handleChange = async () => {
+		if (prevSettings == JSON.stringify(settings)) {
+			return;
+		}
+
+		toast.promise(
+			pb
+				.collection('events')
+				.update($page.params.id, settings)
+				.then(async () => {
+					await invalidateAll();
+					prevSettings = JSON.stringify(settings);
+				}),
+			{
+				loading: 'Saving changes...',
+				success: 'Saved successfully',
+				error: (err) => {
+					if (err instanceof Error) {
+						return err.message;
+					} else {
+						console.error(err);
+						return 'An error occurred';
+					}
+				}
+			}
+		);
+	};
 
 	const handleEventEnded = async () => {
-		// Refresh the event data after ending it early
-		try {
-			const event = await pb.collection('events').getOne($page.params.id);
-			settings.endDate = event.endDate ? new Date(event.endDate) : null;
-			prevSettings = JSON.stringify(settings);
-		} catch (err) {
-			console.error('Error refreshing event data:', err);
-		}
+		await invalidateAll();
 	};
 </script>
 
@@ -266,9 +211,9 @@
 					{m.poster_image()}
 				</Label>
 				<div class="flex gap-4">
-					{#if settings.image && collectionId}
+					{#if settings.image && settings.collectionId}
 						<img
-							src={pbImage(collectionId, $page.params.id, settings.image)}
+							src={pbImage(settings.collectionId, $page.params.id, settings.image)}
 							class="border-1 h-32 w-32 rounded-md border object-cover md:h-72 md:w-72"
 							alt=""
 						/>
@@ -393,6 +338,56 @@
 					bind:value={settings.responsePrefix}
 					on:blur={handleChange}
 				/>
+			</div>
+			<div class="grid gap-3">
+				<Label for="reprQuestion">
+					{m.question_answer_to_represent_application()}
+				</Label>
+				<Select.Root
+					selected={Array.isArray(data.questions)
+						? data.questions
+								.filter((q) => q.type === 'shortText')
+								.find((q) => q.id === settings.reprQuestion)
+							? {
+									label:
+										(
+											data.questions
+												.filter((q) => q.type === 'shortText')
+												.find((q) => q.id === settings.reprQuestion)?.title || m.untitled_question()
+										)
+											.replace(/<[^>]*>/g, '')
+											.replace(/&[^;]+;/g, '') || m.untitled_question(),
+									value: settings.reprQuestion
+								}
+							: undefined
+						: undefined}
+					onSelectedChange={(v) => {
+						settings.reprQuestion = v?.value || '';
+						handleChange();
+					}}
+				>
+					<Select.Trigger class="w-72">
+						<Select.Value placeholder={m.select_a_question_placeholder()} />
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="">
+							{m.none_selected()}
+						</Select.Item>
+						{#if Array.isArray(data.questions) && data.questions.filter((q) => q.type === 'shortText').length > 0}
+							{#each data.questions.filter((q) => q.type === 'shortText') as question}
+								<Select.Item value={question.id}>
+									<div class="truncate whitespace-nowrap">
+										{(question.title || m.untitled_question())
+											.replace(/<[^>]*>/g, '')
+											.replace(/&[^;]+;/g, '')}
+									</div>
+								</Select.Item>
+							{/each}
+						{:else}
+							<Select.Item value="" disabled>{m.no_questions_available()}</Select.Item>
+						{/if}
+					</Select.Content>
+				</Select.Root>
 			</div>
 		</div>
 	</Card.Content>

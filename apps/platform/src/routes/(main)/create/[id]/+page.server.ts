@@ -1,15 +1,15 @@
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit';
 import { m } from '$lib/paraglide/messages';
 import type { Event } from './types';
+import { Collections, type ApplicationsResponse } from '$lib/pocketbase/pocketbase-types';
 
 export const load = async ({ locals, params }) => {
 	try {
-		const event = await locals.pb.collection('events').getOne<Event>(params.id);
+		const event = await locals.pb.collection(Collections.Events).getOne<Event>(params.id);
 
-		// Fetch user applications for this event if user is logged in
-		let applications = [];
+		let applications: ApplicationsResponse[] = [];
 		if (locals.user) {
-			applications = await locals.apb.collection('applications').getFullList({
+			applications = await locals.pb.collection(Collections.Applications).getFullList({
 				filter: `responder = "${locals.user.id}" && event = "${event.id}"`
 			});
 		}

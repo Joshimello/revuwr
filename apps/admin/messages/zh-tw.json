@@ -37,6 +37,11 @@
 	"new_event_responses_desc": "您可以在活動設定中稍後變更這些詳細資料。",
 	"response_limit_per_user": "可申請計劃上限",
 	"response_serial_id_prefix": "核定流水號",
+	"question_answer_to_represent_application": "代表申請的問答題",
+	"select_a_question_placeholder": "選擇問題...",
+	"no_questions_available": "沒有可用的問題",
+	"untitled_question": "無標題問題",
+	"none_selected": "未選擇",
 	"new_event_footnote": "您可以在建立後進一步自訂活動。",
 	"create_event": "建立活動",
 

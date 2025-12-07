@@ -158,6 +158,7 @@ export type EventsRecord<Tterms = unknown> = {
 	moreInfo?: string
 	name?: string
 	questions?: RecordIdString[]
+	reprQuestion?: RecordIdString
 	responseLimit?: number
 	responsePrefix?: string
 	startDate?: IsoDateString

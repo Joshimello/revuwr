@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
@@ -35,7 +36,7 @@
 			});
 
 			// Update all draft applications to 'withdrawn' status
-			const updatePromises = draftApplications.map(application =>
+			const updatePromises = draftApplications.map((application) =>
 				pb.collection('applications').update(application.id, {
 					status: 'withdrawn'
 				})
@@ -43,7 +44,12 @@
 
 			await Promise.all(updatePromises);
 
-			toast.success(`Event ended successfully. ${draftApplications.length} draft applications were withdrawn.`);
+			toast.success(
+				`Event ended successfully. ${draftApplications.length} draft applications were withdrawn.`
+			);
+
+			// Invalidate all data to refresh the page
+			await invalidateAll();
 
 			// Close dialog and notify parent
 			isOpen = false;
@@ -70,7 +76,7 @@
 </script>
 
 <div class="grid gap-3">
-	<Label class="text-destructive font-medium">End Event Early</Label>
+	<Label class="font-medium text-destructive">End Event Early</Label>
 	<p class="text-sm text-muted-foreground">
 		This will set the event end date to today and automatically withdraw all draft applications.
 		This action cannot be undone.
@@ -97,8 +103,8 @@
 
 			<div class="space-y-4">
 				<div class="rounded-md border border-orange-200 bg-orange-50 p-3">
-					<h4 class="text-sm font-medium text-orange-800 mb-2">What will happen:</h4>
-					<ul class="text-sm text-orange-700 space-y-1">
+					<h4 class="mb-2 text-sm font-medium text-orange-800">What will happen:</h4>
+					<ul class="space-y-1 text-sm text-orange-700">
 						<li>• Event end date will be set to today</li>
 						<li>• All draft applications will be withdrawn</li>
 						<li>• No new applications can be submitted</li>
@@ -107,9 +113,7 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for="confirmation" class="text-sm font-medium">
-						Type "END EVENT" to confirm:
-					</Label>
+					<Label for="confirmation" class="text-sm font-medium">Type "END EVENT" to confirm:</Label>
 					<Input
 						id="confirmation"
 						type="text"
@@ -122,9 +126,7 @@
 
 			<Dialog.Footer class="gap-2">
 				<Dialog.Close asChild let:builder>
-					<Button builders={[builder]} variant="outline" disabled={isLoading}>
-						Cancel
-					</Button>
+					<Button builders={[builder]} variant="outline" disabled={isLoading}>Cancel</Button>
 				</Dialog.Close>
 				<Button
 					on:click={handleEndEvent}

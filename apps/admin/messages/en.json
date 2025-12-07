@@ -37,6 +37,11 @@
 	"new_event_responses_desc": "You may change these details later in the event settings",
 	"response_limit_per_user": "Response Limit Per User",
 	"response_serial_id_prefix": "Response Serial ID Prefix",
+	"question_answer_to_represent_application": "Question-answer to represent application",
+	"select_a_question_placeholder": "Select a question...",
+	"no_questions_available": "No questions available",
+	"untitled_question": "Untitled Question",
+	"none_selected": "None selected",
 	"new_event_footnote": "You will be able to customize the event more after this creation.",
 	"create_event": "Create Event",
 
