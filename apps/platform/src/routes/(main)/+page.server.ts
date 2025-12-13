@@ -8,7 +8,9 @@ import type {
 type ExpandedApplications = ApplicationsResponse<{
 	response: AnswersResponse[];
 	event: EventsResponse;
-}>;
+}> & {
+	reprAnswer?: string; // Add the computed representative answer
+};
 
 export const load = async ({ locals }) => {
 	if (locals.user && !locals.user.init) {
@@ -19,8 +21,29 @@ export const load = async ({ locals }) => {
 
 	if (locals.user) {
 		try {
-			applications = await locals.pb.collection('applications').getFullList<ExpandedApplications>({
-				expand: 'response,event'
+			const rawApplications = await locals.pb
+				.collection('applications')
+				.getFullList<ExpandedApplications>({
+					expand: 'response,event'
+				});
+
+			applications = rawApplications.map((app) => {
+				let reprAnswer = '';
+
+				if (app.expand?.event?.reprQuestion && app.expand?.response) {
+					const matchingAnswer = app.expand.response.find(
+						(answer) => answer.question === app.expand.event.reprQuestion
+					);
+
+					if (matchingAnswer) {
+						reprAnswer = (matchingAnswer.response as string) || '';
+					}
+				}
+
+				return {
+					...app,
+					reprAnswer
+				};
 			});
 		} catch (err) {
 			console.error('Failed to fetch applications:', err);

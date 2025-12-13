@@ -1,16 +1,52 @@
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit';
 import { m } from '$lib/paraglide/messages';
 import type { Event } from './types';
-import { Collections, type ApplicationsResponse } from '$lib/pocketbase/pocketbase-types';
+import {
+	Collections,
+	type ApplicationsResponse,
+	type AnswersResponse,
+	type EventsResponse
+} from '$lib/pocketbase/pocketbase-types';
+
+type ExpandedApplicationsForCreate = ApplicationsResponse<{
+	response: AnswersResponse[];
+	event: EventsResponse;
+}> & {
+	reprAnswer?: string;
+};
 
 export const load = async ({ locals, params }) => {
 	try {
 		const event = await locals.pb.collection(Collections.Events).getOne<Event>(params.id);
 
-		let applications: ApplicationsResponse[] = [];
+		let applications: ExpandedApplicationsForCreate[] = [];
 		if (locals.user) {
-			applications = await locals.pb.collection(Collections.Applications).getFullList({
-				filter: `responder = "${locals.user.id}" && event = "${event.id}"`
+			const rawApplications = await locals.pb
+				.collection(Collections.Applications)
+				.getFullList<ExpandedApplicationsForCreate>({
+					filter: `responder = "${locals.user.id}" && event = "${event.id}"`,
+					expand: 'response,event'
+				});
+
+			// Process each application to find the representative answer
+			applications = rawApplications.map((app) => {
+				let reprAnswer = '';
+
+				if (app.expand?.event?.reprQuestion && app.expand?.response) {
+					// Find the answer that matches the representative question ID
+					const matchingAnswer = app.expand.response.find(
+						(answer) => answer.question === app.expand.event.reprQuestion
+					);
+
+					if (matchingAnswer) {
+						reprAnswer = (matchingAnswer.response as string) || '';
+					}
+				}
+
+				return {
+					...app,
+					reprAnswer
+				};
 			});
 		}
 

@@ -6,13 +6,13 @@
 	import * as Popover from '$lib/components/ui/popover';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { m } from '$lib/paraglide/messages.js';
+	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { pb } from '$lib/pocketbase/client';
 	import type { NotificationsResponse, UsersResponse } from '$lib/pocketbase/pocketbase-types.js';
 	import { handleStoredRedirect, redirectToLogin } from '$lib/utils/redirect';
 	import { Bell, LogIn, LogOut, Settings2 } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { format } from 'timeago.js';
 
 	export let data;
 	$: ({ user } = data);
@@ -116,14 +116,21 @@
 											class="flex flex-col border-b px-4 py-3 transition-colors hover:bg-muted/50"
 										>
 											<span class="text-sm">{notification.message}</span>
-											<span class="mt-1 text-xs text-muted-foreground"
-												>{format(notification.created)}</span
-											>
-											{#if notification.link}
-												<Button size="sm" class="mt-2 h-6 w-max text-xs" href={notification.link}>
-													{m.view()}
-												</Button>
-											{/if}
+											<span class="mt-1 text-xs text-muted-foreground">
+												<relative-time
+													datetime={notification.created}
+													tense="past"
+													lang={getLocale() === 'zh' ? 'zh-Hant' : 'en-US'}
+												>
+													{notification.created}
+												</relative-time>
+												>
+												{#if notification.link}
+													<Button size="sm" class="mt-2 h-6 w-max text-xs" href={notification.link}>
+														{m.view()}
+													</Button>
+												{/if}
+											</span>
 										</div>
 									{/each}
 								</ScrollArea>

@@ -5,8 +5,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
 	import { m } from '$lib/paraglide/messages.js';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import { pbImage } from '$lib/pocketbase/client';
-	import { CircleAlertIcon, ExternalLinkIcon } from 'lucide-svelte';
+	import { ChevronLeft, CircleAlertIcon, ExternalLinkIcon } from 'lucide-svelte';
 	import ApplyButton from './apply-button.svelte';
 
 	export let data, form;
@@ -55,6 +56,13 @@
 
 	const registrationStatus = getRegistrationStatus();
 </script>
+
+<div class="mb-6 flex items-center gap-4">
+	<Button variant="outline" size="icon" class="h-7 w-7" href="/">
+		<ChevronLeft class="h-4 w-4" />
+		<span class="sr-only">Back</span>
+	</Button>
+</div>
 
 <!-- Header Section -->
 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -242,6 +250,7 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
+						<Table.Head>{m.application_name()}</Table.Head>
 						<Table.Head>{m.create_application_status()}</Table.Head>
 						<Table.Head>{m.create_application_created()}</Table.Head>
 						<Table.Head>{m.create_application_updated()}</Table.Head>
@@ -251,11 +260,30 @@
 				<Table.Body>
 					{#each applications as application}
 						<Table.Row>
+							<Table.Cell class="font-medium">
+								{application.reprAnswer || ''}
+							</Table.Cell>
 							<Table.Cell>
 								<Status type={application.status} />
 							</Table.Cell>
-							<Table.Cell>{formatDateTime(application.created)}</Table.Cell>
-							<Table.Cell>{formatDateTime(application.updated)}</Table.Cell>
+							<Table.Cell>
+								<relative-time
+									datetime={application.created}
+									tense="past"
+									lang={getLocale() === 'zh' ? 'zh-Hant' : 'en-US'}
+								>
+									{application.created}
+								</relative-time>
+							</Table.Cell>
+							<Table.Cell>
+								<relative-time
+									datetime={application.updated}
+									tense="past"
+									lang={getLocale() === 'zh' ? 'zh-Hant' : 'en-US'}
+								>
+									{application.created}
+								</relative-time>
+							</Table.Cell>
 							<Table.Cell class="text-right">
 								<Button variant="outline" size="sm" href="/application/{application.id}">
 									{m.create_application_view()}

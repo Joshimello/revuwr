@@ -1,5 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"application_name": "Application Name",
 	"tabs_active": "Active",
 	"tabs_archived": "Archived",
 	"button_refresh": "Refresh",

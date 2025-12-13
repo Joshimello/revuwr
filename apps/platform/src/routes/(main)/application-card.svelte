@@ -6,19 +6,20 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Progress } from '$lib/components/ui/progress';
 	import { m } from '$lib/paraglide/messages.js';
-	import { getLocale } from '$lib/paraglide/runtime.js';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import type {
 		AnswersResponse,
 		ApplicationsResponse,
 		EventsResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { ArrowUpRight, Ellipsis, Trash2, X } from 'lucide-svelte';
-	import { format } from 'timeago.js';
+	import { ArrowUpRight, Ellipsis, Info, Trash2, X } from 'lucide-svelte';
 
 	type ExpandedApplication = ApplicationsResponse<{
 		response: AnswersResponse[];
 		event: EventsResponse;
-	}>;
+	}> & {
+		reprAnswer?: string;
+	};
 
 	export let application: ExpandedApplication;
 
@@ -31,8 +32,8 @@
 		['draft', 'approved', 'editsRequested', 'rejected'].includes(application.status);
 	$: showProgress = !isEventArchived && ['draft', 'editsRequested'].includes(application.status);
 
-	// Menu button logic for active events
-	$: showMenuButton =
+	// Withdraw button logic for active events
+	$: showWithdrawButton =
 		!isEventArchived &&
 		(application.status === 'draft' || // Will show "Discard Draft"
 			['submitted', 'resubmitted'].includes(application.status)); // Will show "Withdraw Application"
@@ -54,20 +55,29 @@
 				{application.expand?.event.responsePrefix}{application.serial.toString().padStart(3, '0')}
 			</span>
 		{/if}
-		<span class="text-xl">
-			{application.expand?.event.name}
-		</span>
+		{#if application.reprAnswer}
+			<span class="pb-2 text-xl">
+				{application.reprAnswer}
+			</span>
+		{/if}
 		<div>
 			{#if isEventArchived}
 				<Badge variant="secondary">Archived</Badge>
 			{/if}
 			<Status type={application.status} />
 			<Badge variant="outline">
-				{m.badge_updated({
-					time: format(application.updated, getLocale() === 'zh' ? 'zh_TW' : 'en_US')
-				})}
+				<relative-time
+					datetime={application.updated}
+					tense="past"
+					lang={getLocale() === 'zh' ? 'zh-Hant' : 'en-US'}
+				>
+					{application.updated}
+				</relative-time>
 			</Badge>
 		</div>
+		<span class="pt-3 text-sm text-muted-foreground">
+			{application.expand?.event.name}
+		</span>
 	</Card.Header>
 	<Card.Content>
 		<div class="flex items-end gap-2" class:justify-end={!showProgress}>
@@ -85,20 +95,24 @@
 				</div>
 			{/if}
 
-			{#if showMenuButton}
-				<form method="POST" action="?/withdraw" bind:this={withdrawForm}>
-					<input type="hidden" name="applicationId" value={application.id} />
+			<form method="POST" action="?/withdraw" bind:this={withdrawForm}>
+				<input type="hidden" name="applicationId" value={application.id} />
 
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger asChild let:builder>
-							<Button builders={[builder]} size="icon" variant="outline" class="shrink-0">
-								<Ellipsis size="16" />
-							</Button>
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="end">
-							<DropdownMenu.Label>{m.application_actions()}</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							<DropdownMenu.Group>
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger asChild let:builder>
+						<Button builders={[builder]} size="icon" variant="outline" class="shrink-0">
+							<Ellipsis size="16" />
+						</Button>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end">
+						<DropdownMenu.Label>{m.application_actions()}</DropdownMenu.Label>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Group>
+							<DropdownMenu.Item href="/create/{application.expand?.event.id}">
+								<Info class="mr-2 h-4 w-4 flex-shrink-0" />
+								<span>Event Info</span>
+							</DropdownMenu.Item>
+							{#if showWithdrawButton}
 								<DropdownMenu.Item
 									class="w-full cursor-pointer justify-start text-destructive"
 									on:click={() => {
@@ -113,11 +127,11 @@
 										<span>{m.menu_withdraw_application()}</span>
 									{/if}
 								</DropdownMenu.Item>
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-				</form>
-			{/if}
+							{/if}
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</form>
 
 			{#if showViewButton}
 				<Button

@@ -3,15 +3,10 @@
 	import { PUBLIC_ACME } from '$env/static/public';
 	import RefreshButton from '$lib/components/refresh-button.svelte';
 	import { Button } from '$lib/components/ui/button';
-
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { m } from '$lib/paraglide/messages.js';
 	import { redirectToLogin } from '$lib/utils/redirect';
-	import { register } from 'timeago.js';
-	import zh_TW from 'timeago.js/lib/lang/zh_TW';
 	import ApplicationCard from './application-card.svelte';
-
-	register('zh_TW', zh_TW);
 
 	export let data;
 	$: ({ user, applications } = data);

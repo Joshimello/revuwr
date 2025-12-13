@@ -1,5 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"application_name": "名稱",
 	"tabs_active": "活動中",
 	"tabs_archived": "已歸檔",
 	"button_refresh": "重新整理",

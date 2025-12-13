@@ -1,7 +1,8 @@
 <script lang="ts">
-	import '../app.css';
+	import { Toaster } from '$lib/components/ui/sonner';
 	import '@fontsource/geist-sans';
-	import { Toaster } from "$lib/components/ui/sonner"
+	import '@github/relative-time-element';
+	import '../app.css';
 </script>
 
 <Toaster />
