@@ -102,6 +102,22 @@
 
 	$: visibleQuestions = $answers.slice(windowStart, windowStart + WINDOW_SIZE);
 
+	// Group visible questions by page
+	$: questionGroups = visibleQuestions.reduce(
+		(groups, answer, relativeIndex) => {
+			const index = windowStart + relativeIndex;
+			const question = answer.expand?.question;
+			const page = question?.page ?? 0;
+
+			if (!groups[page]) {
+				groups[page] = [];
+			}
+			groups[page].push({ answer, index, relativeIndex });
+			return groups;
+		},
+		{} as Record<number, Array<{ answer: any; index: number; relativeIndex: number }>>
+	);
+
 	onMount(async () => {
 		try {
 			$application = (await getApplication($page.params.id)) ?? null;
@@ -233,37 +249,42 @@
 					<ChevronLeftIcon class="h-4 w-4" />
 				</Button>
 
-				<!-- Question circles -->
-				<div class="flex gap-2">
-					<!-- eslint-disable-next-line -->
-					{#each visibleQuestions as answer, relativeIndex}
-						{@const index = windowStart + relativeIndex}
-						{@const accessible = isQuestionAccessible(index)}
-						{@const valid = isQuestionValid(index)}
-						{@const current = index === $currentIndex}
-						{@const status = answer.status}
+				<!-- Question circles grouped by page -->
+				<div class="flex gap-3">
+					{#each Object.entries(questionGroups) as [page, questions]}
+						<div class="flex flex-col items-center gap-1">
+							<div class="text-xs text-muted-foreground">Page {page}</div>
+							<div class="flex gap-1 rounded border border-muted-foreground/20 bg-muted/20 p-1">
+								{#each questions as { answer, index, relativeIndex }}
+									{@const accessible = isQuestionAccessible(index)}
+									{@const valid = isQuestionValid(index)}
+									{@const current = index === $currentIndex}
+									{@const status = answer.status}
 
-						<button
-							class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
-								{current
-								? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
-								: accessible
-									? valid
-										? status === 'edit'
-											? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
-											: 'border-green-500 bg-green-500 text-white hover:scale-105'
-										: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
-									: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
-							on:click={() => jumpToQuestion(index)}
-							disabled={!accessible}
-							title="Question {index + 1}{accessible
-								? valid
-									? ' - Valid'
-									: ' - Invalid'
-								: ' - Hidden'}"
-						>
-							{index + 1}
-						</button>
+									<button
+										class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
+										{current
+											? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
+											: accessible
+												? valid
+													? status === 'edit'
+														? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
+														: 'border-green-500 bg-green-500 text-white hover:scale-105'
+													: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
+												: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
+										on:click={() => jumpToQuestion(index)}
+										disabled={!accessible}
+										title="Question {index + 1} (Page {page}){accessible
+											? valid
+												? ' - Valid'
+												: ' - Invalid'
+											: ' - Hidden'}"
+									>
+										{index + 1}
+									</button>
+								{/each}
+							</div>
+						</div>
 					{/each}
 				</div>
 
@@ -299,37 +320,42 @@
 					<ChevronLeftIcon class="h-4 w-4" />
 				</Button>
 
-				<!-- Question circles -->
+				<!-- Question circles grouped by page -->
 				<div class="flex gap-2">
-					<!-- eslint-disable-next-line -->
-					{#each visibleQuestions as answer, relativeIndex}
-						{@const index = windowStart + relativeIndex}
-						{@const accessible = isQuestionAccessible(index)}
-						{@const valid = isQuestionValid(index)}
-						{@const current = index === $currentIndex}
-						{@const status = answer.status}
+					{#each Object.entries(questionGroups) as [page, questions]}
+						<div class="flex flex-col items-center gap-1">
+							<div class="text-xs text-muted-foreground">Page {page}</div>
+							<div class="flex gap-1 rounded border border-muted-foreground/20 bg-muted/20 p-1">
+								{#each questions as { answer, index, relativeIndex }}
+									{@const accessible = isQuestionAccessible(index)}
+									{@const valid = isQuestionValid(index)}
+									{@const current = index === $currentIndex}
+									{@const status = answer.status}
 
-						<button
-							class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
-								{current
-								? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
-								: accessible
-									? valid
-										? status === 'edit'
-											? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
-											: 'border-green-500 bg-green-500 text-white hover:scale-105'
-										: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
-									: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
-							on:click={() => jumpToQuestion(index)}
-							disabled={!accessible}
-							title="Question {index + 1}{accessible
-								? valid
-									? ' - Valid'
-									: ' - Invalid'
-								: ' - Hidden'}"
-						>
-							{index + 1}
-						</button>
+									<button
+										class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
+										{current
+											? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
+											: accessible
+												? valid
+													? status === 'edit'
+														? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
+														: 'border-green-500 bg-green-500 text-white hover:scale-105'
+													: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'
+												: 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-50'}"
+										on:click={() => jumpToQuestion(index)}
+										disabled={!accessible}
+										title="Question {index + 1} (Page {page}){accessible
+											? valid
+												? ' - Valid'
+												: ' - Invalid'
+											: ' - Hidden'}"
+									>
+										{index + 1}
+									</button>
+								{/each}
+							</div>
+						</div>
 					{/each}
 				</div>
 
