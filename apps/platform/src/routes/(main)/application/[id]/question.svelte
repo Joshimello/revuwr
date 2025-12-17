@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -8,7 +9,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { shouldShowConditionalQuestion } from './conditional-utils';
-	import { updateAnswer, updateConditionalAnswers } from './methods';
+	import { updateConditionalAnswers } from './methods';
 	import questionTypes from './question-types';
 	import { answers, application, currentIndex, isReadOnly } from './stores';
 	import type { ExpandedResponse } from './types';
@@ -34,10 +35,36 @@
 		return answer.valid;
 	});
 
+	// Create a more robust reactive validation system
+	let validationResult: [boolean, string] = [false, ''];
+
+	// Update validation whenever value or checkValid changes
+	$: {
+		if (checkValid && value !== undefined) {
+			try {
+				validationResult = checkValid();
+			} catch {
+				validationResult = [false, 'Validation error'];
+			}
+		} else {
+			validationResult = [false, ''];
+		}
+	}
+
+	// Computed validation for current answer
+	$: isCurrentAnswerValid = validationResult[0];
+
+	// Track current question ID to detect navigation
+	let currentQuestionId = content.id;
+
+	// Reset value only when navigating to a different question
+	$: if (content.id !== currentQuestionId) {
+		currentQuestionId = content.id;
+		value = content.response;
+	}
+
 	onMount(() => {
-		console.log($application);
-		console.log(question);
-		console.log(content);
+		// Component mounted - validation system is ready
 	});
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -78,79 +105,106 @@
 		}
 	}
 
-	async function handleContinue() {
-		const [status] = await updateAnswer(content.id, value);
-		if (status) {
-			// Update conditional answers after this answer changes
-			if ($application?.expand?.response) {
-				await updateConditionalAnswers($application.expand.response);
-			}
+	let isUpdating = false;
 
-			// If application status is editsRequested, find next question with status 'edit'
-			if ($application?.status === 'editsRequested') {
-				let nextIndex = $currentIndex + 1;
-				while (nextIndex < $answers.length) {
-					const nextAnswer = $answers[nextIndex];
-					const nextQuestion = nextAnswer?.expand?.question;
-					if (nextQuestion) {
-						const shouldShow = nextQuestion.conditional
-							? shouldShowConditionalQuestion(nextQuestion, $answers)
-							: true;
-						if (shouldShow && nextAnswer.status === 'edit') {
-							$currentIndex = nextIndex;
-							return;
-						}
+	async function handleContinue() {
+		isUpdating = true;
+
+		// Submit the update form
+		const form = document.getElementById('updateAnswerForm') as HTMLFormElement;
+		if (form) {
+			const formData = new FormData(form);
+
+			try {
+				const response = await fetch(form.action, {
+					method: 'POST',
+					body: formData
+				});
+
+				if (response.ok) {
+					// Invalidate all data to refresh stores with latest server data
+					await invalidateAll();
+
+					// Update conditional answers after this answer changes
+					if ($application?.expand?.response) {
+						await updateConditionalAnswers($application.expand.response);
 					}
-					nextIndex++;
-				}
-				// No more edit questions found, jump to end
-				$currentIndex = $answers.length - 1;
-			} else {
-				// Find the next question that should be shown
-				let nextIndex = $currentIndex + 1;
-				while (nextIndex < $answers.length) {
-					const nextQuestion = $answers[nextIndex]?.expand?.question;
-					if (nextQuestion) {
-						const shouldShow = nextQuestion.conditional
-							? shouldShowConditionalQuestion(nextQuestion, $answers)
-							: true;
-						if (shouldShow) {
-							$currentIndex = nextIndex;
-							break;
+
+					// Navigate to next sequential question that should be shown
+					let nextIndex = $currentIndex + 1;
+					while (nextIndex < $answers.length) {
+						const nextAnswer = $answers[nextIndex];
+						const nextQuestion = nextAnswer?.expand?.question;
+						if (nextQuestion) {
+							const shouldShow = nextQuestion.conditional
+								? shouldShowConditionalQuestion(nextQuestion, $answers)
+								: true;
+
+							if (shouldShow) {
+								$currentIndex = nextIndex;
+								break;
+							}
 						}
+						nextIndex++;
 					}
-					nextIndex++;
+
+					// If no more questions to show, go to the last question
+					if (nextIndex >= $answers.length) {
+						$currentIndex = $answers.length - 1;
+					}
+				} else {
+					toast.error('Failed to update answer');
 				}
-				if (nextIndex >= $answers.length) {
-					$currentIndex = $answers.length - 1;
-				}
+			} catch (error) {
+				toast.error('Failed to update answer');
 			}
-		} else {
-			toast.error(m.error_update_answer());
 		}
+
+		isUpdating = false;
 	}
 
 	async function handleSubmit() {
-		const [status] = await updateAnswer(content.id, value);
-		if (status) {
-			// Update conditional answers before submitting
-			if ($application?.expand?.response) {
-				await updateConditionalAnswers($application.expand.response);
-			}
+		isUpdating = true;
 
-			isLoading = true;
-			toast.loading(m.toast_submitting_application(), {
-				duration: Number.POSITIVE_INFINITY
-			});
+		// First update the answer
+		const updateForm = document.getElementById('updateAnswerForm') as HTMLFormElement;
+		if (updateForm) {
+			const formData = new FormData(updateForm);
 
-			// Submit the form
-			const form = document.querySelector('form[action="?/submit"]') as HTMLFormElement;
-			if (form) {
-				form.submit();
+			try {
+				const response = await fetch(updateForm.action, {
+					method: 'POST',
+					body: formData
+				});
+
+				if (response.ok) {
+					// Invalidate all data to refresh stores with latest server data
+					await invalidateAll();
+
+					// Update conditional answers before submitting
+					if ($application?.expand?.response) {
+						await updateConditionalAnswers($application.expand.response);
+					}
+
+					isLoading = true;
+					toast.loading(m.toast_submitting_application(), {
+						duration: Number.POSITIVE_INFINITY
+					});
+
+					// Submit the application
+					const submitForm = document.getElementById('submitForm') as HTMLFormElement;
+					if (submitForm) {
+						submitForm.submit();
+					}
+				} else {
+					toast.error('Failed to update answer');
+				}
+			} catch (error) {
+				toast.error('Failed to update answer');
 			}
-		} else {
-			toast.error('Failed to update answer');
 		}
+
+		isUpdating = false;
 	}
 </script>
 
@@ -204,47 +258,21 @@
 		{#key value}
 			<div class="mt-24 flex items-center gap-2 md:bottom-24">
 				{#if $currentIndex < $answers.length - 1}
-					<Button size="lg" on:click={handleContinue} disabled={checkValid && !checkValid()[0]}>
-						{m.button_continue()}
+					<Button
+						on:click={handleContinue}
+						disabled={!isCurrentAnswerValid || $isReadOnly || isUpdating}
+						class="flex-1 md:flex-none"
+					>
+						{isUpdating ? 'Saving...' : m.button_continue()}
 					</Button>
 				{:else}
-					<form
-						method="post"
-						action="?/submit"
+					<Button
+						on:click={handleSubmit}
+						disabled={!isCurrentAnswerValid || isLoading || $isReadOnly || isUpdating}
 						class="flex-1 md:flex-none"
-						on:submit={async (event) => {
-							const [status] = await updateAnswer(content.id, value);
-							if (status) {
-								// Update conditional answers before submitting
-								if ($application?.expand?.response) {
-									await updateConditionalAnswers($application.expand.response);
-								}
-
-								isLoading = true;
-								toast.loading(m.toast_submitting_application(), {
-									duration: Number.POSITIVE_INFINITY
-								});
-							} else {
-								toast.error('Failed to update answer');
-								event.preventDefault();
-							}
-						}}
 					>
-						<Button
-							size="lg"
-							disabled={isLoading ||
-								!allQuestionsValid ||
-								(checkValid &&
-									!checkValid()[0] &&
-									!(
-										$currentIndex === $answers.length - 1 &&
-										$application?.status === 'editsRequested'
-									))}
-							type="submit"
-						>
-							{m.button_submit_application()}
-						</Button>
-					</form>
+						{isUpdating ? 'Saving...' : isLoading ? 'Submitting...' : m.button_submit_application()}
+					</Button>
 				{/if}
 
 				<Tooltip.Root openDelay={0}>
@@ -260,6 +288,15 @@
 	{/if}
 
 	<div class="h-96"></div>
+
+	<!-- Hidden form for updating answers -->
+	<form id="updateAnswerForm" method="post" action="?/updateAnswer" style="display: none;">
+		<input type="hidden" name="answerId" value={content.id} />
+		<input type="hidden" name="answer" value={JSON.stringify(value)} />
+	</form>
+
+	<!-- Hidden form for submitting application -->
+	<form id="submitForm" method="post" action="?/submit" style="display: none;"></form>
 {:else}
 	{m.invalid_question()}
 {/if}

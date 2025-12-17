@@ -10,6 +10,7 @@ export const getAllUsers = async () => {
 		toast.success('Users loaded');
 		return records;
 	} catch (err) {
+		console.error(err);
 		if (err instanceof Error) {
 			toast.error(err.message);
 		} else {
@@ -32,75 +33,34 @@ export const createUser = async (details: CreateUserDetails, cb?: () => void) =>
 		toast.success('User created');
 		if (cb) cb();
 	} catch (err) {
+		console.error(err);
 		if (err instanceof Error) {
 			toast.error(err.message);
 		} else {
 			toast.error('Unknown error');
-			console.error(err);
 		}
 	}
 };
 
-export const deleteUserAccount = async (userId: string, cb?: () => void) => {
-	try {
-		await pb.collection('users').delete(userId);
-		toast.success('User account deleted');
-		if (cb) cb();
-	} catch (err) {
-		if (err instanceof Error) {
-			toast.error(err.message);
-		} else {
-			toast.error('Unknown error');
-			console.error(err);
-		}
-	}
-};
+export const deleteUser = async (userId: string, deleteUserAccount: boolean = false) => {
+	const applications = await pb.collection('applications').getFullList({
+		filter: `responder = "${userId}"`
+	});
 
-export const deleteUserAssociated = async (userId: string, cb?: () => void) => {
-	try {
-		const applications = await pb.collection('applications').getFullList({
-			filter: `responder = "${userId}"`
-		});
-		for (let application of applications) {
-			for (let answerId of application.response) {
-				await pb.collection('answers').delete(answerId);
+	if (applications.length > 0) {
+		const batch = pb.createBatch();
+		for (const application of applications) {
+			for (const answerId of application.response) {
+				batch.collection('answers').delete(answerId);
 			}
-			await pb.collection('applications').delete(application.id);
+			batch.collection('applications').delete(application.id);
 		}
-		toast.success('User associated data deleted');
-		if (cb) cb();
-	} catch (err) {
-		if (err instanceof Error) {
-			toast.error(err.message);
-		} else {
-			toast.error('Unknown error');
-			console.error(err);
-		}
+		await batch.send();
 	}
-};
 
-export const deleteUserExsistance = async (userId: string, cb?: () => void) => {
-	try {
-		const applications = await pb.collection('applications').getFullList({
-			filter: `responder = "${userId}"`
-		});
-		for (let application of applications) {
-			for (let answerId of application.response) {
-				await pb.collection('answers').delete(answerId);
-			}
-			await pb.collection('applications').delete(application.id);
-		}
-
+	if (deleteUserAccount) {
 		await pb.collection('users').delete(userId);
-
-		toast.success('User deleted');
-		if (cb) cb();
-	} catch (err) {
-		if (err instanceof Error) {
-			toast.error(err.message);
-		} else {
-			toast.error('Unknown error');
-			console.error(err);
-		}
 	}
+
+	return deleteUserAccount ? 'User and all data deleted' : 'User associated data deleted';
 };

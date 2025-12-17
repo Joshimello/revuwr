@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
 	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Label } from '$lib/components/ui/label';
@@ -8,12 +9,7 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { Edit3, Mail, SquareArrowOutUpRight, SquareMenu, Trash2, User } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import {
-		deleteUserAccount,
-		deleteUserAssociated,
-		deleteUserExsistance,
-		getAllUsers
-	} from './methods';
+	import { deleteUser, getAllUsers } from './methods';
 	import QuickEdit from './quick-edit.svelte';
 	import { users } from './stores';
 	import type { ExpandedUsersResponse } from './types';
@@ -23,6 +19,16 @@
 	let deleteUserOpen = false;
 	let quickEditOpen = false;
 	let isLoading = false;
+	let deleteAllUserData = false;
+	let deleteUserAccount = false;
+
+	// When deleteUserAccount is checked, force deleteAllUserData to be checked
+	$: if (deleteUserAccount && !deleteAllUserData) {
+		deleteAllUserData = true;
+	}
+
+	// Button should be disabled if nothing is checked
+	$: canDelete = deleteAllUserData || deleteUserAccount;
 </script>
 
 <div class="flex">
@@ -74,67 +80,53 @@
 			</Dialog.Description>
 		</Dialog.Header>
 		<Separator />
-		<div class="flex flex-col gap-2">
+		<div class="flex flex-col gap-4">
+			<div class="flex items-center space-x-2">
+				<Checkbox id="delete-user-data" bind:checked={deleteAllUserData} disabled={isLoading} />
+				<Label for="delete-user-data" class="text-sm font-medium">
+					{m.delete_all_user_data()}
+				</Label>
+			</div>
+			<Label class="text-xs text-muted-foreground">
+				{m.delete_all_user_data_description()}
+			</Label>
+
+			<div class="flex items-center space-x-2">
+				<Checkbox id="delete-user-account" bind:checked={deleteUserAccount} disabled={isLoading} />
+				<Label for="delete-user-account" class="text-sm font-medium">
+					{m.delete_user_account_also()}
+				</Label>
+			</div>
+			<Label class="text-xs text-muted-foreground">
+				{m.delete_user_account_also_description()}
+			</Label>
+
 			<Button
 				variant="destructive"
-				disabled={isLoading}
+				disabled={isLoading || !canDelete}
 				on:click={() => {
 					isLoading = true;
-					toast.loading(m.deleting_data());
-					deleteUserAssociated(record.id, async () => {
-						deleteUserOpen = false;
-						$users = (await getAllUsers()) || [];
-						isLoading = false;
+					const promise = deleteUser(record.id, deleteUserAccount)
+						.then(async (message) => {
+							deleteUserOpen = false;
+							deleteAllUserData = false;
+							deleteUserAccount = false;
+							$users = (await getAllUsers()) || [];
+							return message;
+						})
+						.finally(() => {
+							isLoading = false;
+						});
+
+					toast.promise(promise, {
+						loading: deleteUserAccount ? m.deleting_all() : m.deleting_data(),
+						success: (message) => message,
+						error: (err) => (err instanceof Error ? err.message : 'Unknown error')
 					});
 				}}
 			>
-				{m.delete_just_data()}
+				{m.delete_button()}
 			</Button>
-			<Label class="text-muted-foreground ">
-				{m.delete_data_description()}
-			</Label>
-		</div>
-		<Separator />
-		<div class="flex flex-col gap-2">
-			<Button
-				variant="destructive"
-				disabled={isLoading}
-				on:click={() => {
-					isLoading = true;
-					toast.loading(m.deleting_account());
-					deleteUserAccount(record.id, async () => {
-						deleteUserOpen = false;
-						$users = (await getAllUsers()) || [];
-						isLoading = false;
-					});
-				}}
-			>
-				{m.delete_just_account()}
-			</Button>
-			<Label class="text-muted-foreground ">
-				{m.delete_account_description()}
-			</Label>
-		</div>
-		<Separator />
-		<div class="flex flex-col gap-2">
-			<Button
-				variant="destructive"
-				disabled={isLoading}
-				on:click={() => {
-					isLoading = true;
-					toast.loading(m.deleting_all());
-					deleteUserExsistance(record.id, async () => {
-						deleteUserOpen = false;
-						$users = (await getAllUsers()) || [];
-						isLoading = false;
-					});
-				}}
-			>
-				{m.delete_all()}
-			</Button>
-			<Label class="text-muted-foreground ">
-				{m.delete_all_description()}
-			</Label>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>

@@ -10,18 +10,15 @@ import Activity from './fields/activity.svelte';
 import Info from './fields/info.svelte';
 
 import {
-	Minus,
+	MinusIcon,
 	Text,
 	CheckCircle,
 	CopyCheck,
-	Image as ImageIcon,
 	FileUp,
 	Mail,
 	Phone as PhoneIcon,
 	UsersRound,
-	TableProperties,
 	CalendarRange,
-	ReceiptText,
 	InfoIcon,
 	TableIcon
 } from 'lucide-svelte';
@@ -36,7 +33,7 @@ export default {
 		component: Info
 	},
 	shortText: {
-		icon: Minus,
+		icon: MinusIcon,
 		label: 'Short Text',
 		component: ShortText
 	},

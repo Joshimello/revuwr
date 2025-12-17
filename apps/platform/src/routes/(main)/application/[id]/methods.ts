@@ -1,11 +1,14 @@
 import { pb } from '$lib/pocketbase/client';
 import { toast } from 'svelte-sonner';
 import type { ExpandedApplication, ExpandedResponse } from './types';
-import { application } from './stores';
 import { page } from '$app/stores';
 import { get } from 'svelte/store';
 import { processConditionalQuestions } from './conditional-utils';
 
+/**
+ * @deprecated Use server action ?/removeFile instead
+ * This function is kept for backwards compatibility but should not be used for new code
+ */
 export const removeFile = async (id: string, file: string) => {
 	try {
 		const record = await pb.collection('files').update(id, {
@@ -25,6 +28,10 @@ export const removeFile = async (id: string, file: string) => {
 	}
 };
 
+/**
+ * @deprecated Use server action ?/createFiles instead
+ * This function is kept for backwards compatibility but should not be used for new code
+ */
 export const createFiles = async (files: File[]) => {
 	if (!get(page).data.user.id) {
 		toast.error('User not found');
@@ -48,6 +55,10 @@ export const createFiles = async (files: File[]) => {
 	}
 };
 
+/**
+ * @deprecated Use server-side loading in +page.server.ts load function instead
+ * This function is kept for backwards compatibility but should not be used for new code
+ */
 export const getApplication = async (id: string) => {
 	try {
 		const response = await pb.collection('applications').getOne<ExpandedApplication>(id, {
@@ -104,14 +115,8 @@ export const updateConditionalAnswers = async (answers: ExpandedResponse[]) => {
 
 		await Promise.all(updatePromises.filter(Boolean));
 
-		// Update the application store
-		application.update((app) => {
-			if (app?.expand?.response) {
-				app.expand.response = processedAnswers;
-			}
-			return app;
-		});
-
+		// Note: Store updates are now handled by invalidateAll() in the components
+		// to ensure server-side data is the source of truth
 		return processedAnswers;
 	} catch (err) {
 		if (err instanceof Error) {
@@ -120,38 +125,5 @@ export const updateConditionalAnswers = async (answers: ExpandedResponse[]) => {
 			toast.error('Unknown error: update conditional answers');
 		}
 		return answers;
-	}
-};
-
-export const updateAnswer = async (id: string, answer: unknown) => {
-	try {
-		console.log(answer);
-		const response = await pb.collection('answers').update<ExpandedResponse>(
-			id,
-			{
-				response: answer,
-				valid: true
-			},
-			{
-				expand: 'question'
-			}
-		);
-		application.update((application) => {
-			const answerIndex = application?.expand?.response.findIndex((a) => a.id === id);
-			if (answerIndex !== undefined && application && application.expand) {
-				application.expand.response[answerIndex] = response;
-				return application;
-			}
-			return application;
-		});
-		console.log('Answer updated');
-		return [true, response];
-	} catch (err) {
-		if (err instanceof Error) {
-			toast.error(err.message);
-		} else {
-			toast.error('Unknown error: update answer');
-		}
-		return [false, null];
 	}
 };
