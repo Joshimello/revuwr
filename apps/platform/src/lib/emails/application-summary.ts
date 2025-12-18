@@ -1,5 +1,73 @@
 import { getResponseRepresentation } from '$lib/response-repr';
 
+/**
+ * Parse CSV string into HTML table
+ */
+function parseCSVToTable(csvString: string): string {
+	if (!csvString.trim()) return '';
+
+	const lines = csvString.trim().split('\n');
+	if (lines.length < 2) return '';
+
+	const parseCSVLine = (line: string): string[] => {
+		const result: string[] = [];
+		let current = '';
+		let inQuotes = false;
+
+		for (let i = 0; i < line.length; i++) {
+			const char = line[i];
+
+			if (char === '"') {
+				if (inQuotes && line[i + 1] === '"') {
+					current += '"';
+					i++; // Skip next quote
+				} else {
+					inQuotes = !inQuotes;
+				}
+			} else if (char === ',' && !inQuotes) {
+				result.push(current.trim());
+				current = '';
+			} else {
+				current += char;
+			}
+		}
+
+		result.push(current.trim());
+		return result;
+	};
+
+	const headers = parseCSVLine(lines[0]);
+	const rows = lines.slice(1).map(parseCSVLine);
+
+	let tableHtml = `
+		<table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+			<thead>
+				<tr style="background-color: #f8f9fa;">`;
+
+	headers.forEach((header) => {
+		tableHtml += `<th style="border: 1px solid #dee2e6; padding: 8px; text-align: left; font-weight: 600;">${header}</th>`;
+	});
+
+	tableHtml += `</tr></thead><tbody>`;
+
+	rows.forEach((row, index) => {
+		const isGrandTotal = row[0] === 'Grand Total';
+		const bgColor = isGrandTotal ? '#e3f2fd' : index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+		const fontWeight = isGrandTotal ? 'font-weight: 700;' : '';
+		const borderTop = isGrandTotal ? 'border-top: 2px solid #007bff;' : '';
+
+		tableHtml += `<tr style="background-color: ${bgColor}; ${borderTop}">`;
+		row.forEach((cell) => {
+			tableHtml += `<td style="border: 1px solid #dee2e6; padding: 8px; ${fontWeight}">${cell || ''}</td>`;
+		});
+		tableHtml += `</tr>`;
+	});
+
+	tableHtml += `</tbody></table>`;
+
+	return tableHtml;
+}
+
 type ExpandedApplication = {
 	id: string;
 	serial?: number;
@@ -28,10 +96,6 @@ type ExpandedApplication = {
  */
 export function generateApplicationSummaryEmail(application: ExpandedApplication): string {
 	const eventName = application.expand?.event?.name || 'Unknown Event';
-	const responderName = application.expand?.responder?.name || 'User';
-	const serialId = application.serial
-		? `${application.expand?.event?.responsePrefix || ''}${application.serial.toString().padStart(3, '0')}`
-		: application.id;
 
 	// Strip HTML tags from question titles
 	const stripHtml = (html: string): string => {
@@ -66,23 +130,45 @@ export function generateApplicationSummaryEmail(application: ExpandedApplication
 		const responses = responsesByPage.get(pageNum) || [];
 
 		responses.forEach((resp) => {
-			const respTyped = resp as { expand?: { question?: { title?: string } } };
+			const respTyped = resp as {
+				expand?: {
+					question?: {
+						title?: string;
+						type?: string;
+					};
+				};
+			};
 			const questionTitle = stripHtml(respTyped.expand?.question?.title || '');
+			const questionType = respTyped.expand?.question?.type;
 			const responseText = getResponseRepresentation(
 				resp as import('$lib/response-repr').ExpandedAnswer
 			);
 
-			if (questionTitle) {
-				responsesHtml += `
-					<div style="margin-bottom: 20px;">
-						<div style="font-weight: bold; color: #333; margin-bottom: 8px; padding: 8px; background-color: #f8f9fa; border-left: 3px solid #007bff;">
-							${questionTitle}
+			// Skip questions with no response
+			if (questionTitle && responseText && responseText.trim() !== '') {
+				let displayContent = '';
+
+				// Check if this is a table-type response (member, activity, budget)
+				if (['member', 'activity', 'budget'].includes(questionType || '') && responseText) {
+					const tableHtml = parseCSVToTable(responseText);
+					displayContent = tableHtml || '';
+				} else {
+					displayContent = responseText;
+				}
+
+				// Only add to email if there's actual content
+				if (displayContent) {
+					responsesHtml += `
+						<div style="margin-bottom: 20px;">
+							<div style="font-weight: bold; color: #333; margin-bottom: 8px; padding: 8px; background-color: #f8f9fa; border-left: 3px solid #007bff;">
+								${questionTitle}
+							</div>
+							<div style="padding: 8px; background-color: #fff; border: 1px solid #e9ecef; border-radius: 4px; overflow-x: auto;">
+								${displayContent}
+							</div>
 						</div>
-						<div style="padding: 8px; background-color: #fff; border: 1px solid #e9ecef; border-radius: 4px;">
-							${responseText || '<em style="color: #666;">No response</em>'}
-						</div>
-					</div>
-				`;
+					`;
+				}
 			}
 		});
 	});
