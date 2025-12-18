@@ -23,6 +23,7 @@
 	import { toast } from 'svelte-sonner';
 
 	let events: EventsResponse[] = [];
+	let applicationsCount: { event: string; application_count: number }[] = [];
 	let isLoading: boolean = true;
 
 	// Set breadcrumbs for events list page
@@ -35,7 +36,12 @@
 
 	onMount(async () => {
 		try {
-			events = await pb.collection('events').getFullList();
+			const [eventsData, applicationsData] = await Promise.all([
+				pb.collection('events').getFullList(),
+				pb.collection('applications_count').getFullList()
+			]);
+			events = eventsData;
+			applicationsCount = applicationsData;
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);
@@ -46,6 +52,11 @@
 		}
 		isLoading = false;
 	});
+
+	function getApplicationCount(eventId: string): number {
+		const count = applicationsCount.find((item) => item.event === eventId);
+		return count?.application_count || 0;
+	}
 </script>
 
 <div class="flex items-center">
@@ -93,6 +104,9 @@
 								{m.last_updated()}
 							</Table.Head>
 							<Table.Head>
+								{m.applications()}
+							</Table.Head>
+							<Table.Head>
 								<span class="sr-only">Actions</span>
 							</Table.Head>
 						</Table.Row>
@@ -120,6 +134,12 @@
 								</Table.Cell>
 								<Table.Cell>
 									<Skeleton class="h-6 w-32" />
+								</Table.Cell>
+								<Table.Cell>
+									<Skeleton class="h-6 w-8" />
+								</Table.Cell>
+								<Table.Cell>
+									<Skeleton class="h-6 w-8" />
 								</Table.Cell>
 								<Table.Cell>
 									<Button aria-haspopup="true" size="icon" variant="ghost">
@@ -174,6 +194,9 @@
 										minute: 'numeric',
 										hour12: true
 									})}
+								</Table.Cell>
+								<Table.Cell>
+									{getApplicationCount(event.id)}
 								</Table.Cell>
 								<Table.Cell>
 									<DropdownMenu.Root>
@@ -232,6 +255,9 @@
 								{m.last_updated()}
 							</Table.Head>
 							<Table.Head>
+								{m.applications()}
+							</Table.Head>
+							<Table.Head>
 								<span class="sr-only">Actions</span>
 							</Table.Head>
 						</Table.Row>
@@ -259,6 +285,9 @@
 								</Table.Cell>
 								<Table.Cell>
 									<Skeleton class="h-6 w-32" />
+								</Table.Cell>
+								<Table.Cell>
+									<Skeleton class="h-6 w-8" />
 								</Table.Cell>
 								<Table.Cell>
 									<Button aria-haspopup="true" size="icon" variant="ghost">
@@ -313,6 +342,9 @@
 										minute: 'numeric',
 										hour12: true
 									})}
+								</Table.Cell>
+								<Table.Cell>
+									{getApplicationCount(event.id)}
 								</Table.Cell>
 								<Table.Cell>
 									<DropdownMenu.Root>

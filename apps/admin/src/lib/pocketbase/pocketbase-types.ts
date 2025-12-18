@@ -13,6 +13,7 @@ export enum Collections {
 	Superusers = "_superusers",
 	Answers = "answers",
 	Applications = "applications",
+	ApplicationsCount = "applications_count",
 	Colleges = "colleges",
 	Events = "events",
 	Files = "files",
@@ -125,6 +126,12 @@ export type ApplicationsRecord = {
 	serial?: number
 	status?: string
 	updated: IsoAutoDateString
+}
+
+export type ApplicationsCountRecord = {
+	application_count?: number
+	event?: RecordIdString
+	id: string
 }
 
 export type CollegesRecord = {
@@ -277,6 +284,7 @@ export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemF
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type AnswersResponse<Tresponse = unknown, Texpand = unknown> = Required<AnswersRecord<Tresponse>> & BaseSystemFields<Texpand>
 export type ApplicationsResponse<Texpand = unknown> = Required<ApplicationsRecord> & BaseSystemFields<Texpand>
+export type ApplicationsCountResponse<Texpand = unknown> = Required<ApplicationsCountRecord> & BaseSystemFields<Texpand>
 export type CollegesResponse<Texpand = unknown> = Required<CollegesRecord> & BaseSystemFields<Texpand>
 export type EventsResponse<Tterms = unknown, Texpand = unknown> = Required<EventsRecord<Tterms>> & BaseSystemFields<Texpand>
 export type FilesResponse<Texpand = unknown> = Required<FilesRecord> & BaseSystemFields<Texpand>
@@ -296,6 +304,7 @@ export type CollectionRecords = {
 	_superusers: SuperusersRecord
 	answers: AnswersRecord
 	applications: ApplicationsRecord
+	applications_count: ApplicationsCountRecord
 	colleges: CollegesRecord
 	events: EventsRecord
 	files: FilesRecord
@@ -314,6 +323,7 @@ export type CollectionResponses = {
 	_superusers: SuperusersResponse
 	answers: AnswersResponse
 	applications: ApplicationsResponse
+	applications_count: ApplicationsCountResponse
 	colleges: CollegesResponse
 	events: EventsResponse
 	files: FilesResponse

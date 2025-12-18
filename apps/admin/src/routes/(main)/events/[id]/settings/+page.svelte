@@ -329,7 +329,7 @@
 			</div>
 			<div class="grid gap-3">
 				<Label for="name">
-					{m.response_serial_id_prefix()} （ex: 1132LE001-999）
+					{m.response_serial_id_prefix()} （ex: 1132LE）
 				</Label>
 				<Input
 					id="name"
