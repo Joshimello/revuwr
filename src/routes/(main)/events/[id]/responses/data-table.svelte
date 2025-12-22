@@ -1,0 +1,390 @@
+<script lang="ts">
+	import ResponseRenderer from '$lib/components/response-renderer.svelte';
+	import Status, { statuses } from '$lib/components/status.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Input } from '$lib/components/ui/input';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import * as Select from '$lib/components/ui/select';
+	import * as Table from '$lib/components/ui/table';
+	import * as m from '$lib/paraglide/messages.js';
+	import type {
+		AnswersResponse,
+		ApplicationsResponse,
+		EventsResponse,
+		QuestionsResponse,
+		UsersResponse
+	} from '$lib/pocketbase/pocketbase-types';
+	import { ArrowDownAZ, ArrowUpZA, ChevronDown, Minus } from 'lucide-svelte';
+	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table';
+	import {
+		addColumnFilters,
+		addHiddenColumns,
+		addSelectedRows,
+		addSortBy,
+		addTableFilter
+	} from 'svelte-headless-table/plugins';
+	import { type Writable } from 'svelte/store';
+	import DataTableAction from './data-table-action.svelte';
+	import DataTableCell from './data-table-cell.svelte';
+	import DataTableCheckbox from './data-table-checkbox.svelte';
+	import DataTableControl from './data-table-control.svelte';
+	import DataTableReviews from './data-table-reviews.svelte';
+	import DataTableUser from './data-table-user.svelte';
+
+	type ExpandedApplications = ApplicationsResponse<{
+		responder: UsersResponse;
+		response: AnswersResponse<
+			any,
+			{
+				question: QuestionsResponse;
+			}
+		>[];
+	}>;
+
+	type ExpandedEvents = EventsResponse<
+		any,
+		{
+			questions: QuestionsResponse[];
+		}
+	>;
+
+	export let data: Writable<ExpandedApplications[]>;
+	export let event: ExpandedEvents;
+
+	data.subscribe((items) => {
+		items.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
+		items.forEach((item, index) => (item.index = index + 1));
+	});
+
+	const table = createTable(data, {
+		sort: addSortBy(),
+		filter: addTableFilter({
+			fn: ({ filterValue, value }) => value.toLowerCase().includes(filterValue.toLowerCase())
+		}),
+		hide: addHiddenColumns(),
+		select: addSelectedRows(),
+		colFilter: addColumnFilters()
+	});
+
+	const columns = table.createColumns([
+		table.column({
+			id: 'checkbox',
+			accessor: 'id',
+			header: (_, { pluginStates }) => {
+				const { allPageRowsSelected } = pluginStates.select;
+				return createRender(DataTableCheckbox, {
+					checked: allPageRowsSelected
+				});
+			},
+			cell: ({ row }, { pluginStates }) => {
+				const { getRowState } = pluginStates.select;
+				const { isSelected } = getRowState(row);
+
+				return createRender(DataTableCheckbox, {
+					checked: isSelected
+				});
+			},
+			plugins: {
+				sort: {
+					disable: true
+				},
+				filter: {
+					exclude: true
+				}
+			}
+		}),
+		table.column({
+			id: 'actions',
+			accessor: (value) => value,
+			header: '',
+			cell: ({ value }) => {
+				return createRender(DataTableAction, { record: value });
+			}
+		}),
+		table.column({
+			id: 'index',
+			accessor: 'index',
+			header: m.index(),
+			plugins: {
+				sort: {
+					disable: false
+				}
+			}
+		}),
+		table.column({
+			id: 'id',
+			accessor: (value) => value,
+			header: m.serial_id(),
+			cell: ({ value }) =>
+				createRender(DataTableCell, {
+					a: value.serial
+						? `${event.responsePrefix}${value.serial.toString().padStart(3, '0')}`
+						: '-',
+					b: value.id
+				}),
+			plugins: {
+				sort: {
+					getSortValue: (value) => value.serial
+				},
+				filter: {
+					getFilterValue: (value) =>
+						value.id + ` ${event.responsePrefix}${value.serial.toString().padStart(3, '0')}`
+				}
+			}
+		}),
+		table.column({
+			id: m.responder(),
+			accessor: ({ expand }) => expand?.responder,
+			header: m.user(),
+			cell: ({ value }) => createRender(DataTableUser, { user: value }),
+			plugins: {
+				sort: {
+					getSortValue: (value) => value?.username || ''
+				},
+				filter: {
+					getFilterValue: (value) => (value?.name || '') + ` ${value?.username || ''}`
+				}
+			}
+		}),
+		table.column({
+			id: 'status',
+			accessor: 'status',
+			header: m.status(),
+			cell: ({ value }) => createRender(Status, { type: value }),
+			plugins: {
+				colFilter: {
+					fn: ({ filterValue, value }) => filterValue === value
+				}
+			}
+		}),
+		table.column({
+			id: 'reviews',
+			accessor: (value) => value,
+			header: m.reviews(),
+			cell: ({ value }) => createRender(DataTableReviews, { record: value }),
+			plugins: {
+				sort: {
+					disable: true
+				}
+			}
+		}),
+		table.column({
+			id: 'controls',
+			accessor: (value) => value,
+			header: m.controls(),
+			cell: ({ value }) => createRender(DataTableControl, { record: value, event }),
+			plugins: {
+				sort: {
+					disable: true
+				}
+			}
+		}),
+		table.column({
+			id: 'updated',
+			accessor: 'updated',
+			header: m.updated(),
+			cell: ({ value }) => {
+				return createRender(DataTableCell, {
+					b: new Date(value).toLocaleString('en-US', {
+						year: 'numeric',
+						month: 'short',
+						day: 'numeric'
+					}),
+					a: new Date(value).toLocaleString('en-US', {
+						hour: 'numeric',
+						minute: 'numeric',
+						hour12: true
+					})
+				});
+			},
+			plugins: {
+				filter: {
+					getFilterValue: (value) =>
+						new Date(value).toLocaleString('en-US', {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric',
+							hour: 'numeric',
+							minute: 'numeric',
+							hour12: true
+						})
+				}
+			}
+		}),
+		table.column({
+			id: 'adminNote',
+			accessor: 'adminNote',
+			header: m.notes()
+		})
+	]);
+
+	event.expand?.questions.forEach((question) => {
+		columns.push(
+			table.column({
+				id: question.id,
+				accessor: (value: ExpandedApplications) =>
+					value.expand?.response.find((i) => i.question == question.id),
+				header: question.title.replaceAll(/<[^>]*>/g, ''),
+				cell: ({ value }) =>
+					createRender(ResponseRenderer, {
+						data: value
+					})
+			})
+		);
+	});
+
+	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, flatColumns, rows } =
+		table.createViewModel(columns);
+	const { filterValue } = pluginStates.filter;
+	const { hiddenColumnIds } = pluginStates.hide;
+	const { selectedDataIds } = pluginStates.select;
+	const { filterValues } = pluginStates.colFilter;
+
+	const ids = flatColumns.map((col) => col.id);
+	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
+
+	event.questions.forEach((questionId) => {
+		hideForId[questionId] = false;
+	});
+
+	// Hide Reviews and Controls columns by default
+	hideForId['reviews'] = false;
+	hideForId['controls'] = false;
+
+	$: $hiddenColumnIds = Object.entries(hideForId)
+		.filter(([, hide]) => !hide)
+		.map(([id]) => id);
+
+	const hiddenCols = ['checkbox', 'actions', 'index'];
+
+	if (localStorage.getItem('hideForId')) {
+		const filterValueFromLocalStorage = localStorage.getItem('filterValue') || '';
+		if (filterValueFromLocalStorage) {
+			$filterValue = filterValueFromLocalStorage;
+		}
+
+		const hideForIdFromLocalStorage = JSON.parse(localStorage.getItem('hideForId') || 'null');
+		if (hideForIdFromLocalStorage) {
+			hideForId = hideForIdFromLocalStorage;
+		}
+	}
+
+	$: localStorage.setItem('filterValue', $filterValue);
+	$: localStorage.setItem('hideForId', JSON.stringify(hideForId));
+
+	export let selectedRecords;
+	$: selectedRecords = $selectedDataIds;
+</script>
+
+<div class="grid w-max gap-6">
+	<div class="sticky left-0 flex w-fit items-center gap-2">
+		<Input
+			class="max-w-sm"
+			placeholder={m.search()}
+			spellcheck="false"
+			autocomplete="off"
+			aria-autocomplete="none"
+			type="text"
+			bind:value={$filterValue}
+		/>
+		<Select.Root
+			onSelectedChange={(selected) => {
+				if (selected?.value == 'all') $filterValues.status = undefined;
+				else $filterValues.status = selected?.value;
+			}}
+		>
+			<Select.Trigger class="w-[180px]">
+				<Select.Value placeholder={m.status()} />
+			</Select.Trigger>
+			<Select.Content sameWidth={false}>
+				<Select.Item value="all">
+					{m.all()}
+				</Select.Item>
+				{#each Object.entries(statuses) as [status, _]}
+					<Select.Item value={status} class="w-full">
+						<Status type={status} />
+					</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
+		<DropdownMenu.Root closeOnItemClick={false}>
+			<DropdownMenu.Trigger asChild let:builder>
+				<Button variant="outline" builders={[builder]}>
+					{m.columns()}
+					<ChevronDown class="ml-2 h-4 w-4" />
+				</Button>
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content class="max-w-64">
+				<ScrollArea class="h-96">
+					{#each flatColumns as col}
+						{#if !hiddenCols.includes(col.id)}
+							<DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
+								{col.header}
+							</DropdownMenu.CheckboxItem>
+						{/if}
+					{/each}
+				</ScrollArea>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+	</div>
+	<div class="w-max rounded-md border">
+		<Table.Root {...$tableAttrs}>
+			<Table.Header>
+				{#each $headerRows as headerRow}
+					<Subscribe rowAttrs={headerRow.attrs()}>
+						<Table.Row>
+							{#each headerRow.cells as cell (cell.id)}
+								<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+									<Table.Head {...attrs} class="[&:has([role=checkbox])]:pl-3">
+										<div class="flex items-center gap-2">
+											<Render of={cell.render()} />
+											{#if cell.id != 'actions' && cell.id != 'checkbox'}
+												<Button
+													class="h-7 w-7"
+													size="icon"
+													variant="ghost"
+													on:click={props.sort.toggle}
+												>
+													{#if props.sort.order == 'asc'}
+														<ArrowDownAZ size="16" />
+													{:else if props.sort.order == 'desc'}
+														<ArrowUpZA size="16" />
+													{:else}
+														<Minus size="16" />
+													{/if}
+												</Button>
+											{/if}
+										</div>
+									</Table.Head>
+								</Subscribe>
+							{/each}
+						</Table.Row>
+					</Subscribe>
+				{/each}
+			</Table.Header>
+			<Table.Body {...$tableBodyAttrs}>
+				{#each $pageRows as row (row.id)}
+					<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
+						<Table.Row
+							{...rowAttrs}
+							data-state={$selectedDataIds[row.id] && 'selected'}
+							class={`${row.original.adminColor} hover:${row.original.adminColor}`}
+						>
+							{#each row.cells as cell (cell.id)}
+								<Subscribe attrs={cell.attrs()} let:attrs>
+									<Table.Cell
+										{...attrs}
+										class={`[&:has([role=checkbox])]:pl-3 ${cell.id == 'actions' ? 'w-0 text-right' : ''}`}
+									>
+										<Render of={cell.render()} />
+									</Table.Cell>
+								</Subscribe>
+							{/each}
+						</Table.Row>
+					</Subscribe>
+				{/each}
+			</Table.Body>
+		</Table.Root>
+	</div>
+</div>
