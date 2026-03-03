@@ -224,7 +224,8 @@ export const actions: Actions = {
 			}
 
 			await locals.apb.collection('applications').update(params.id, {
-				status: application.status == 'editsRequested' ? 'resubmitted' : 'submitted'
+				status: application.status == 'editsRequested' ? 'resubmitted' : 'submitted',
+				submissionTime: new Date().toISOString()
 			});
 
 			// Send confirmation email to the user

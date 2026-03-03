@@ -31,6 +31,9 @@
 		});
 	};
 
+	const isEventArchived = event.status === 'archived';
+	const viewableStatuses = ['draft', 'approved', 'editsRequested', 'rejected'];
+
 	// Date logic from apply-button
 	const notStarted = new Date(event.startDate) > new Date();
 	const isEnded = new Date(+new Date(event.endDate) + 86400000) < new Date();
@@ -253,7 +256,7 @@
 						<Table.Head>{m.application_name()}</Table.Head>
 						<Table.Head>{m.create_application_status()}</Table.Head>
 						<Table.Head>{m.create_application_created()}</Table.Head>
-						<Table.Head>{m.create_application_updated()}</Table.Head>
+						<Table.Head>Updated / Submitted</Table.Head>
 						<Table.Head class="text-right">{m.create_application_actions()}</Table.Head>
 					</Table.Row>
 				</Table.Header>
@@ -276,18 +279,20 @@
 								</relative-time>
 							</Table.Cell>
 							<Table.Cell>
-								<relative-time
-									datetime={application.updated}
+								{application.submissionTime ? m.label_submitted() : m.label_updated()}&nbsp;<relative-time
+									datetime={application.submissionTime || application.updated}
 									tense="past"
 									lang={getLocale() === 'zh' ? 'zh-Hant' : 'en-US'}
 								>
-									{application.created}
+									{application.submissionTime || application.updated}
 								</relative-time>
 							</Table.Cell>
 							<Table.Cell class="text-right">
-								<Button variant="outline" size="sm" href="/application/{application.id}">
-									{m.create_application_view()}
-								</Button>
+								{#if !isEventArchived && viewableStatuses.includes(application.status)}
+									<Button variant="outline" size="sm" href="/application/{application.id}">
+										{m.create_application_view()}
+									</Button>
+								{/if}
 							</Table.Cell>
 						</Table.Row>
 					{/each}

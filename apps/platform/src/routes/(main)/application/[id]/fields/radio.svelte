@@ -26,7 +26,7 @@
 		if (value.selected == null && !question.required) {
 			return [true, ''];
 		}
-		if (value.selected == options.choices.length && value.others == null) {
+		if (value.selected == options.choices.length && !value.others?.trim()) {
 			return [false, 'Please fill in the others field'];
 		}
 		if (question.required && value.selected == null) {
@@ -72,6 +72,10 @@
 							class="w-full bg-transparent text-xl outline-none"
 							placeholder="Others"
 							bind:value={value.others}
+							on:input={() => {
+								if (!value) return;
+								value.selected = options.choices.length;
+							}}
 						/>
 					</Label>
 				</div>

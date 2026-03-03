@@ -29,7 +29,7 @@
     if (options.isMaxSelections && value.selected.length > options.maxSelections) {
       return [false, `Please select at most ${options.maxSelections} options`];
     }
-    if (value.selected.includes(options.choices.length) && !value.others) {
+    if (value.selected.includes(options.choices.length) && !value.others?.trim()) {
       return [false, "Please fill in the others field"];
     }
     if (question.required && value.selected.length === 0) {
@@ -85,6 +85,12 @@
         placeholder="Others"
         bind:value={value.others}
         disabled={disabled}
+        on:input={() => {
+          if (!value) return;
+          if (!value.selected.includes(options.choices.length)) {
+            value.selected = [...value.selected, options.choices.length];
+          }
+        }}
       />
     </Label>
   </div>

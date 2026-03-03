@@ -3,12 +3,12 @@
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { m } from '$lib/paraglide/messages.js';
-	import { ChevronLeft as ChevronLeftIcon, ChevronRight, Info } from 'lucide-svelte';
+	import { ChevronDown, ChevronLeft as ChevronLeftIcon, ChevronRight, Info, List } from 'lucide-svelte';
+	import * as Popover from '$lib/components/ui/popover';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import { onMount } from 'svelte';
-	import { ChevronLeft } from 'svelte-radix';
 	import { shouldShowConditionalQuestion } from './conditional-utils';
 	import { updateConditionalAnswers } from './methods';
-	import questionTypes from './question-types';
 	import Question from './question.svelte';
 	import { answers, application, currentIndex, event, isReadOnly } from './stores';
 	import type { ExpandedApplication, ExpandedResponse } from './types';
@@ -34,18 +34,11 @@
 	}
 
 	function jumpToQuestion(index: number): void {
-		// Since we're only showing accessible questions in the navigation,
-		// we can jump directly to any question that's displayed
 		$currentIndex = index;
 	}
 
-	// Sliding window configuration
-	const WINDOW_SIZE = 7; // Show 7 circles total (current + 3 before + 3 after)
-	let windowStart = 0;
-
 	function navigateQuestion(direction: 'left' | 'right'): void {
 		if (direction === 'left') {
-			// Find previous valid question to show
 			let prevIndex = $currentIndex - 1;
 			while (prevIndex >= 0) {
 				const prevQuestion = $answers[prevIndex]?.expand?.question;
@@ -64,7 +57,6 @@
 				$currentIndex = 0;
 			}
 		} else {
-			// Find next valid question to show
 			let nextIndex = $currentIndex + 1;
 			while (nextIndex < $answers.length) {
 				const nextQuestion = $answers[nextIndex]?.expand?.question;
@@ -85,145 +77,69 @@
 		}
 	}
 
-	// Debug $answers store updates
-	$: {
-		console.log('DEBUG: $answers store changed', {
-			answersLength: $answers?.length || 0,
-			hasAnswers: !!$answers,
-			application: !!$application,
-			applicationResponses: $application?.expand?.response?.length || 0
-		});
-	}
+	$: currentPage = $answers[$currentIndex]?.expand?.question?.page ?? null;
 
-	// First filter out conditional questions that shouldn't be shown
-	$: accessibleAnswers = (() => {
-		// Defensive checks to prevent empty states
-		if (!$answers || $answers.length === 0) {
-			console.log('DEBUG: No answers available', { answers: $answers });
-			return [];
+	// Dots for current section
+	$: sectionDots = $answers
+		.map((answer, index) => ({ answer, index }))
+		.filter(({ answer }) => answer.expand?.question?.page === currentPage);
+
+	$: sections = (() => {
+		const seen = new Set<number>();
+		const result: Array<{ page: number; firstIndex: number }> = [];
+		for (let i = 0; i < $answers.length; i++) {
+			const page = $answers[i]?.expand?.question?.page;
+			if (page !== undefined && page !== null && !seen.has(page)) {
+				seen.add(page);
+				result.push({ page, firstIndex: i });
+			}
 		}
-
-		try {
-			console.log('DEBUG: Starting to filter answers', {
-				totalAnswers: $answers.length,
-				answers: $answers.map((a, i) => ({
-					index: i,
-					hasQuestion: !!a.expand?.question,
-					questionType: a.expand?.question?.type,
-					conditional: a.expand?.question?.conditional
-				}))
-			});
-
-			const filtered = $answers
-				.map((answer, index) => ({ answer, index }))
-				.filter(({ answer, index }) => {
-					const question = answer.expand?.question;
-					if (!question) {
-						console.log(`DEBUG: Question ${index} has no question data`);
-						return false;
-					}
-
-					// For conditional questions, check if they should be shown
-					if (question.conditional) {
-						try {
-							const shouldShow = shouldShowConditionalQuestion(question, $answers);
-							console.log(
-								`DEBUG: Conditional question ${index} (${question.type}): shouldShow = ${shouldShow}`
-							);
-							return shouldShow;
-						} catch (error) {
-							console.log(`DEBUG: Error checking conditional question ${index}:`, error);
-							return false;
-						}
-					}
-
-					console.log(`DEBUG: Non-conditional question ${index} (${question.type}): showing`);
-					return true;
-				});
-
-			console.log('DEBUG: Filtered results', {
-				originalCount: $answers.length,
-				filteredCount: filtered.length,
-				filteredIndices: filtered.map((f) => f.index)
-			});
-
-			return filtered;
-		} catch (error) {
-			console.error('Error filtering accessible answers:', error);
-			return [];
-		}
+		return result.sort((a, b) => a.page - b.page);
 	})();
 
-	// Calculate window position with proper defensive checks
-	$: {
-		if (accessibleAnswers && accessibleAnswers.length > 0 && $currentIndex >= 0) {
-			const halfWindow = Math.floor(WINDOW_SIZE / 2);
-			const currentPositionInFiltered = accessibleAnswers.findIndex(
-				({ index }) => index === $currentIndex
-			);
+	$: questionsBySection = sections.map(({ page, firstIndex }) => ({
+		page,
+		firstIndex,
+		questions: $answers
+			.map((answer, index) => ({ answer, index }))
+			.filter(({ answer }) => answer.expand?.question?.page === page)
+	}));
 
-			if (currentPositionInFiltered >= 0) {
-				const calculatedStart = Math.max(
-					0,
-					Math.min(currentPositionInFiltered - halfWindow, accessibleAnswers.length - WINDOW_SIZE)
-				);
-				windowStart = Math.max(0, calculatedStart);
-			} else {
-				windowStart = 0;
-			}
-		} else {
-			windowStart = 0;
-		}
+	$: isAtFirst = $currentIndex <= 0;
+	$: isAtLast = $currentIndex >= $answers.length - 1;
+
+	function dotClass(answer: ExpandedResponse, index: number, currentIdx: number): string {
+		const isCurrent = index === currentIdx;
+		const base = 'h-2 w-2 rounded-full transition-colors duration-150 cursor-pointer';
+		if (isCurrent) return `${base} bg-primary outline outline-2 outline-offset-1 outline-primary`;
+		if (answer.status === 'edit') return `${base} bg-orange-400 hover:bg-orange-500`;
+		if (answer.valid) return `${base} bg-green-500 hover:bg-green-600`;
+		const r = answer.response;
+		const hasResponse =
+			r !== null &&
+			r !== undefined &&
+			r !== '' &&
+			!(typeof r === 'object' && Object.keys(r as Record<string, unknown>).length === 0);
+		if (hasResponse) return `${base} bg-red-500 hover:bg-red-600`;
+		return `${base} border border-muted-foreground/40 bg-background hover:border-muted-foreground`;
 	}
-
-	// Apply windowing to filtered questions with defensive checks
-	$: visibleQuestions =
-		accessibleAnswers && accessibleAnswers.length > 0
-			? accessibleAnswers.slice(windowStart, windowStart + WINDOW_SIZE)
-			: [];
-
-	// Group visible questions by page
-	$: questionGroups =
-		visibleQuestions && visibleQuestions.length > 0
-			? visibleQuestions.reduce(
-					(groups, { answer, index }) => {
-						const question = answer.expand?.question;
-						const page = question?.page ?? 0;
-
-						if (!groups[page]) {
-							groups[page] = [];
-						}
-						groups[page].push({ answer, index });
-						return groups;
-					},
-					{} as Record<number, Array<{ answer: ExpandedResponse; index: number }>>
-				)
-			: {};
 
 	// Reactive statement to update stores when data changes
 	$: if (data.application) {
-		console.log('DEBUG: Setting application store', {
-			hasApplication: !!data.application,
-			hasResponses: !!data.application.expand?.response,
-			responseCount: data.application.expand?.response?.length || 0
-		});
 		$application = data.application;
 	}
 
 	onMount(() => {
-		// Set initial question index
 		setInitialQuestionIndex();
 	});
 
 	// Process conditional questions separately after data is loaded
 	$: if ($application?.expand?.response && $answers.length > 0) {
-		// Process conditional questions asynchronously without blocking UI
 		updateConditionalAnswers($application.expand.response).catch(console.error);
 	}
 
 	// Reactive statement to handle question navigation when data updates
 	$: if ($application && $answers.length > 0) {
-		// Only set initial index if currentIndex is invalid or unset
 		if ($currentIndex < 0 || $currentIndex >= $answers.length) {
 			setInitialQuestionIndex();
 		}
@@ -232,13 +148,11 @@
 	function setInitialQuestionIndex() {
 		if (!$application || $answers.length === 0) return;
 
-		// If application status is editsRequested, find first question with status 'edit'
 		if ($application?.status === 'editsRequested') {
 			const firstEditIndex = $answers.findIndex((answer) => {
 				const question = answer.expand?.question;
 				if (!question) return false;
 
-				// Check if question should be shown and has edit status
 				const shouldShow = question.conditional
 					? shouldShowConditionalQuestion(question, $answers)
 					: true;
@@ -248,18 +162,15 @@
 
 			$currentIndex = firstEditIndex === -1 ? $answers.length - 1 : firstEditIndex;
 		} else {
-			// Find the first question that should be shown and is invalid
 			const firstInvalidIndex = $answers.findIndex((answer) => {
 				const question = answer.expand?.question;
 				if (!question) return false;
 
-				// If question is conditional, check if it should be shown
 				if (question.conditional) {
 					const shouldShow = shouldShowConditionalQuestion(question, $answers);
 					return shouldShow && !answer.valid;
 				}
 
-				// For non-conditional questions, just check validity
 				return !answer.valid;
 			});
 
@@ -270,13 +181,13 @@
 
 <div class="flex items-center gap-4">
 	<Button variant="outline" size="icon" class="h-7 w-7" href="/">
-		<ChevronLeft class="h-4 w-4" />
+		<ChevronLeftIcon class="h-4 w-4" />
 		<span class="sr-only">{m.button_back()}</span>
 	</Button>
 </div>
 
 {#if $application && $event}
-	<div class="mt-24 md:flex">
+	<div class="mt-6 md:flex">
 		{#if $answers[$currentIndex]?.expand?.question}
 			{@const question = $answers[$currentIndex]?.expand?.question}
 			{@const shouldShow = question?.conditional
@@ -284,21 +195,13 @@
 				: true}
 
 			{#if shouldShow}
-				{#if question?.type == 'budget'}
-					<div class="flex w-full flex-col gap-4">
-						{#key $currentIndex}
-							<Question content={$answers[$currentIndex]} />
-						{/key}
-					</div>
-				{:else}
-					<div class="flex w-full flex-col gap-4 md:max-w-xl">
-						{#key $currentIndex}
-							<Question content={$answers[$currentIndex]} />
-						{/key}
-					</div>
-				{/if}
+				<div class="flex w-full flex-col gap-4">
+					{#key $currentIndex}
+						<Question content={$answers[$currentIndex]} />
+					{/key}
+				</div>
 			{:else}
-				<div class="flex w-full flex-col gap-4 md:max-w-xl">
+				<div class="flex w-full flex-col gap-4">
 					<div class="p-8 text-center">
 						<p class="text-muted-foreground">
 							This question is hidden based on your previous answers.
@@ -312,10 +215,11 @@
 		{/if}
 	</div>
 
-	<div class="fixed bottom-0 left-0 right-0 bg-muted">
-		<div class="mx-auto flex max-w-4xl flex-col gap-2 px-2 py-2 md:py-3">
+	<!-- Bottom navigation bar -->
+	<div class="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur">
+		<div class="mx-auto max-w-4xl px-3 py-2">
 			{#if $isReadOnly}
-				<Alert.Root>
+				<Alert.Root class="mb-2">
 					<Info class="h-4 w-4" />
 					<Alert.Title class="font-bold">{m.app_readonly_title()}</Alert.Title>
 					<Alert.Description>
@@ -325,177 +229,132 @@
 				</Alert.Root>
 			{/if}
 
-			<!-- Mobile: Status and progress on top row -->
-			<div class="flex items-center justify-center gap-4 sm:hidden">
-				<Status type={$application.status} />
-				{#if accessibleAnswers && accessibleAnswers.length > WINDOW_SIZE}
-					<div class="text-xs text-muted-foreground">
-						{windowStart + 1}-{Math.min(windowStart + WINDOW_SIZE, accessibleAnswers.length)} of {accessibleAnswers.length}
-					</div>
-				{/if}
-			</div>
-
-			<!-- Desktop: All in one row -->
-			<div class="hidden items-center justify-center gap-3 sm:flex">
-				<!-- Status moved to left -->
-				<Status type={$application.status} />
-
-				<!-- Previous question -->
-				<Button
-					variant="ghost"
-					size="sm"
-					class="h-8 w-8 p-0"
-					on:click={() => navigateQuestion('left')}
-					disabled={$currentIndex === 0}
-				>
-					<ChevronLeftIcon class="h-4 w-4" />
-				</Button>
-
-				<!-- Question circles grouped by page -->
-				<div class="flex gap-3">
-					{#if Object.keys(questionGroups).length > 0}
-						{#each Object.entries(questionGroups) as [page, questions]}
-							<div class="flex flex-col items-center gap-1">
-								<div class="text-xs text-muted-foreground">Page {page}</div>
-								<div class="flex gap-1 rounded border border-muted-foreground/20 bg-muted/20 p-1">
-									{#each questions as { answer, index }}
-										{@const valid = isQuestionValid(index)}
-										{@const current = index === $currentIndex}
-										{@const status = answer.status}
-										{@const question = answer.expand?.question}
-										{@const questionType = question ? questionTypes[question.type] : null}
-										{@const IconComponent = questionType?.icon}
-
-										<button
-											class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
-											{current
-												? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
-												: valid
-													? status === 'edit'
-														? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
-														: 'border-green-500 bg-green-500 text-white hover:scale-105'
-													: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'}"
-											on:click={() => jumpToQuestion(index)}
-											title="{questionType?.label || 'Question'} {index + 1} (Page {page}){valid
-												? ' - Valid'
-												: ' - Invalid'}"
-										>
-											{#if IconComponent}
-												<svelte:component this={IconComponent} class="h-4 w-4" />
-											{:else}
-												{index + 1}
-											{/if}
-										</button>
-									{/each}
-								</div>
-							</div>
-						{/each}
-					{:else if accessibleAnswers.length === 0 && $answers && $answers.length > 0}
-						<!-- Loading state - show placeholder circles -->
-						<div class="flex gap-1">
-							<div class="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
-							<div class="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
-							<div class="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
-						</div>
-					{/if}
+			<!-- Nav row -->
+			<div class="flex items-center gap-2">
+				<!-- Left: status -->
+				<div class="flex flex-1 justify-start">
+					<Status type={$application.status} />
 				</div>
 
-				<!-- Next question -->
-				<Button
-					variant="ghost"
-					size="sm"
-					class="h-8 w-8 p-0"
-					on:click={() => navigateQuestion('right')}
-					disabled={$currentIndex === $answers.length - 1}
-				>
-					<ChevronRight class="h-4 w-4" />
-				</Button>
+				<!-- Center: prev / counter / next -->
+				<div class="flex items-center gap-1">
+					<Button
+						variant="ghost"
+						size="sm"
+						class="h-8 w-8 p-0"
+						on:click={() => navigateQuestion('left')}
+						disabled={isAtFirst}
+					>
+						<ChevronLeftIcon class="h-4 w-4" />
+					</Button>
 
-				<!-- Progress indicator -->
-				{#if accessibleAnswers && accessibleAnswers.length > WINDOW_SIZE}
-					<div class="ml-2 text-xs text-muted-foreground">
-						{windowStart + 1}-{Math.min(windowStart + WINDOW_SIZE, accessibleAnswers.length)} of {accessibleAnswers.length}
-					</div>
-				{/if}
-			</div>
-
-			<!-- Mobile: Navigation circles row -->
-			<div class="flex items-center justify-center gap-2 sm:hidden">
-				<!-- Previous question -->
-				<Button
-					variant="ghost"
-					size="sm"
-					class="h-8 w-8 p-0"
-					on:click={() => navigateQuestion('left')}
-					disabled={$currentIndex === 0}
-				>
-					<ChevronLeftIcon class="h-4 w-4" />
-				</Button>
-
-				<!-- Question circles grouped by page -->
-				<div class="flex gap-2">
-					{#if Object.keys(questionGroups).length > 0}
-						{#each Object.entries(questionGroups) as [page, questions]}
-							<div class="flex flex-col items-center gap-1">
-								<div class="text-xs text-muted-foreground">Page {page}</div>
-								<div class="flex gap-1 rounded border border-muted-foreground/20 bg-muted/20 p-1">
-									{#each questions as { answer, index }}
-										{@const valid = isQuestionValid(index)}
-										{@const current = index === $currentIndex}
-										{@const status = answer.status}
-										{@const question = answer.expand?.question}
-										{@const questionType = question ? questionTypes[question.type] : null}
-										{@const IconComponent = questionType?.icon}
-
-										<button
-											class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-200
-											{current
-												? 'scale-110 border-primary bg-primary text-primary-foreground shadow-md'
-												: valid
-													? status === 'edit'
-														? 'border-orange-500 bg-orange-500 text-white hover:scale-105'
-														: 'border-green-500 bg-green-500 text-white hover:scale-105'
-													: 'border-muted-foreground bg-background hover:scale-105 hover:border-primary'}"
-											on:click={() => jumpToQuestion(index)}
-											title="{questionType?.label || 'Question'} {index + 1} (Page {page}){valid
-												? ' - Valid'
-												: ' - Invalid'}"
+					<div class="flex items-center text-sm tabular-nums text-muted-foreground">
+						<span>Q {$currentIndex + 1} / {$answers.length}</span>
+						{#if currentPage !== null}
+							<span class="mx-1">·</span>
+							{#if sections.length > 1}
+								<Popover.Root>
+									<Popover.Trigger asChild let:builder>
+										<Button
+											builders={[builder]}
+											variant="ghost"
+											size="sm"
+											class="h-6 gap-0.5 px-1 text-sm font-normal text-muted-foreground"
 										>
-											{#if IconComponent}
-												<svelte:component this={IconComponent} class="h-4 w-4" />
-											{:else}
-												{index + 1}
-											{/if}
-										</button>
-									{/each}
-								</div>
-							</div>
-						{/each}
-					{:else if accessibleAnswers.length === 0 && $answers && $answers.length > 0}
-						<!-- Loading state - show placeholder circles -->
-						<div class="flex gap-1">
-							<div class="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
-							<div class="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
-							<div class="h-8 w-8 animate-pulse rounded-full bg-muted"></div>
-						</div>
-					{/if}
+											Section {currentPage}<ChevronDown class="h-3 w-3" />
+										</Button>
+									</Popover.Trigger>
+									<Popover.Content class="w-36 p-1" align="center" side="top">
+										{#each sections as { page, firstIndex }}
+											<button
+												class="flex w-full rounded px-2 py-1.5 text-sm transition-colors {page === currentPage
+													? 'bg-accent font-medium'
+													: 'hover:bg-accent'}"
+												on:click={() => jumpToQuestion(firstIndex)}
+											>
+												Section {page}
+											</button>
+										{/each}
+									</Popover.Content>
+								</Popover.Root>
+							{:else}
+								<span>Section {currentPage}</span>
+							{/if}
+						{/if}
+					</div>
+
+					<Button
+						variant="ghost"
+						size="sm"
+						class="h-8 w-8 p-0"
+						on:click={() => navigateQuestion('right')}
+						disabled={isAtLast}
+					>
+						<ChevronRight class="h-4 w-4" />
+					</Button>
 				</div>
 
-				<!-- Next question -->
-				<Button
-					variant="ghost"
-					size="sm"
-					class="h-8 w-8 p-0"
-					on:click={() => navigateQuestion('right')}
-					disabled={$currentIndex === $answers.length - 1}
-				>
-					<ChevronRight class="h-4 w-4" />
-				</Button>
+				<!-- Right: all-questions sheet trigger -->
+				<div class="flex flex-1 justify-end">
+					<Sheet.Root>
+						<Sheet.Trigger asChild let:builder>
+							<Button builders={[builder]} variant="ghost" size="icon" class="h-8 w-8">
+								<List class="h-4 w-4" />
+								<span class="sr-only">All questions</span>
+							</Button>
+						</Sheet.Trigger>
+						<Sheet.Content side="right" class="flex flex-col gap-0 p-0">
+							<Sheet.Header class="border-b px-4 py-3">
+								<Sheet.Title>All Questions</Sheet.Title>
+							</Sheet.Header>
+							<div class="flex-1 overflow-y-auto">
+								{#each questionsBySection as { page, questions } (page)}
+									<div class="border-b last:border-b-0">
+										<div class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+											Section {page}
+										</div>
+										{#each questions as { answer, index } (index)}
+											<Sheet.Close asChild let:builder>
+												<button
+													use:builder.action
+													{...builder}
+													on:click={() => jumpToQuestion(index)}
+													class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-accent {index === $currentIndex
+														? 'bg-accent/60 font-medium'
+														: ''}"
+												>
+													<span class="mt-0.5 shrink-0 {dotClass(answer, index, $currentIndex)}"></span>
+													<span class="line-clamp-2 leading-snug">
+														<!-- eslint-disable-next-line -->
+														{@html answer.expand?.question?.title ?? `Question ${index + 1}`}
+													</span>
+												</button>
+											</Sheet.Close>
+										{/each}
+									</div>
+								{/each}
+							</div>
+						</Sheet.Content>
+					</Sheet.Root>
+				</div>
 			</div>
+
+			<!-- Section question dots -->
+			{#if sectionDots.length > 0}
+				<div class="mt-2 flex min-h-[1.25rem] flex-wrap items-center justify-center gap-1.5">
+					{#each sectionDots as { answer, index } (index)}
+						<button
+							on:click={() => jumpToQuestion(index)}
+							title={answer.expand?.question?.title ?? `Question ${index + 1}`}
+							class={dotClass(answer, index, $currentIndex)}
+						></button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 {:else}
-	<div class="mt-24 flex items-center justify-center">
+	<div class="mt-6 flex items-center justify-center">
 		<div class="text-center">
 			<h3 class="text-2xl font-bold tracking-tight">Not Found</h3>
 		</div>

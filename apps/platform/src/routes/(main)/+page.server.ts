@@ -72,10 +72,8 @@ export const actions = {
 
 		try {
 			const application = await locals.apb.collection('applications').getOne(applicationId, {
-				expand: 'response'
+				expand: 'response,event'
 			});
-
-			console.log(application);
 
 			if (application.responder !== locals.user.id) {
 				return fail(403, { message: 'Unauthorized' });
@@ -84,6 +82,14 @@ export const actions = {
 			// Check if the status allows deletion/withdrawal
 			if (!['draft', 'submitted', 'resubmitted'].includes(application.status)) {
 				return fail(400, { message: 'Application cannot be deleted or withdrawn' });
+			}
+
+			// For submitted/resubmitted, require canWithdraw on the event
+			if (
+				['submitted', 'resubmitted'].includes(application.status) &&
+				!application.expand?.event?.canWithdraw
+			) {
+				return fail(403, { message: 'Withdrawal is not allowed for this event' });
 			}
 
 			if (application.status === 'draft') {

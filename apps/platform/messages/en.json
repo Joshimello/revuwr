@@ -219,5 +219,7 @@
 	"create_application_created": "Created",
 	"create_application_updated": "Updated",
 	"create_application_actions": "Actions",
-	"create_application_view": "View"
+	"create_application_view": "View",
+	"label_submitted": "Submitted",
+	"label_updated": "Updated"
 }

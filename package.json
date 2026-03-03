@@ -3,7 +3,7 @@
   "devDependencies": {
     "prettier": "^3.2.5",
     "prettier-plugin-svelte": "^3.2.2",
-    "turbo": "^2.0.9",
+    "turbo": "^2.8.12",
     "zod": "^4.1.13"
   },
   "engines": {

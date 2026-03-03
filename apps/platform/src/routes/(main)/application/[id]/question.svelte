@@ -256,7 +256,7 @@
 
 	{#if !$isReadOnly || ($currentIndex === $answers.length - 1 && $application?.status === 'editsRequested')}
 		{#key value}
-			<div class="mt-24 flex items-center gap-2 md:bottom-24">
+			<div class="mb-20 mt-6 flex items-center gap-2">
 				{#if $currentIndex < $answers.length - 1}
 					<Button
 						on:click={handleContinue}
@@ -286,8 +286,6 @@
 			</div>
 		{/key}
 	{/if}
-
-	<div class="h-96"></div>
 
 	<!-- Hidden form for updating answers -->
 	<form id="updateAnswerForm" method="post" action="?/updateAnswer" style="display: none;">

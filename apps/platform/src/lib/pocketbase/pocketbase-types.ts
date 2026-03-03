@@ -125,6 +125,7 @@ export type ApplicationsRecord = {
 	response?: RecordIdString[]
 	serial?: number
 	status?: string
+	submissionTime?: IsoDateString
 	updated: IsoAutoDateString
 }
 
@@ -164,6 +165,7 @@ export type EventsRecord<Tterms = unknown> = {
 	afterStartDate?: EventsAfterStartDateOptions
 	approvedCount?: number
 	beforeStartDate?: EventsBeforeStartDateOptions
+	canWithdraw?: boolean
 	created: IsoAutoDateString
 	description?: string
 	endDate?: IsoDateString

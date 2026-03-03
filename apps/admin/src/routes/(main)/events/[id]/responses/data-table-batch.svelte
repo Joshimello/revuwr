@@ -56,6 +56,7 @@
 				);
 				applications[index].status = updatedApplication.status;
 			}
+			applications = [...applications];
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);
@@ -126,6 +127,7 @@
 					recordRef.status = 'approved';
 				}
 			}
+			applications = [...applications];
 
 			toast.success('Applications approved');
 			batchApproveOpen = false;
@@ -169,6 +171,7 @@
 					recordRef.status = 'editsRequested';
 				}
 			}
+			applications = [...applications];
 
 			toast.success('Edits requested for selected applications');
 			batchRequestEditOpen = false;
@@ -211,6 +214,7 @@
 					recordRef.status = 'rejected';
 				}
 			}
+			applications = [...applications];
 
 			toast.success('Applications rejected');
 			batchRejectOpen = false;

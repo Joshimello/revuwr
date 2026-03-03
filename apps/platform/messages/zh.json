@@ -172,8 +172,8 @@
 	"resubmitted": "已重新提交",
 	"edits_requested": "需要修改",
 	"follow_up_requested": "需要後續追蹤",
-	"rejected": "已拒絕",
-	"withdrawn": "已撤回",
+	"rejected": "未通過",
+	"withdrawn": "申請已截止",
 	"unknown": "未知",
 	"updated": "更新於",
 	"completed": "已完成",
@@ -219,5 +219,7 @@
 	"create_application_created": "創建時間",
 	"create_application_updated": "更新時間",
 	"create_application_actions": "操作",
-	"create_application_view": "檢視"
+	"create_application_view": "檢視",
+	"label_submitted": "已提交",
+	"label_updated": "已更新"
 }

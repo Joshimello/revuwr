@@ -36,10 +36,11 @@
 	$: showWithdrawButton =
 		!isEventArchived &&
 		(application.status === 'draft' || // Will show "Discard Draft"
-			['submitted', 'resubmitted'].includes(application.status)); // Will show "Withdraw Application"
+			(['submitted', 'resubmitted'].includes(application.status) &&
+				!!application.expand?.event.canWithdraw)); // Will show "Withdraw Application"
 
-	// For archived events, no menu or view buttons, no progress
-	$: showViewButton = isEventArchived ? false : isViewable;
+	// For archived events, always show view button (read-only is enforced by the application page)
+	$: showViewButton = isEventArchived || isViewable;
 
 	$: completedCount = application.expand?.response.filter((i) => i.valid).length ?? 0;
 	$: totalCount = application.response.length;
@@ -66,12 +67,12 @@
 			{/if}
 			<Status type={application.status} />
 			<Badge variant="outline">
-				<relative-time
-					datetime={application.updated}
+				{application.submissionTime ? m.label_submitted() : m.label_updated()}&nbsp;<relative-time
+					datetime={application.submissionTime || application.updated}
 					tense="past"
 					lang={getLocale() === 'zh' ? 'zh-Hant' : 'en-US'}
 				>
-					{application.updated}
+					{application.submissionTime || application.updated}
 				</relative-time>
 			</Badge>
 		</div>

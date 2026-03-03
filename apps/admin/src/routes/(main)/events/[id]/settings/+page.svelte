@@ -299,6 +299,20 @@
 					{m.allow_applications_after_dateline()}
 				</Label>
 			</div>
+			<div class="flex items-center space-x-2">
+				<Checkbox
+					checked={settings.canWithdraw === true}
+					onCheckedChange={(checked) => {
+						settings.canWithdraw = checked === true;
+						handleChange();
+					}}
+				/>
+				<Label
+					class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+				>
+					Allow applicants to withdraw submitted applications
+				</Label>
+			</div>
 			<EndEarlyButton eventId={$page.params.id} onEventEnded={handleEventEnded} />
 		</div>
 	</Card.Content>
