@@ -1,10 +1,5 @@
 import { dev } from '$app/environment';
-import {
-	NTHU_OAUTH_CLIENT_ID,
-	NTHU_OAUTH_CLIENT_SECRET,
-	PB_EMAIL,
-	PB_PASSWORD
-} from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import type { UsersResponse } from '$lib/pocketbase/pocketbase-types.js';
 import { error, isRedirect, redirect, type RequestHandler } from '@sveltejs/kit';
 import { nanoid } from 'nanoid';
@@ -17,8 +12,8 @@ const getToken = async (code: string) => {
 	}
 
 	const tokenBase = 'https://oauth.ccxp.nthu.edu.tw/v1.1/token.php';
-	const client_id = NTHU_OAUTH_CLIENT_ID;
-	const client_secret = NTHU_OAUTH_CLIENT_SECRET;
+	const client_id = env.NTHU_OAUTH_CLIENT_ID;
+	const client_secret = env.NTHU_OAUTH_CLIENT_SECRET;
 	const grant_type = 'authorization_code';
 	const redirect_uri = 'https://fsga.et.nthu.edu.tw/api/auth/callback/nthu';
 
@@ -90,7 +85,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	}
 
 	try {
-		await locals.apb.admins.authWithPassword(PB_EMAIL, PB_PASSWORD);
+		await locals.apb.admins.authWithPassword(env.PB_EMAIL, env.PB_PASSWORD);
 	} catch (err) {
 		return error(500, 'Internal server error');
 	}

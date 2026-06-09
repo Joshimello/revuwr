@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is an npm workspace/Turbo monorepo. Application code lives in `apps/`:
+This is a Bun workspace/Turbo monorepo. Application code lives in `apps/`:
 
 - `apps/admin`: SvelteKit admin for event, question, response, review, export, and settings workflows.
 - `apps/platform`: SvelteKit applicant/reviewer platform for auth, onboarding, applications, review, and email flows.
@@ -13,15 +13,15 @@ Within each app, routes are under `src/routes`, shared utilities and components 
 
 ## Build, Test, and Development Commands
 
-- `npm install`: install dependencies; use Node `>=18`.
-- `npm run dev`: run all app dev servers through Turbo.
-- `npm run build`: build all workspaces with Turbo.
-- `npm run lint`: run workspace ESLint tasks.
-- `npm run format`: format the repository with Prettier.
-- `npm --workspace <admin|platform> run check`: run `svelte-check` for one app.
-- `npm --workspace <admin|platform> run test`: run Playwright and Vitest tests for one app.
-- `npm --workspace platform run machine-translate`: update platform translations through Inlang.
-- `npm --workspace <admin|platform> run typegen`: regenerate PocketBase types.
+- `bun install`: install dependencies; use Node `>=18`.
+- `bun run dev`: run all app dev servers through Turbo.
+- `bun run build`: build all workspaces with Turbo.
+- `bun run lint`: run workspace ESLint tasks.
+- `bun run format`: format the repository with Prettier.
+- `bun run --filter <admin|platform> check`: run `svelte-check` for one app.
+- `bun run --filter <admin|platform> test`: run Playwright and Vitest tests for one app.
+- `bun run --filter platform machine-translate`: update platform translations through Inlang.
+- `bun run --filter <admin|platform> typegen`: regenerate PocketBase types.
 
 ## Coding Style & Naming Conventions
 

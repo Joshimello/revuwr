@@ -1,0 +1,55 @@
+services:
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP: admin
+        PUBLIC_BASE_PATH: ${ADMIN_PUBLIC_BASE_PATH:-}
+        PUBLIC_PB_URL: ${PUBLIC_PB_URL}
+        PUBLIC_PLATFORM_URL: ${PUBLIC_PLATFORM_URL}
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      ORIGIN: ${ADMIN_ORIGIN:-http://localhost:3000}
+      PUBLIC_BASE_PATH: ${ADMIN_PUBLIC_BASE_PATH:-}
+      PUBLIC_PB_URL: ${PUBLIC_PB_URL}
+      PUBLIC_PLATFORM_URL: ${PUBLIC_PLATFORM_URL}
+    ports:
+      - '${ADMIN_PORT:-3000}:3000'
+    restart: unless-stopped
+
+  platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP: platform
+        PUBLIC_ACME: ${PUBLIC_ACME}
+        PUBLIC_BASE_PATH: ${PLATFORM_PUBLIC_BASE_PATH:-}
+        PUBLIC_PB_URL: ${PUBLIC_PB_URL}
+        PUBLIC_USER_BIRTHDAY: ${PUBLIC_USER_BIRTHDAY:-hide}
+        PUBLIC_USER_COUNTRY: ${PUBLIC_USER_COUNTRY:-hide}
+        PUBLIC_USER_DEPARTMENT: ${PUBLIC_USER_DEPARTMENT:-hide}
+        PUBLIC_USER_OCCUPATION: ${PUBLIC_USER_OCCUPATION:-hide}
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      ORIGIN: ${PLATFORM_ORIGIN:-http://localhost:3001}
+      PB_EMAIL: ${PB_EMAIL}
+      PB_PASSWORD: ${PB_PASSWORD}
+      PUBLIC_ACME: ${PUBLIC_ACME}
+      PUBLIC_BASE_PATH: ${PLATFORM_PUBLIC_BASE_PATH:-}
+      PUBLIC_PB_URL: ${PUBLIC_PB_URL}
+      PUBLIC_USER_BIRTHDAY: ${PUBLIC_USER_BIRTHDAY:-hide}
+      PUBLIC_USER_COUNTRY: ${PUBLIC_USER_COUNTRY:-hide}
+      PUBLIC_USER_DEPARTMENT: ${PUBLIC_USER_DEPARTMENT:-hide}
+      PUBLIC_USER_OCCUPATION: ${PUBLIC_USER_OCCUPATION:-hide}
+      RS_API_KEY: ${RS_API_KEY}
+      NTHU_OAUTH_CLIENT_ID: ${NTHU_OAUTH_CLIENT_ID}
+      NTHU_OAUTH_CLIENT_SECRET: ${NTHU_OAUTH_CLIENT_SECRET}
+    ports:
+      - '${PLATFORM_PORT:-3001}:3000'
+    restart: unless-stopped
