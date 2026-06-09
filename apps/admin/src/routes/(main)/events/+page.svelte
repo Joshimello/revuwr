@@ -10,7 +10,7 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as m from '$lib/paraglide/messages.js';
 	import { pb, pbImage } from '$lib/pocketbase/client';
-	import type { EventsResponse } from '$lib/pocketbase/pocketbase-types';
+	import type { ApplicationsResponse, EventsResponse } from '$lib/pocketbase/pocketbase-types';
 	import {
 		CirclePlus,
 		ClipboardCheck,
@@ -38,10 +38,27 @@
 		try {
 			const [eventsData, applicationsData] = await Promise.all([
 				pb.collection('events').getFullList(),
-				pb.collection('applications_count').getFullList()
+				pb.collection('applications').getFullList<ApplicationsResponse>({
+					filter: 'status!="trashed"',
+					fields: 'id,event'
+				})
 			]);
 			events = eventsData;
-			applicationsCount = applicationsData;
+			applicationsCount = Object.values(
+				applicationsData.reduce(
+					(counts, application) => {
+						if (!counts[application.event]) {
+							counts[application.event] = {
+								event: application.event,
+								application_count: 0
+							};
+						}
+						counts[application.event].application_count += 1;
+						return counts;
+					},
+					{} as Record<string, { event: string; application_count: number }>
+				)
+			);
 		} catch (err) {
 			if (err instanceof Error) {
 				toast.error(err.message);

@@ -25,6 +25,7 @@
 		FileX,
 		Mails,
 		SquarePen,
+		Trash2,
 		UserRoundSearch
 	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -40,8 +41,7 @@
 	}>;
 
 	const handleUpdateStatus = async (status: string) => {
-		const indexes = Object.keys(selectedRecords || {});
-		const ids = indexes.map((index) => applications[parseInt(index)].id);
+		const ids = selectedIds;
 		const promises = ids.map((id) =>
 			pb.collection('applications').update(id, {
 				status: status
@@ -54,7 +54,7 @@
 				const index = applications.findIndex(
 					(application) => application.id === updatedApplication.id
 				);
-				applications[index].status = updatedApplication.status;
+				if (index !== -1) applications[index].status = updatedApplication.status;
 			}
 			applications = [...applications];
 		} catch (err) {
@@ -66,16 +66,19 @@
 		}
 	};
 
-	$: selectedIds = Object.keys(selectedRecords || {}).map(
-		(index) => applications[parseInt(index)].id
-	);
-	$: selectedEmails = Object.keys(selectedRecords || {})
-		.map((index) => applications[parseInt(index)].expand?.responder?.email)
+	$: selectedApplications = Object.keys(selectedRecords || {})
+		.map((id) => applications.find((application) => application.id === id))
+		.filter((application): application is ExpandedApplication => Boolean(application));
+	$: selectedIds = selectedApplications.map((application) => application.id);
+	$: selectedEmails = selectedApplications
+		.map((application) => application.expand?.responder?.email)
 		.filter(Boolean);
+	$: selectedCount = selectedApplications.length;
 	// Dialog states
 	let batchApproveOpen = false;
 	let batchRequestEditOpen = false;
 	let batchRejectOpen = false;
+	let batchTrashOpen = false;
 	let isMailResponder = false;
 	let mailContent = '';
 
@@ -91,13 +94,16 @@
 		batchRejectOpen = true;
 	};
 
+	const handleBatchTrash = () => {
+		batchTrashOpen = true;
+	};
+
 	const executeBatchApprove = async () => {
-		const indexes = Object.keys(selectedRecords || {});
-		const selectedApplications = indexes.map((index) => applications[parseInt(index)]);
+		const applicationsToUpdate = selectedApplications;
 
 		try {
 			// Update each application
-			for (const app of selectedApplications) {
+			for (const app of applicationsToUpdate) {
 				const updatedEvent = await pb.collection('events').update($eventStore!.id, {
 					'approvedCount+': 1
 				});
@@ -121,7 +127,7 @@
 			}
 
 			// Update the local store
-			for (const app of selectedApplications) {
+			for (const app of applicationsToUpdate) {
 				let recordRef = applications.find((a) => a.id === app.id);
 				if (recordRef) {
 					recordRef.status = 'approved';
@@ -141,12 +147,11 @@
 	};
 
 	const executeBatchRequestEdit = async () => {
-		const indexes = Object.keys(selectedRecords || {});
-		const selectedApplications = indexes.map((index) => applications[parseInt(index)]);
+		const applicationsToUpdate = selectedApplications;
 
 		try {
 			// Update each application
-			for (const app of selectedApplications) {
+			for (const app of applicationsToUpdate) {
 				const application = await pb.collection('applications').update(app.id, {
 					status: 'editsRequested'
 				});
@@ -165,7 +170,7 @@
 			}
 
 			// Update the local store
-			for (const app of selectedApplications) {
+			for (const app of applicationsToUpdate) {
 				let recordRef = applications.find((a) => a.id === app.id);
 				if (recordRef) {
 					recordRef.status = 'editsRequested';
@@ -185,12 +190,11 @@
 	};
 
 	const executeBatchReject = async () => {
-		const indexes = Object.keys(selectedRecords || {});
-		const selectedApplications = indexes.map((index) => applications[parseInt(index)]);
+		const applicationsToUpdate = selectedApplications;
 
 		try {
 			// Update each application
-			for (const app of selectedApplications) {
+			for (const app of applicationsToUpdate) {
 				const application = await pb.collection('applications').update(app.id, {
 					status: 'rejected'
 				});
@@ -208,7 +212,7 @@
 			}
 
 			// Update the local store
-			for (const app of selectedApplications) {
+			for (const app of applicationsToUpdate) {
 				let recordRef = applications.find((a) => a.id === app.id);
 				if (recordRef) {
 					recordRef.status = 'rejected';
@@ -226,9 +230,14 @@
 			}
 		}
 	};
+
+	const executeBatchTrash = async () => {
+		await handleUpdateStatus('trashed');
+		batchTrashOpen = false;
+	};
 </script>
 
-{#if Object.keys(selectedRecords || {}).length > 0}
+{#if selectedCount > 0}
 	<div transition:fly={{ duration: 200, y: -10 }} class="fixed bottom-6">
 		<Card.Root>
 			<Card.Header>
@@ -236,9 +245,7 @@
 					{m.batch_actions()}
 				</Card.Title>
 				<Card.Description
-					>{Object.keys(selectedRecords || {}).length}
-					{m.of()}
-					{applications.length}
+					>{selectedCount}
 					{m.rows()}
 					{m.selected()}</Card.Description
 				>
@@ -268,6 +275,11 @@
 					{m.reject()}
 				</Button>
 
+				<Button class="flex items-center gap-2" variant="destructive" on:click={handleBatchTrash}>
+					<Trash2 size="16" strokeWidth="3" />
+					{m.trash_selected()}
+				</Button>
+
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild let:builder>
 						<Button class="flex items-center gap-2" builders={[builder]}>
@@ -278,13 +290,15 @@
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
 							{#each Object.entries(statuses) as [key, value]}
-								<DropdownMenu.Item
-									on:click={() => {
-										handleUpdateStatus(key);
-									}}
-								>
-									<Status type={key} />
-								</DropdownMenu.Item>
+								{#if key !== 'trashed'}
+									<DropdownMenu.Item
+										on:click={() => {
+											handleUpdateStatus(key);
+										}}
+									>
+										<Status type={key} />
+									</DropdownMenu.Item>
+								{/if}
 							{/each}
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>
@@ -364,7 +378,7 @@
 		</div>
 		<Dialog.Footer>
 			<Button class="bg-green-500 text-white" variant="outline" on:click={executeBatchApprove}>
-				{m.approve()} ({Object.keys(selectedRecords || {}).length})
+				{m.approve()} ({selectedCount})
 			</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
@@ -396,7 +410,7 @@
 		</div>
 		<Dialog.Footer>
 			<Button class="bg-amber-500 text-white" variant="outline" on:click={executeBatchRequestEdit}>
-				{m.return_for_edits()} ({Object.keys(selectedRecords || {}).length})
+				{m.return_for_edits()} ({selectedCount})
 			</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
@@ -428,7 +442,26 @@
 		</div>
 		<Dialog.Footer>
 			<Button class="bg-red-500 text-white" variant="outline" on:click={executeBatchReject}>
-				{m.reject()} ({Object.keys(selectedRecords || {}).length})
+				{m.reject()} ({selectedCount})
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
+
+<!-- Batch Trash Dialog -->
+<Dialog.Root bind:open={batchTrashOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>
+				{m.trash_selected()}
+			</Dialog.Title>
+			<Dialog.Description>
+				{m.trash_selected_desc()}
+			</Dialog.Description>
+		</Dialog.Header>
+		<Dialog.Footer>
+			<Button variant="destructive" on:click={executeBatchTrash}>
+				{m.trash_selected()} ({selectedCount})
 			</Button>
 		</Dialog.Footer>
 	</Dialog.Content>

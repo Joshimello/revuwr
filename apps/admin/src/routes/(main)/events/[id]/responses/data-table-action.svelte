@@ -12,7 +12,7 @@
 		ApplicationsResponse,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { SquareArrowOutUpRight, SquareMenu } from 'lucide-svelte';
+	import { SquareArrowOutUpRight, SquareMenu, Trash2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { applications } from './stores';
 
@@ -24,6 +24,7 @@
 	export let record: ExpandedApplication;
 	let prevNote = record.adminNote;
 	let addNotesOpen = false;
+	let trashOpen = false;
 
 	const handleChangeStatus = async (status: string) => {
 		try {
@@ -132,12 +133,23 @@
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent class="w-max">
 						{#each Object.entries(statuses) as [key, value]}
-							<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
-								<Status type={key} />
-							</DropdownMenu.Item>
+							{#if key !== 'trashed'}
+								<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
+									<Status type={key} />
+								</DropdownMenu.Item>
+							{/if}
 						{/each}
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
+				{#if record.status !== 'trashed'}
+					<DropdownMenu.Item
+						class="flex items-center gap-2 text-destructive"
+						on:click={() => (trashOpen = true)}
+					>
+						<Trash2 size="16" />
+						{m.trash_response()}
+					</DropdownMenu.Item>
+				{/if}
 				<DropdownMenu.Sub>
 					<DropdownMenu.SubTrigger>
 						{m.download()}
@@ -195,5 +207,29 @@
 			>
 			<Textarea class="h-64" bind:value={record.adminNote} on:blur={handleSaveNotes} />
 		</Dialog.Header>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={trashOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>
+				{m.trash_response()}
+			</Dialog.Title>
+			<Dialog.Description>
+				{m.trash_response_desc()}
+			</Dialog.Description>
+		</Dialog.Header>
+		<Dialog.Footer>
+			<Button
+				variant="destructive"
+				on:click={async () => {
+					await handleChangeStatus('trashed');
+					trashOpen = false;
+				}}
+			>
+				{m.trash_response()}
+			</Button>
+		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>

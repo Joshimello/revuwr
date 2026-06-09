@@ -87,6 +87,7 @@
 	});
 
 	let selectedRecords: Record<string, boolean>;
+	$: visibleApplicationCount = $applications.filter((app) => app.status !== 'trashed').length;
 </script>
 
 <div class="flex items-center gap-4">
@@ -102,7 +103,7 @@
 		</span>
 	</Button>
 	<h1 class="text-lg font-semibold md:text-2xl">
-		{m.event_responses()} ({$applications.length})
+		{m.event_responses()} ({visibleApplicationCount})
 	</h1>
 </div>
 

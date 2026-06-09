@@ -1,4 +1,4 @@
-import { fail, redirect, isRedirect, error } from '@sveltejs/kit';
+import { fail, redirect, isRedirect, error, isHttpError } from '@sveltejs/kit';
 import type { ExpandedApplication } from './types.js';
 import type { Actions, ServerLoad } from '@sveltejs/kit';
 import { PUBLIC_ACME } from '$env/static/public';
@@ -22,6 +22,10 @@ export const load: ServerLoad = async ({ params, locals }) => {
 		// Check if user has access to this application
 		if (application.responder !== locals.user.id) {
 			throw error(403, 'Access denied');
+		}
+
+		if (application.status === 'trashed') {
+			throw error(404, 'Application not found');
 		}
 
 		// Process conditional questions and update answers that should be automatically valid
@@ -49,6 +53,9 @@ export const load: ServerLoad = async ({ params, locals }) => {
 			application
 		};
 	} catch (err) {
+		if (isHttpError(err)) {
+			throw err;
+		}
 		if (err instanceof Error) {
 			throw error(500, err.message);
 		}
@@ -57,12 +64,24 @@ export const load: ServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
-	async createFiles({ request, locals }) {
+	async createFiles({ request, params, locals }) {
 		if (!locals.user) {
 			return fail(401, { message: 'Unauthorized' });
 		}
 
+		if (!params.id) {
+			return fail(400, { message: 'Invalid application ID' });
+		}
+
 		try {
+			const application = await locals.pb.collection('applications').getOne(params.id);
+			if (application.responder !== locals.user.id) {
+				return fail(403, { message: 'Access denied' });
+			}
+			if (application.status === 'trashed') {
+				return fail(404, { message: 'Application not found' });
+			}
+
 			const formData = await request.formData();
 			const files = formData.getAll('files') as File[];
 
@@ -90,12 +109,24 @@ export const actions: Actions = {
 		}
 	},
 
-	async removeFile({ request, locals }) {
+	async removeFile({ request, params, locals }) {
 		if (!locals.user) {
 			return fail(401, { message: 'Unauthorized' });
 		}
 
+		if (!params.id) {
+			return fail(400, { message: 'Invalid application ID' });
+		}
+
 		try {
+			const application = await locals.pb.collection('applications').getOne(params.id);
+			if (application.responder !== locals.user.id) {
+				return fail(403, { message: 'Access denied' });
+			}
+			if (application.status === 'trashed') {
+				return fail(404, { message: 'Application not found' });
+			}
+
 			const formData = await request.formData();
 			const fileId = formData.get('fileId')?.toString();
 			const fileName = formData.get('fileName')?.toString();
@@ -164,6 +195,9 @@ export const actions: Actions = {
 			if (application.responder !== locals.user?.id) {
 				return fail(403, { message: 'Access denied' });
 			}
+			if (application.status === 'trashed') {
+				return fail(404, { message: 'Application not found' });
+			}
 
 			// Update the answer
 			const updatedAnswer = await locals.pb.collection('answers').update(
@@ -201,12 +235,16 @@ export const actions: Actions = {
 					expand: 'event,response,response.question'
 				});
 
-			if (application.expand?.event.status != 'active') {
-				return fail(400, { message: 'Event has been archived' });
-			}
-
 			if (!locals.user || application.responder !== locals.user.id) {
 				return fail(400, { message: 'Invalid user' });
+			}
+
+			if (application.status === 'trashed') {
+				return fail(404, { message: 'Application not found' });
+			}
+
+			if (application.expand?.event.status != 'active') {
+				return fail(400, { message: 'Event has been archived' });
 			}
 
 			if (!application.expand?.response) {
@@ -273,6 +311,10 @@ export const actions: Actions = {
 				return fail(400, { message: 'Invalid user' });
 			}
 
+			if (application.status === 'trashed') {
+				return fail(404, { message: 'Application not found' });
+			}
+
 			if (!application.expand?.response) {
 				return fail(400, { message: 'Responses could not be fetched' });
 			}
@@ -317,6 +359,10 @@ export const actions: Actions = {
 
 			if (!locals.user || application.responder !== locals.user.id) {
 				return fail(400, { message: 'Invalid user' });
+			}
+
+			if (application.status === 'trashed') {
+				return fail(404, { message: 'Application not found' });
 			}
 
 			if (['draft', 'withdrawn'].includes(application.status)) {

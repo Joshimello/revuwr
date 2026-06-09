@@ -28,7 +28,9 @@ export const load: PageLoad = async ({ url }) => {
 		});
 
 		if (!allApplications[0].expand) return;
-		const applications = allApplications.filter((a) => applicationIds.includes(a.id));
+		const applications = allApplications.filter(
+			(a) => applicationIds.includes(a.id) && a.status !== 'trashed'
+		);
 		console.log(applications);
 		return {
 			applications: applications || []

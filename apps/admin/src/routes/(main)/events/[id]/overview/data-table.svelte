@@ -36,6 +36,7 @@
 
 	export let data: Readable<ReviewApplications>;
 	export let event: EventsResponse;
+	const NON_TRASHED_STATUS_FILTER = '__nonTrashed';
 
 	const table = createTable(data, {
 		sort: addSortBy(),
@@ -98,7 +99,8 @@
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
 				colFilter: {
-					fn: ({ filterValue, value }) => filterValue === value
+					fn: ({ filterValue, value }) =>
+						filterValue === NON_TRASHED_STATUS_FILTER ? value !== 'trashed' : filterValue === value
 				}
 			}
 		}),
@@ -170,6 +172,8 @@
 	const { selectedDataIds } = pluginStates.select;
 	const { filterValues } = pluginStates.colFilter;
 
+	$filterValues.status = NON_TRASHED_STATUS_FILTER;
+
 	const ids = flatColumns.map((col) => col.id);
 	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
 
@@ -193,7 +197,7 @@
 		/>
 		<Select.Root
 			onSelectedChange={(selected) => {
-				if (selected?.value == 'all') $filterValues.status = undefined;
+				if (selected?.value == 'all') $filterValues.status = NON_TRASHED_STATUS_FILTER;
 				else $filterValues.status = selected?.value;
 			}}
 		>

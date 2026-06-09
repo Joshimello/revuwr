@@ -110,9 +110,11 @@
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent class="w-max">
 						{#each Object.entries(statuses) as [key, value]}
-							<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
-								<Status type={key} />
-							</DropdownMenu.Item>
+							{#if key !== 'trashed'}
+								<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
+									<Status type={key} />
+								</DropdownMenu.Item>
+							{/if}
 						{/each}
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>

@@ -51,6 +51,7 @@
 
 	export let data: Writable<ExpandedApplications[]>;
 	export let event: ExpandedEvents;
+	const NON_TRASHED_STATUS_FILTER = '__nonTrashed';
 
 	data.subscribe((items) => {
 		items.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
@@ -154,7 +155,8 @@
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
 				colFilter: {
-					fn: ({ filterValue, value }) => filterValue === value
+					fn: ({ filterValue, value }) =>
+						filterValue === NON_TRASHED_STATUS_FILTER ? value !== 'trashed' : filterValue === value
 				}
 			}
 		}),
@@ -241,6 +243,8 @@
 	const { selectedDataIds } = pluginStates.select;
 	const { filterValues } = pluginStates.colFilter;
 
+	$filterValues.status = NON_TRASHED_STATUS_FILTER;
+
 	const ids = flatColumns.map((col) => col.id);
 	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
 
@@ -274,7 +278,13 @@
 	$: localStorage.setItem('hideForId', JSON.stringify(hideForId));
 
 	export let selectedRecords;
-	$: selectedRecords = $selectedDataIds;
+	const getOriginalApplication = (row: unknown) =>
+		(row as { original: ExpandedApplications }).original;
+	$: selectedRecords = Object.fromEntries(
+		$rows
+			.filter((row) => $selectedDataIds[row.id])
+			.map((row) => [getOriginalApplication(row).id, true])
+	);
 </script>
 
 <div class="grid w-max gap-6">
@@ -290,7 +300,7 @@
 		/>
 		<Select.Root
 			onSelectedChange={(selected) => {
-				if (selected?.value == 'all') $filterValues.status = undefined;
+				if (selected?.value == 'all') $filterValues.status = NON_TRASHED_STATUS_FILTER;
 				else $filterValues.status = selected?.value;
 			}}
 		>

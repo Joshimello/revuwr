@@ -38,6 +38,10 @@
 		withdrawn: {
 			label: m.withdrawn(),
 			classes: 'bg-gray-500 text-white'
+		},
+		trashed: {
+			label: m.trashed(),
+			classes: 'bg-slate-700 text-white'
 		}
 	};
 </script>

@@ -24,6 +24,7 @@ export const load = async ({ locals }) => {
 			const rawApplications = await locals.pb
 				.collection('applications')
 				.getFullList<ExpandedApplications>({
+					filter: 'status!="trashed"',
 					expand: 'response,event'
 				});
 
@@ -71,12 +72,18 @@ export const actions = {
 		}
 
 		try {
-			const application = await locals.apb.collection('applications').getOne(applicationId, {
-				expand: 'response,event'
-			});
+			const application = await locals.apb
+				.collection('applications')
+				.getOne<ExpandedApplications>(applicationId, {
+					expand: 'response,event'
+				});
 
 			if (application.responder !== locals.user.id) {
 				return fail(403, { message: 'Unauthorized' });
+			}
+
+			if (application.status === 'trashed') {
+				return fail(404, { message: 'Application not found' });
 			}
 
 			// Check if the status allows deletion/withdrawal

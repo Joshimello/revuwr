@@ -36,7 +36,9 @@ export const load: PageLoad = async ({ url }) => {
 			};
 		}
 
-		const applications = allApplications.filter((a) => applicationIds.includes(a.id));
+		const applications = allApplications.filter(
+			(a) => applicationIds.includes(a.id) && a.status !== 'trashed'
+		);
 		const eventName = applications[0]?.expand?.event?.name || 'Multiple Events';
 		const filename = `applications_export_${applications.length}_items_${new Date().toISOString().split('T')[0]}.csv`;
 

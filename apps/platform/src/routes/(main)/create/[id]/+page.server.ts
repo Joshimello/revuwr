@@ -24,7 +24,7 @@ export const load = async ({ locals, params }) => {
 			const rawApplications = await locals.pb
 				.collection(Collections.Applications)
 				.getFullList<ExpandedApplicationsForCreate>({
-					filter: `responder = "${locals.user.id}" && event = "${event.id}"`,
+					filter: `responder = "${locals.user.id}" && event = "${event.id}" && status!="trashed"`,
 					expand: 'response,event'
 				});
 
@@ -96,7 +96,7 @@ export const actions = {
 
 			// user responses check
 			const userResponses = await locals.apb.collection('applications').getFullList({
-				filter: `responder = "${locals.user.id}" && event = "${event.id}"`
+				filter: `responder = "${locals.user.id}" && event = "${event.id}" && status!="trashed"`
 			});
 
 			if (userResponses.length >= event.responseLimit) {

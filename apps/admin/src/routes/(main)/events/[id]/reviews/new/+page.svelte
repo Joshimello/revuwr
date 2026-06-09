@@ -114,7 +114,7 @@
 				expand: `questions`
 			});
 			applications = await pb.collection('applications').getFullList({
-				filter: `event="${$page.params.id}"`
+				filter: `event="${$page.params.id}" && status!="trashed"`
 			});
 			selectedApplications = selectedApplications.filter((id) =>
 				applications.find((app) => app.id === id)

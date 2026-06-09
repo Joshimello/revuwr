@@ -124,6 +124,10 @@
 	"send_mail": "發送郵件",
 	"send_for_review": "發送以供審查",
 	"export_as": "匯出為",
+	"trash_response": "移至垃圾桶",
+	"trash_selected": "移至垃圾桶",
+	"trash_response_desc": "這會在預設管理員與使用者檢視中隱藏此回覆。你可以從垃圾桶篩選器還原。",
+	"trash_selected_desc": "這會在預設管理員與使用者檢視中隱藏所選回覆。你可以從垃圾桶篩選器還原。",
 
 	"draft": "草稿",
 	"submitted": "已提交",
@@ -133,6 +137,7 @@
 	"follow_up_requested": "請求跟進",
 	"rejected": "未通過",
 	"withdrawn": "已撤回",
+	"trashed": "已移至垃圾桶",
 	"unknown": "未知",
 
 	"approve": "批准",

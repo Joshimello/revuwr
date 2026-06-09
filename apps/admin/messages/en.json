@@ -124,6 +124,10 @@
 	"send_mail": "Send mail",
 	"send_for_review": "Send for review",
 	"export_as": "Export as",
+	"trash_response": "Trash response",
+	"trash_selected": "Trash selected",
+	"trash_response_desc": "This will hide the response from default admin and user views. You can restore it from the Trashed filter.",
+	"trash_selected_desc": "This will hide the selected responses from default admin and user views. You can restore them from the Trashed filter.",
 
 	"draft": "Draft",
 	"submitted": "Submitted",
@@ -133,6 +137,7 @@
 	"follow_up_requested": "Follow-up Requested",
 	"rejected": "Rejected",
 	"withdrawn": "Withdrawn",
+	"trashed": "Trashed",
 	"unknown": "Unknown",
 
 	"approve": "Approve",

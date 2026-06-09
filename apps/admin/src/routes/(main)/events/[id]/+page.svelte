@@ -64,7 +64,7 @@
 			applications = (
 				await pb.collection('applications').getList<ExpandedApplications>(1, 7, {
 					sort: '-created',
-					filter: `event="${id}"`,
+					filter: `event="${id}" && status!="trashed"`,
 					expand: 'responder'
 				})
 			).items;

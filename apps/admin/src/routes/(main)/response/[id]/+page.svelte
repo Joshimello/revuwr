@@ -397,9 +397,11 @@
 							<DropdownMenu.Content>
 								<DropdownMenu.Group>
 									{#each Object.entries(statuses) as [key, value]}
-										<DropdownMenu.Item on:click={() => handleStatusChange(key)}>
-											<Status type={key} />
-										</DropdownMenu.Item>
+										{#if key !== 'trashed'}
+											<DropdownMenu.Item on:click={() => handleStatusChange(key)}>
+												<Status type={key} />
+											</DropdownMenu.Item>
+										{/if}
 									{/each}
 								</DropdownMenu.Group>
 							</DropdownMenu.Content>
