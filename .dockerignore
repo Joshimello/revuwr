@@ -7,6 +7,7 @@ node_modules
 apps/*/node_modules
 apps/*/.svelte-kit
 apps/*/build
+apps/*/src/lib/paraglide
 coverage
 .DS_Store
 .env

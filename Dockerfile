@@ -14,6 +14,10 @@ COPY packages/config-eslint/package.json packages/config-eslint/package.json
 RUN bun install --frozen-lockfile --ignore-scripts
 
 FROM deps AS build
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends nodejs \
+	&& rm -rf /var/lib/apt/lists/*
+
 ARG APP
 ARG PUBLIC_ACME
 ARG PUBLIC_BASE_PATH
@@ -35,7 +39,10 @@ ENV NODE_ENV=production \
 	PUBLIC_USER_OCCUPATION=${PUBLIC_USER_OCCUPATION}
 
 COPY . .
-RUN test "${APP}" = "admin" -o "${APP}" = "platform" && bun run --filter ${APP} build
+RUN case "${APP}" in \
+	admin|platform) cd "apps/${APP}" && node ../../node_modules/vite/bin/vite.js build ;; \
+	*) echo "Unsupported APP: ${APP}" >&2; exit 1 ;; \
+	esac
 
 FROM oven/bun:1.3.5 AS runner
 WORKDIR /app
