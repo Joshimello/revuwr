@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ResponseRenderer from '$lib/components/response-renderer.svelte';
 	import Status, { statuses } from '$lib/components/status.svelte';
-	import StatusFilter from '$lib/components/status-filter.svelte';
+	import StatusFilter, { defaultSelectedStatuses } from '$lib/components/status-filter.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
@@ -52,7 +52,7 @@
 	export let data: Writable<ExpandedApplications[]>;
 	export let event: ExpandedEvents;
 	const statusKeys = Object.keys(statuses);
-	let selectedStatuses = [...statusKeys];
+	let selectedStatuses = [...defaultSelectedStatuses];
 
 	data.subscribe((items) => {
 		items.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());

@@ -17,13 +17,13 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import Status, { statuses } from '$lib/components/status.svelte';
-	import StatusFilter from '$lib/components/status-filter.svelte';
+	import StatusFilter, { defaultSelectedStatuses } from '$lib/components/status-filter.svelte';
 	import DataTableStats from './data-table-stats.svelte';
 	import * as m from '$lib/paraglide/messages.js';
 
 	export let data: Writable<ReviewsResponse[]>;
 	const statusKeys = Object.keys(statuses);
-	let selectedStatuses = [...statusKeys];
+	let selectedStatuses = [...defaultSelectedStatuses];
 
 	const table = createTable(data, {
 		sort: addSortBy(),

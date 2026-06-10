@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Status, { statuses } from '$lib/components/status.svelte';
-	import StatusFilter from '$lib/components/status-filter.svelte';
+	import StatusFilter, { defaultSelectedStatuses } from '$lib/components/status-filter.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
@@ -37,7 +37,7 @@
 	export let data: Readable<ReviewApplications>;
 	export let event: EventsResponse;
 	const statusKeys = Object.keys(statuses);
-	let selectedStatuses = [...statusKeys];
+	let selectedStatuses = [...defaultSelectedStatuses];
 
 	const table = createTable(data, {
 		sort: addSortBy(),

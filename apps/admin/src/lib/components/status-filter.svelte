@@ -1,5 +1,12 @@
+<script lang="ts" context="module">
+	import { statuses } from '$lib/components/status.svelte';
+
+	const statusKeys = Object.keys(statuses);
+	export const defaultSelectedStatuses = statusKeys.filter((status) => status !== 'trashed');
+</script>
+
 <script lang="ts">
-	import Status, { statuses } from '$lib/components/status.svelte';
+	import Status from '$lib/components/status.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Label } from '$lib/components/ui/label';
@@ -8,9 +15,7 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { ChevronDown } from 'lucide-svelte';
 
-	export let selectedStatuses: string[] = Object.keys(statuses);
-
-	const statusKeys = Object.keys(statuses);
+	export let selectedStatuses: string[] = [...defaultSelectedStatuses];
 
 	$: selectedStatusSet = new Set(selectedStatuses);
 	$: allSelected = selectedStatuses.length === statusKeys.length;
