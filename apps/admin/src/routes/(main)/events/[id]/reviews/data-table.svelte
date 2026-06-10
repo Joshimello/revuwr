@@ -1,7 +1,5 @@
 <script lang="ts">
-	import type {
-		ReviewsResponse
-	} from '$lib/pocketbase/pocketbase-types';
+	import type { ReviewsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { type Writable } from 'svelte/store';
 	import { createRender, createTable, Render, Subscribe } from 'svelte-headless-table';
 	import * as Table from '$lib/components/ui/table';
@@ -19,11 +17,13 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import Status, { statuses } from '$lib/components/status.svelte';
-	import * as Select from '$lib/components/ui/select';
+	import StatusFilter from '$lib/components/status-filter.svelte';
 	import DataTableStats from './data-table-stats.svelte';
-	import * as m from '$lib/paraglide/messages.js'
+	import * as m from '$lib/paraglide/messages.js';
 
 	export let data: Writable<ReviewsResponse[]>;
+	const statusKeys = Object.keys(statuses);
+	let selectedStatuses = [...statusKeys];
 
 	const table = createTable(data, {
 		sort: addSortBy(),
@@ -60,16 +60,19 @@
 			header: m.status(),
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
-        colFilter: {
-          fn: ({ filterValue, value }) => filterValue === value,
-        }
-      }
+				colFilter: {
+					fn: ({ filterValue, value }) => {
+						const statusFilter = Array.isArray(filterValue) ? filterValue : statusKeys;
+						return statusFilter.length === statusKeys.length || statusFilter.includes(value);
+					}
+				}
+			}
 		}),
 		table.column({
 			id: 'stats',
-			accessor: value => value,
+			accessor: (value) => value,
 			header: m.stats(),
-			cell: ({ value }) => createRender(DataTableStats, { value: value }),
+			cell: ({ value }) => createRender(DataTableStats, { value: value })
 		}),
 		table.column({
 			id: 'endDate',
@@ -144,7 +147,9 @@
 	const { filterValue } = pluginStates.filter;
 	const { hiddenColumnIds } = pluginStates.hide;
 	const { selectedDataIds } = pluginStates.select;
-	const { filterValues } = pluginStates.colFilter
+	const { filterValues } = pluginStates.colFilter;
+
+	$: $filterValues.status = selectedStatuses;
 
 	const ids = flatColumns.map((col) => col.id);
 	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
@@ -171,24 +176,7 @@
 			type="text"
 			bind:value={$filterValue}
 		/>
-		<Select.Root onSelectedChange={selected => {
-			if (selected?.value == "all") $filterValues.status = undefined
-			else $filterValues.status = selected?.value
-		}}>
-			<Select.Trigger class="w-[180px]">
-				<Select.Value placeholder="status" />
-			</Select.Trigger>
-			<Select.Content sameWidth={false}>
-				<Select.Item value="all">
-					{m.all()}
-				</Select.Item>
-				{#each Object.entries(statuses) as [status, _]}
-					<Select.Item value={status} class="w-full">
-						<Status type={status} />
-					</Select.Item>
-				{/each}
-			</Select.Content>
-		</Select.Root>
+		<StatusFilter bind:selectedStatuses />
 		<DropdownMenu.Root closeOnItemClick={false}>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="outline" builders={[builder]}>

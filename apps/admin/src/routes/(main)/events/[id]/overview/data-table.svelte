@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Status, { statuses } from '$lib/components/status.svelte';
+	import StatusFilter from '$lib/components/status-filter.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
 	import * as m from '$lib/paraglide/messages.js';
 	import type { EventsResponse } from '$lib/pocketbase/pocketbase-types';
@@ -36,7 +36,8 @@
 
 	export let data: Readable<ReviewApplications>;
 	export let event: EventsResponse;
-	const NON_TRASHED_STATUS_FILTER = '__nonTrashed';
+	const statusKeys = Object.keys(statuses);
+	let selectedStatuses = [...statusKeys];
 
 	const table = createTable(data, {
 		sort: addSortBy(),
@@ -99,8 +100,10 @@
 			cell: ({ value }) => createRender(Status, { type: value }),
 			plugins: {
 				colFilter: {
-					fn: ({ filterValue, value }) =>
-						filterValue === NON_TRASHED_STATUS_FILTER ? value !== 'trashed' : filterValue === value
+					fn: ({ filterValue, value }) => {
+						const statusFilter = Array.isArray(filterValue) ? filterValue : statusKeys;
+						return statusFilter.length === statusKeys.length || statusFilter.includes(value);
+					}
 				}
 			}
 		}),
@@ -172,7 +175,7 @@
 	const { selectedDataIds } = pluginStates.select;
 	const { filterValues } = pluginStates.colFilter;
 
-	$filterValues.status = NON_TRASHED_STATUS_FILTER;
+	$: $filterValues.status = selectedStatuses;
 
 	const ids = flatColumns.map((col) => col.id);
 	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
@@ -195,26 +198,7 @@
 			type="text"
 			bind:value={$filterValue}
 		/>
-		<Select.Root
-			onSelectedChange={(selected) => {
-				if (selected?.value == 'all') $filterValues.status = NON_TRASHED_STATUS_FILTER;
-				else $filterValues.status = selected?.value;
-			}}
-		>
-			<Select.Trigger class="w-[180px]">
-				<Select.Value placeholder={m.status()} />
-			</Select.Trigger>
-			<Select.Content sameWidth={false}>
-				<Select.Item value="all">
-					{m.all()}
-				</Select.Item>
-				{#each Object.entries(statuses) as [status, _]}
-					<Select.Item value={status} class="w-full">
-						<Status type={status} />
-					</Select.Item>
-				{/each}
-			</Select.Content>
-		</Select.Root>
+		<StatusFilter bind:selectedStatuses />
 		<DropdownMenu.Root closeOnItemClick={false}>
 			<DropdownMenu.Trigger asChild let:builder>
 				<Button variant="outline" builders={[builder]}>

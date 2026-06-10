@@ -87,7 +87,7 @@
 	});
 
 	let selectedRecords: Record<string, boolean>;
-	$: visibleApplicationCount = $applications.filter((app) => app.status !== 'trashed').length;
+	$: visibleApplicationCount = $applications.length;
 </script>
 
 <div class="flex items-center gap-4">
