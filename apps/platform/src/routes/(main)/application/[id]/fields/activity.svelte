@@ -10,6 +10,8 @@
 	import type { QuestionsResponse } from '$lib/pocketbase/pocketbase-types';
 	import { CirclePlus, Edit, Trash } from 'lucide-svelte';
 	import { onMount } from 'svelte';
+	import ActivityTimeSelect from './activity-time-select.svelte';
+	import { formatActivityTime } from './activity-time';
 
 	export let question: QuestionsResponse;
 	const options = question.options as {
@@ -129,7 +131,7 @@
 									})}
 								</div>
 								<div class="hidden text-sm text-muted-foreground md:inline">
-									{session.startTime} - {session.endTime}
+									{formatActivityTime(session.startTime)} – {formatActivityTime(session.endTime)}
 								</div>
 							</Table.Cell>
 							<Table.Cell class="whitespace-nowrap">
@@ -199,17 +201,23 @@
 							/>
 						</div>
 						<div class="">
-							<Label for="time">
+							<Label>
 								{m.activity_starting_time()}
 								{#if newActivity.startTime && newActivity.endTime && !isTimeValid()}
 									<span class="text-destructive">{m.activity_time_validation_error()}</span>
 								{/if}
 							</Label>
-							<Input bind:value={newActivity.startTime} id="time" type="time" />
+							<ActivityTimeSelect
+								bind:value={newActivity.startTime}
+								label={m.activity_starting_time()}
+							/>
 						</div>
 						<div class="">
-							<Label for="time">{m.activity_ending_time()}</Label>
-							<Input bind:value={newActivity.endTime} id="time" type="time" />
+							<Label>{m.activity_ending_time()}</Label>
+							<ActivityTimeSelect
+								bind:value={newActivity.endTime}
+								label={m.activity_ending_time()}
+							/>
 						</div>
 						<div class="mt-2.5">
 							<RadioGroup.Root bind:value={newActivity.form}>

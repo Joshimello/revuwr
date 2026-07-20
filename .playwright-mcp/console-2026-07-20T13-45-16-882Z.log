@@ -1,0 +1,18 @@
+[     630ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/:0
+[     656ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[     657ms] [WARNING] <Error> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   31722ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   31723ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   31725ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   46073ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/:0
+[   46090ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   46091ms] [WARNING] <Error> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   77610ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/:0
+[   77650ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   77651ms] [WARNING] <Error> was created with unknown prop 'params' @ http://localhost:5173/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=d7beac4f:3377
+[   94351ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5175/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=933e79c7:3377
+[   94353ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5175/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=933e79c7:3377
+[   94357ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5175/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=933e79c7:3377
+[  117816ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5175/:0
+[  117840ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5175/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=933e79c7:3377
+[  117841ms] [WARNING] <Error> was created with unknown prop 'params' @ http://localhost:5175/@fs/Users/josh/Projects/revuwr/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=933e79c7:3377

@@ -1,0 +1,11 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]: NTHU CTLD
+    - button "Sign In" [ref=e7] [cursor=pointer]
+  - generic [ref=e13]:
+    - heading "Welcome to NTHU CTLD's application platform" [level=3] [ref=e14]
+    - paragraph [ref=e15]: Start by logging in to your account.
+    - generic [ref=e16]:
+      - button "Login" [ref=e17] [cursor=pointer]
+      - link "Login with Username" [ref=e18] [cursor=pointer]:
+        - /url: /login
