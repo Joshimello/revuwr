@@ -10,6 +10,7 @@
 	import { toast } from 'svelte-sonner';
 	import { shouldShowConditionalQuestion } from './conditional-utils';
 	import { updateConditionalAnswers } from './methods';
+	import { getNextQuestionIndex } from './navigation';
 	import questionTypes from './question-types';
 	import { answers, application, currentIndex, event, isReadOnly } from './stores';
 	import { canSubmitApplication } from './submission-state';
@@ -145,28 +146,11 @@
 						await updateConditionalAnswers($application.expand.response);
 					}
 
-					// Navigate to next sequential question that should be shown
-					let nextIndex = $currentIndex + 1;
-					while (nextIndex < $answers.length) {
-						const nextAnswer = $answers[nextIndex];
-						const nextQuestion = nextAnswer?.expand?.question;
-						if (nextQuestion) {
-							const shouldShow = nextQuestion.conditional
-								? shouldShowConditionalQuestion(nextQuestion, $answers)
-								: true;
-
-							if (shouldShow) {
-								$currentIndex = nextIndex;
-								break;
-							}
-						}
-						nextIndex++;
-					}
-
-					// If no more questions to show, go to the last question
-					if (nextIndex >= $answers.length) {
-						$currentIndex = $answers.length - 1;
-					}
+					$currentIndex = getNextQuestionIndex(
+						$answers,
+						$currentIndex,
+						$application?.status
+					);
 				} else {
 					toast.error('Failed to update answer');
 				}

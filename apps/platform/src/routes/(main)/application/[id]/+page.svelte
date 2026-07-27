@@ -19,20 +19,6 @@
 
 	export let data: PageData;
 
-	function isQuestionValid(index: number): boolean {
-		const answer = $answers[index];
-		const question = answer?.expand?.question;
-
-		if (!question) return false;
-
-		// If conditional and shouldn't be shown, mark as valid
-		if (question.conditional && !shouldShowConditionalQuestion(question, $answers)) {
-			return true;
-		}
-
-		return answer.valid;
-	}
-
 	function jumpToQuestion(index: number): void {
 		$currentIndex = index;
 	}
@@ -187,6 +173,17 @@
 </div>
 
 {#if $application && $event}
+	{#if $isReadOnly}
+		<Alert.Root class="mt-6">
+			<Info class="h-4 w-4" />
+			<Alert.Title class="font-bold">{m.app_readonly_title()}</Alert.Title>
+			<Alert.Description>
+				<!-- eslint-disable-next-line -->
+				{@html m.app_readonly_description()}
+			</Alert.Description>
+		</Alert.Root>
+	{/if}
+
 	<div class="mt-6 md:flex">
 		{#if $answers[$currentIndex]?.expand?.question}
 			{@const question = $answers[$currentIndex]?.expand?.question}
@@ -218,17 +215,6 @@
 	<!-- Bottom navigation bar -->
 	<div class="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur">
 		<div class="mx-auto max-w-4xl px-3 py-2">
-			{#if $isReadOnly}
-				<Alert.Root class="mb-2">
-					<Info class="h-4 w-4" />
-					<Alert.Title class="font-bold">{m.app_readonly_title()}</Alert.Title>
-					<Alert.Description>
-						<!-- eslint-disable-next-line -->
-						{@html m.app_readonly_description()}
-					</Alert.Description>
-				</Alert.Root>
-			{/if}
-
 			<!-- Nav row -->
 			<div class="flex items-center gap-2">
 				<!-- Left: status -->
