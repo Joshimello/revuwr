@@ -1,4 +1,4 @@
-name: Build and deploy production images
+name: Publish production images
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: production-deployment
+  group: production-images
   cancel-in-progress: true
 
 env:
@@ -95,28 +95,3 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}-${{ matrix.app }}:main
             ${{ env.IMAGE_PREFIX }}-${{ matrix.app }}:sha-${{ github.sha }}
-
-  deploy:
-    name: Deploy through Coolify
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    env:
-      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-      COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
-    steps:
-      - name: Trigger Coolify deployment
-        if: ${{ env.COOLIFY_TOKEN != '' && env.COOLIFY_WEBHOOK != '' }}
-        shell: bash
-        run: |
-          curl \
-            --fail-with-body \
-            --silent \
-            --show-error \
-            --request GET \
-            "$COOLIFY_WEBHOOK" \
-            --header "Authorization: Bearer $COOLIFY_TOKEN"
-
-      - name: Report missing Coolify configuration
-        if: ${{ env.COOLIFY_TOKEN == '' || env.COOLIFY_WEBHOOK == '' }}
-        run: echo "::notice::Images were published, but deployment was skipped because COOLIFY_TOKEN or COOLIFY_WEBHOOK is not configured."
