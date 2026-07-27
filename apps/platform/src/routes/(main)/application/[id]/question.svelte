@@ -11,7 +11,8 @@
 	import { shouldShowConditionalQuestion } from './conditional-utils';
 	import { updateConditionalAnswers } from './methods';
 	import questionTypes from './question-types';
-	import { answers, application, currentIndex, isReadOnly } from './stores';
+	import { answers, application, currentIndex, event, isReadOnly } from './stores';
+	import { canSubmitApplication } from './submission-state';
 	import type { ExpandedResponse } from './types';
 
 	export let content: ExpandedResponse;
@@ -21,9 +22,13 @@
 	let value: unknown = content.response;
 
 	let isLoading = false;
+	let isUpdating = false;
 
-	// Check if all questions are valid (including conditional logic)
-	$: allQuestionsValid = $answers.every((answer) => {
+	// Check if all other questions are valid (including conditional logic).
+	// The current answer uses live field validation and is persisted immediately before submission.
+	$: allOtherAnswersValid = $answers.every((answer, index) => {
+		if (index === $currentIndex) return true;
+
 		const answerQuestion = answer.expand?.question;
 		if (!answerQuestion) return false;
 
@@ -53,6 +58,18 @@
 
 	// Computed validation for current answer
 	$: isCurrentAnswerValid = validationResult[0];
+
+	$: canSubmit = canSubmitApplication({
+		applicationStatus: $application?.status,
+		eventStatus: $event?.status,
+		currentIndex: $currentIndex,
+		answerCount: $answers.length,
+		currentAnswerValid: isCurrentAnswerValid,
+		allOtherAnswersValid,
+		isReadOnly: $isReadOnly,
+		isLoading,
+		isUpdating
+	});
 
 	// Track current question ID to detect navigation
 	let currentQuestionId = content.id;
@@ -97,15 +114,13 @@
 				if ($currentIndex < $answers.length - 1) {
 					// Continue to next question
 					handleContinue();
-				} else if (allQuestionsValid) {
+				} else if (canSubmit) {
 					// Submit application only if all questions are valid
 					handleSubmit();
 				}
 			}
 		}
 	}
-
-	let isUpdating = false;
 
 	async function handleContinue() {
 		isUpdating = true;
@@ -268,7 +283,7 @@
 				{:else}
 					<Button
 						on:click={handleSubmit}
-						disabled={!isCurrentAnswerValid || isLoading || $isReadOnly || isUpdating}
+						disabled={!canSubmit}
 						class="flex-1 md:flex-none"
 					>
 						{isUpdating ? 'Saving...' : isLoading ? 'Submitting...' : m.button_submit_application()}
