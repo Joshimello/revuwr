@@ -3,7 +3,49 @@ import type { ExpandedApplication } from './types.js';
 import type { Actions, ServerLoad } from '@sveltejs/kit';
 import { PUBLIC_ACME } from '$env/static/public';
 import { generateApplicationSummaryEmail } from '$lib/emails/application-summary';
-import { processConditionalQuestions } from './conditional-utils.js';
+import {
+	isAnswerApplicable,
+	normalizeAnswerResponse,
+	validateAnswer,
+	validateApplicationAnswers
+} from './answer-validation.js';
+
+async function validateFileReferences(
+	locals: App.Locals,
+	userId: string,
+	response: unknown
+): Promise<boolean> {
+	if (!Array.isArray(response)) return false;
+
+	try {
+		for (const item of response) {
+			if (
+				typeof item !== 'object' ||
+				item === null ||
+				typeof item.recordId !== 'string' ||
+				typeof item.collectionId !== 'string' ||
+				!Array.isArray(item.files)
+			) {
+				return false;
+			}
+
+			const fileRecord = await locals.apb.collection('files').getOne(item.recordId);
+			const filenames = item.files as unknown[];
+			if (
+				fileRecord.user !== userId ||
+				fileRecord.collectionId !== item.collectionId ||
+				filenames.some(
+					(file) => typeof file !== 'string' || !(fileRecord.file as string[]).includes(file)
+				)
+			) {
+				return false;
+			}
+		}
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 export const load: ServerLoad = async ({ params, locals }) => {
 	if (!params.id) {
@@ -26,27 +68,6 @@ export const load: ServerLoad = async ({ params, locals }) => {
 
 		if (application.status === 'trashed') {
 			throw error(404, 'Application not found');
-		}
-
-		// Process conditional questions and update answers that should be automatically valid
-		if (application.expand?.response) {
-			const processedAnswers = await processConditionalQuestions(application.expand.response);
-
-			// Update any answers that were marked as valid due to conditional logic
-			for (let i = 0; i < processedAnswers.length; i++) {
-				const originalAnswer = application.expand.response[i];
-				const processedAnswer = processedAnswers[i];
-
-				// If the processed answer is now valid but the original wasn't, update it in the database
-				if (processedAnswer.valid && !originalAnswer.valid) {
-					await locals.pb.collection('answers').update(originalAnswer.id, {
-						valid: true
-					});
-				}
-			}
-
-			// Update the response with processed answers
-			application.expand.response = processedAnswers;
 		}
 
 		return {
@@ -190,20 +211,72 @@ export const actions: Actions = {
 				return fail(400, { message: 'Invalid answer format' });
 			}
 
-			// Get the application to verify user access
-			const application = await locals.pb.collection('applications').getOne(params.id);
+			const application = await locals.apb
+				.collection('applications')
+				.getOne<ExpandedApplication>(params.id, {
+					expand: 'event,response,response.question'
+				});
 			if (application.responder !== locals.user?.id) {
 				return fail(403, { message: 'Access denied' });
 			}
 			if (application.status === 'trashed') {
 				return fail(404, { message: 'Application not found' });
 			}
+			if (!['draft', 'editsRequested'].includes(application.status)) {
+				return fail(409, { message: 'This application can no longer be edited' });
+			}
+			if (application.expand?.event.status !== 'active') {
+				return fail(409, { message: 'This event is not accepting application updates' });
+			}
 
-			// Update the answer
-			const updatedAnswer = await locals.pb.collection('answers').update(
+			const storedAnswer = application.expand?.response?.find(
+				(applicationAnswer) => applicationAnswer.id === answerId
+			);
+			if (!storedAnswer || storedAnswer.application !== application.id) {
+				return fail(400, { message: 'Answer does not belong to this application' });
+			}
+			if (application.status === 'editsRequested' && storedAnswer.status !== 'edit') {
+				return fail(403, { message: 'This answer was not requested for editing' });
+			}
+
+			const question = storedAnswer.expand?.question;
+			const validation = validateAnswer(question, answer);
+			if (!validation.valid) {
+				return fail(422, {
+					message: validation.message,
+					invalidAnswers: [
+						{
+							answerId: storedAnswer.id,
+							questionId: question?.id ?? '',
+							code: validation.code,
+							message: validation.message
+						}
+					]
+				});
+			}
+			if (
+				question?.type === 'file' &&
+				!(await validateFileReferences(locals, locals.user.id, answer))
+			) {
+				return fail(422, {
+					message: 'One or more file references are invalid',
+					invalidAnswers: [
+						{
+							answerId: storedAnswer.id,
+							questionId: question.id,
+							code: 'invalid_file_reference',
+							message: 'One or more file references are invalid'
+						}
+					]
+				});
+			}
+
+			const normalizedAnswer = question ? normalizeAnswerResponse(question, answer) : answer;
+
+			const updatedAnswer = await locals.apb.collection('answers').update(
 				answerId,
 				{
-					response: answer,
+					response: normalizedAnswer,
 					valid: true
 				},
 				{
@@ -229,18 +302,25 @@ export const actions: Actions = {
 		}
 
 		try {
-			const application = await locals.pb
+			if (!locals.user) {
+				return fail(401, { message: 'Unauthorized' });
+			}
+
+			const application = await locals.apb
 				.collection('applications')
 				.getOne<ExpandedApplication>(params.id, {
 					expand: 'event,response,response.question'
 				});
 
-			if (!locals.user || application.responder !== locals.user.id) {
-				return fail(400, { message: 'Invalid user' });
+			if (application.responder !== locals.user.id) {
+				return fail(403, { message: 'Access denied' });
 			}
 
 			if (application.status === 'trashed') {
 				return fail(404, { message: 'Application not found' });
+			}
+			if (['submitted', 'resubmitted'].includes(application.status)) {
+				return redirect(303, `/`);
 			}
 
 			if (application.expand?.event.status != 'active') {
@@ -256,9 +336,31 @@ export const actions: Actions = {
 			}
 
 			const responses = application.expand.response;
+			const validation = validateApplicationAnswers(responses);
 
-			if (responses.some((i) => i.valid === false)) {
-				return fail(400, { message: 'Some responses are invalid' });
+			for (let index = 0; index < responses.length; index++) {
+				const answer = responses[index];
+				if (
+					answer.expand?.question?.type === 'file' &&
+					isAnswerApplicable(answer, responses) &&
+					validateAnswer(answer.expand.question, answer.response).valid &&
+					!(await validateFileReferences(locals, locals.user.id, answer.response))
+				) {
+					validation.invalidAnswers.push({
+						answerId: answer.id,
+						questionId: answer.expand.question.id,
+						index,
+						code: 'invalid_file_reference',
+						message: 'One or more file references are invalid'
+					});
+				}
+			}
+
+			if (validation.invalidAnswers.length > 0) {
+				return fail(422, {
+					message: 'Please correct the highlighted response before submitting',
+					invalidAnswers: validation.invalidAnswers
+				});
 			}
 
 			await locals.apb.collection('applications').update(params.id, {
@@ -270,12 +372,25 @@ export const actions: Actions = {
 			const emailHtml = generateApplicationSummaryEmail(application);
 			const eventName = application.expand?.event?.name || 'Event';
 
-			await locals.rs.emails.send({
-				from: `${PUBLIC_ACME} <notification@mail.nthumods.com>`,
-				to: [locals.user.email],
-				subject: `Application Submitted - ${eventName}`,
-				html: emailHtml
-			});
+			try {
+				const emailResult = await locals.rs.emails.send({
+					from: `${PUBLIC_ACME} <notification@mail.nthumods.com>`,
+					to: [locals.user.email],
+					subject: `Application Submitted - ${eventName}`,
+					html: emailHtml
+				});
+				if (emailResult.error) {
+					console.error('Application confirmation email failed', {
+						applicationId: application.id,
+						error: emailResult.error
+					});
+				}
+			} catch (emailError) {
+				console.error('Application confirmation email failed', {
+					applicationId: application.id,
+					error: emailError
+				});
+			}
 
 			return redirect(303, `/`);
 		} catch (err) {

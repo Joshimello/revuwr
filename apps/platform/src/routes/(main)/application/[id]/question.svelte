@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { applyAction, deserialize } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
@@ -6,10 +7,8 @@
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { m } from '$lib/paraglide/messages.js';
 	import { Info } from 'lucide-svelte';
-	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { shouldShowConditionalQuestion } from './conditional-utils';
-	import { updateConditionalAnswers } from './methods';
+	import { isAnswerEffectivelyValid, validateAnswer } from './answer-validation';
 	import { getNextQuestionIndex } from './navigation';
 	import questionTypes from './question-types';
 	import { answers, application, currentIndex, event, isReadOnly } from './stores';
@@ -19,7 +18,6 @@
 	export let content: ExpandedResponse;
 	const question = content.expand?.question;
 
-	let checkValid: () => [boolean, string];
 	let value: unknown = content.response;
 
 	let isLoading = false;
@@ -30,35 +28,13 @@
 	$: allOtherAnswersValid = $answers.every((answer, index) => {
 		if (index === $currentIndex) return true;
 
-		const answerQuestion = answer.expand?.question;
-		if (!answerQuestion) return false;
-
-		// If conditional and shouldn't be shown, consider it valid
-		if (answerQuestion.conditional && !shouldShowConditionalQuestion(answerQuestion, $answers)) {
-			return true;
-		}
-
-		return answer.valid;
+		return isAnswerEffectivelyValid(answer, $answers);
 	});
 
-	// Create a more robust reactive validation system
-	let validationResult: [boolean, string] = [false, ''];
-
-	// Update validation whenever value or checkValid changes
-	$: {
-		if (checkValid && value !== undefined) {
-			try {
-				validationResult = checkValid();
-			} catch {
-				validationResult = [false, 'Validation error'];
-			}
-		} else {
-			validationResult = [false, ''];
-		}
-	}
+	$: validationResult = validateAnswer(question, value);
 
 	// Computed validation for current answer
-	$: isCurrentAnswerValid = validationResult[0];
+	$: isCurrentAnswerValid = validationResult.valid;
 
 	$: canSubmit = canSubmitApplication({
 		applicationStatus: $application?.status,
@@ -81,10 +57,6 @@
 		value = content.response;
 	}
 
-	onMount(() => {
-		// Component mounted - validation system is ready
-	});
-
 	function handleKeydown(event: KeyboardEvent) {
 		if (
 			event.key === 'Enter' &&
@@ -99,7 +71,7 @@
 				event.preventDefault();
 
 				// Check if validation passes
-				if (checkValid && !checkValid()[0]) {
+				if (!validationResult.valid) {
 					return;
 				}
 
@@ -141,11 +113,6 @@
 					// Invalidate all data to refresh stores with latest server data
 					await invalidateAll();
 
-					// Update conditional answers after this answer changes
-					if ($application?.expand?.response) {
-						await updateConditionalAnswers($application.expand.response);
-					}
-
 					$currentIndex = getNextQuestionIndex(
 						$answers,
 						$currentIndex,
@@ -165,45 +132,67 @@
 	async function handleSubmit() {
 		isUpdating = true;
 
-		// First update the answer
-		const updateForm = document.getElementById('updateAnswerForm') as HTMLFormElement;
-		if (updateForm) {
-			const formData = new FormData(updateForm);
-
-			try {
+		try {
+			// The final question is read-only during an edit request, so only persist it for drafts.
+			const updateForm = document.getElementById('updateAnswerForm') as HTMLFormElement;
+			if (updateForm && !$isReadOnly) {
+				const formData = new FormData(updateForm);
 				const response = await fetch(updateForm.action, {
 					method: 'POST',
 					body: formData
 				});
 
-				if (response.ok) {
-					// Invalidate all data to refresh stores with latest server data
-					await invalidateAll();
-
-					// Update conditional answers before submitting
-					if ($application?.expand?.response) {
-						await updateConditionalAnswers($application.expand.response);
-					}
-
-					isLoading = true;
-					toast.loading(m.toast_submitting_application(), {
-						duration: Number.POSITIVE_INFINITY
-					});
-
-					// Submit the application
-					const submitForm = document.getElementById('submitForm') as HTMLFormElement;
-					if (submitForm) {
-						submitForm.submit();
-					}
-				} else {
+				if (!response.ok) {
 					toast.error('Failed to update answer');
+					return;
 				}
-			} catch (error) {
-				toast.error('Failed to update answer');
-			}
-		}
 
-		isUpdating = false;
+				await invalidateAll();
+			}
+
+			isLoading = true;
+			toast.loading(m.toast_submitting_application(), {
+				duration: Number.POSITIVE_INFINITY
+			});
+
+			const submitForm = document.getElementById('submitForm') as HTMLFormElement;
+			if (!submitForm) return;
+
+			const submitResponse = await fetch(submitForm.action, {
+				method: 'POST',
+				body: new FormData(submitForm),
+				headers: {
+					'x-sveltekit-action': 'true'
+				}
+			});
+			const result = deserialize(await submitResponse.text());
+
+			if (result.type === 'failure') {
+				const resultData = result.data as {
+					message?: string;
+					invalidAnswers?: { answerId: string }[];
+				};
+				const firstInvalidAnswerId = resultData.invalidAnswers?.[0]?.answerId;
+				const firstInvalidIndex = firstInvalidAnswerId
+					? $answers.findIndex((answer) => answer.id === firstInvalidAnswerId)
+					: -1;
+
+				if (firstInvalidIndex >= 0) {
+					$currentIndex = firstInvalidIndex;
+				}
+				toast.dismiss();
+				toast.error(resultData.message ?? 'Application could not be submitted');
+				isLoading = false;
+			} else {
+				await applyAction(result);
+			}
+		} catch {
+			toast.dismiss();
+			toast.error('Application could not be submitted');
+			isLoading = false;
+		} finally {
+			isUpdating = false;
+		}
 	}
 </script>
 
@@ -217,9 +206,9 @@
 				<Badge variant="secondary">{m.optional_badge()}</Badge>
 			{/if}
 
-			{#if checkValid && !checkValid()[0]}
+			{#if !validationResult.valid}
 				<span class="text-sm text-destructive">
-					{checkValid()[1]}
+					{validationResult.message}
 				</span>
 			{/if}
 		</div>
@@ -240,7 +229,6 @@
 			{question}
 			disabled={$isReadOnly}
 			bind:value
-			bind:checkValid
 		/>
 	</div>
 

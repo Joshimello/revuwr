@@ -7,8 +7,8 @@
 	import * as Popover from '$lib/components/ui/popover';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { onMount } from 'svelte';
+	import { isAnswerEffectivelyValid } from './answer-validation';
 	import { shouldShowConditionalQuestion } from './conditional-utils';
-	import { updateConditionalAnswers } from './methods';
 	import Question from './question.svelte';
 	import { answers, application, currentIndex, event, isReadOnly } from './stores';
 	import type { ExpandedApplication, ExpandedResponse } from './types';
@@ -99,7 +99,9 @@
 		const base = 'h-2 w-2 rounded-full transition-colors duration-150 cursor-pointer';
 		if (isCurrent) return `${base} bg-primary outline outline-2 outline-offset-1 outline-primary`;
 		if (answer.status === 'edit') return `${base} bg-orange-400 hover:bg-orange-500`;
-		if (answer.valid) return `${base} bg-green-500 hover:bg-green-600`;
+		if (isAnswerEffectivelyValid(answer, $answers)) {
+			return `${base} bg-green-500 hover:bg-green-600`;
+		}
 		const r = answer.response;
 		const hasResponse =
 			r !== null &&
@@ -118,11 +120,6 @@
 	onMount(() => {
 		setInitialQuestionIndex();
 	});
-
-	// Process conditional questions separately after data is loaded
-	$: if ($application?.expand?.response && $answers.length > 0) {
-		updateConditionalAnswers($application.expand.response).catch(console.error);
-	}
 
 	// Reactive statement to handle question navigation when data updates
 	$: if ($application && $answers.length > 0) {
@@ -148,17 +145,9 @@
 
 			$currentIndex = firstEditIndex === -1 ? $answers.length - 1 : firstEditIndex;
 		} else {
-			const firstInvalidIndex = $answers.findIndex((answer) => {
-				const question = answer.expand?.question;
-				if (!question) return false;
-
-				if (question.conditional) {
-					const shouldShow = shouldShowConditionalQuestion(question, $answers);
-					return shouldShow && !answer.valid;
-				}
-
-				return !answer.valid;
-			});
+			const firstInvalidIndex = $answers.findIndex(
+				(answer) => !isAnswerEffectivelyValid(answer, $answers)
+			);
 
 			$currentIndex = firstInvalidIndex === -1 ? $answers.length - 1 : firstInvalidIndex;
 		}

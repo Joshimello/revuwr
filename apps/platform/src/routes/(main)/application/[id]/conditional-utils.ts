@@ -82,33 +82,3 @@ export function shouldShowConditionalQuestion(
 	// If none of the conditions are met, don't show the question
 	return false;
 }
-
-/**
- * Processes all answers and marks conditional questions as valid if their conditions aren't met
- * @param answers - All answers in the application
- * @returns Promise<void>
- */
-export async function processConditionalQuestions(
-	answers: ExpandedResponse[]
-): Promise<ExpandedResponse[]> {
-	const processedAnswers = [...answers];
-
-	for (let i = 0; i < processedAnswers.length; i++) {
-		const answer = processedAnswers[i];
-		const question = answer.expand?.question;
-
-		if (question && question.conditional) {
-			const shouldShow = shouldShowConditionalQuestion(question, processedAnswers);
-
-			// If the question shouldn't be shown, mark it as valid
-			if (!shouldShow) {
-				processedAnswers[i] = {
-					...answer,
-					valid: true
-				};
-			}
-		}
-	}
-
-	return processedAnswers;
-}
