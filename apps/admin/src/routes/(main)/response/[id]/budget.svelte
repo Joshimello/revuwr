@@ -42,7 +42,7 @@
 	}[];
 
 	export let value: typeof schema = [];
-	console.log(value);
+	export let outValue: typeof schema = value;
 
 	onMount(() => {
 		if (value.length === 0) {
@@ -50,7 +50,7 @@
 		}
 	});
 
-	export const outValue = value;
+	$: outValue = value;
 
 	// $: if (schema) {
 	// 	value = schema.map((item) => ({ ...item }));
@@ -79,7 +79,7 @@
 				return 'ERROR';
 			}
 			return value;
-		} catch (error) {
+		} catch {
 			return 'ERROR';
 		}
 	};
@@ -90,7 +90,7 @@
 		range: { input: number[]; output: number[] }
 	) => {
 		const parsedFormula = parseFormula(formula, data);
-		const value = range.output[range.input.findLastIndex((value, index) => parsedFormula >= value)];
+		const value = range.output[range.input.findLastIndex((value) => parsedFormula >= value)];
 		if (isNaN(value)) {
 			return 'ERROR';
 		}

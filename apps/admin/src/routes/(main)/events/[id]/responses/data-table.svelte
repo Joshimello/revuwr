@@ -35,7 +35,7 @@
 	type ExpandedApplications = ApplicationsResponse<{
 		responder: UsersResponse;
 		response: AnswersResponse<
-			any,
+			unknown,
 			{
 				question: QuestionsResponse;
 			}
@@ -43,7 +43,7 @@
 	}>;
 
 	type ExpandedEvents = EventsResponse<
-		any,
+		unknown,
 		{
 			questions: QuestionsResponse[];
 		}
@@ -224,20 +224,26 @@
 		})
 	]);
 
-	event.expand?.questions.forEach((question) => {
-		columns.push(
-			table.column({
-				id: question.id,
-				accessor: (value: ExpandedApplications) =>
-					value.expand?.response.find((i) => i.question == question.id),
-				header: question.title.replaceAll(/<[^>]*>/g, ''),
-				cell: ({ value }) =>
-					createRender(ResponseRenderer, {
-						data: value
-					})
-			})
-		);
-	});
+	event.expand?.questions
+		.filter((question) => question.type !== 'info')
+		.forEach((question) => {
+			columns.push(
+				table.column({
+					id: question.id,
+					accessor: (value: ExpandedApplications) => ({
+						answer: value.expand?.response.find((i) => i.question == question.id),
+						allAnswers: value.expand?.response ?? []
+					}),
+					header: question.title.replaceAll(/<[^>]*>/g, ''),
+					cell: ({ value }) =>
+						createRender(ResponseRenderer, {
+							data: value.answer,
+							allAnswers: value.allAnswers,
+							variant: 'table'
+						})
+				})
+			);
+		});
 
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, flatColumns, rows } =
 		table.createViewModel(columns);

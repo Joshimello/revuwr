@@ -8,7 +8,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Popover from '$lib/components/ui/popover';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { i18n } from '$lib/i18n.js';
 	import * as m from '$lib/paraglide/messages.js';
@@ -102,12 +101,13 @@
 		</div>
 	</div>
 
-	<div class="flex flex-col">
-		<header class="flex h-14 items-center border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+	<div class="flex min-w-0 flex-col">
+		<header class="flex min-w-0 items-center border-b bg-muted/40 px-4 h-14 lg:h-[60px] lg:px-6">
 			<Sheet.Root>
 				<Sheet.Trigger let:builder>
 					<Button variant="outline" size="icon" class="shrink-0 md:hidden" builders={[builder]}>
 						<Menu class="h-5 w-5" />
+						<span class="sr-only">Open navigation</span>
 					</Button>
 				</Sheet.Trigger>
 				<Sheet.Content side="left" class="flex flex-col">
@@ -138,7 +138,7 @@
 				</Sheet.Content>
 			</Sheet.Root>
 
-			<div class="hidden w-full flex-1 sm:block">
+			<div class="hidden min-w-0 flex-1 sm:block">
 				{#if $breadcrumbs.length > 0}
 					<Breadcrumb.Root>
 						<Breadcrumb.List>
@@ -158,13 +158,14 @@
 			</div>
 
 			{#if user}
-				<span class="ml-4">{user.email}</span>
+				<span class="ml-4 hidden max-w-64 truncate xl:block">{user.email}</span>
 			{/if}
 
 			<Popover.Root>
 				<Popover.Trigger asChild let:builder>
-					<Button size="icon" variant="ghost" builders={[builder]} class="ml-4">
+					<Button size="icon" variant="ghost" builders={[builder]} class="ml-auto">
 						<ALargeSmall size="16" />
+						<span class="sr-only">Text size</span>
 					</Button>
 				</Popover.Trigger>
 				<Popover.Content class="flex w-max gap-1 p-2">
@@ -185,6 +186,7 @@
 				<DropdownMenu.Trigger asChild let:builder>
 					<Button size="icon" variant="ghost" builders={[builder]}>
 						<Languages size="16" />
+						<span class="sr-only">Language</span>
 					</Button>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content>
@@ -208,14 +210,17 @@
 
 			<Button size="icon" variant="ghost" on:click={handleLogout}>
 				<LogOutIcon size="16" />
+				<span class="sr-only">Sign out</span>
 			</Button>
 		</header>
 
-		<ScrollArea class="max-h-[calc(100vh-3.5rem)] flex-1 lg:max-h-[calc(100vh-60px)]">
-			<div class="flex flex-col gap-4 p-4 lg:max-h-[calc(100vh-60px)] lg:gap-6 lg:p-6">
+		<div
+			class="min-w-0 max-h-[calc(100vh-3.5rem)] flex-1 overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-60px)]"
+		>
+			<div class="flex min-w-0 flex-col gap-4 p-4 lg:max-h-[calc(100vh-60px)] lg:gap-6 lg:p-6">
 				<slot />
 				<div class="min-h-16" />
 			</div>
-		</ScrollArea>
+		</div>
 	</div>
 </div>

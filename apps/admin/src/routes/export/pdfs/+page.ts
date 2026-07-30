@@ -13,9 +13,9 @@ type ExpandedApplication = ApplicationsResponse<{
 	event: EventsResponse;
 	responder: UsersResponse;
 	response: AnswersResponse<
-		any,
+		unknown,
 		{
-			question: QuestionsResponse<any>;
+			question: QuestionsResponse<unknown>;
 		}
 	>[];
 }>;
@@ -31,7 +31,6 @@ export const load: PageLoad = async ({ url }) => {
 		const applications = allApplications.filter(
 			(a) => applicationIds.includes(a.id) && a.status !== 'trashed'
 		);
-		console.log(applications);
 		return {
 			applications: applications || []
 		};

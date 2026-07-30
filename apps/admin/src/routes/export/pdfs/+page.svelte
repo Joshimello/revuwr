@@ -2,11 +2,36 @@
 	import ResponseRenderer from '$lib/components/response-renderer.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table';
+	import * as m from '$lib/paraglide/messages.js';
+	import { getAnswerDisplayState, type ExpandedAnswer } from '$lib/response-display';
 	import { Printer } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 	const { applications } = data;
+
+	function responseSections(value: unknown) {
+		const allAnswers = (Array.isArray(value) ? value : []) as ExpandedAnswer[];
+		const answers = [...allAnswers]
+			.filter((answer) => answer.expand?.question.type !== 'info')
+			.sort((first, second) => {
+				const firstQuestion = first.expand?.question;
+				const secondQuestion = second.expand?.question;
+				return (
+					(firstQuestion?.page ?? 0) - (secondQuestion?.page ?? 0) ||
+					(firstQuestion?.count ?? 0) - (secondQuestion?.count ?? 0)
+				);
+			})
+			.map((answer, index) => ({ answer, number: index + 1 }));
+
+		return Array.from(new Set(answers.map((item) => item.answer.expand?.question.page ?? 1))).map(
+			(pageNumber) => ({
+				pageNumber,
+				allAnswers,
+				answers: answers.filter((item) => (item.answer.expand?.question.page ?? 1) === pageNumber)
+			})
+		);
+	}
 </script>
 
 {#if applications && applications.length > 0}
@@ -92,18 +117,36 @@
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
-						{#each application?.expand?.response || [] as response}
-							{#if response.expand?.question}
-								<Table.Row>
-									<Table.Cell class="font-medium">
-										<!-- eslint-disable-next-line -->
-										{@html response.expand?.question.title}
-									</Table.Cell>
-									<Table.Cell>
-										<ResponseRenderer data={response} />
-									</Table.Cell>
-								</Table.Row>
-							{/if}
+						{#each responseSections(application?.expand?.response) as section}
+							<Table.Row class="bg-muted/60">
+								<Table.Cell colspan={2} class="font-semibold">
+									{m.section_number({ number: section.pageNumber })}
+								</Table.Cell>
+							</Table.Row>
+							{#each section.answers as item}
+								{@const response = item.answer}
+								{@const state = getAnswerDisplayState(response, section.allAnswers)}
+								{#if response.expand?.question}
+									<Table.Row>
+										<Table.Cell class="align-top font-medium">
+											<div class="mb-1 text-xs text-muted-foreground">
+												{m.question_number({ number: item.number })}
+												· {response.expand.question.required ? m.required() : m.optional()}
+											</div>
+											<!-- eslint-disable-next-line -->
+											{@html response.expand.question.title}
+										</Table.Cell>
+										<Table.Cell class="align-top">
+											<ResponseRenderer
+												data={response}
+												variant="print"
+												{state}
+												allAnswers={section.allAnswers}
+											/>
+										</Table.Cell>
+									</Table.Row>
+								{/if}
+							{/each}
 						{/each}
 					</Table.Body>
 				</Table.Root>
