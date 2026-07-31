@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import ApplicationExportDialog from '$lib/components/application-export-dialog.svelte';
 	import { default as Status, statuses } from '$lib/components/status.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -7,7 +8,7 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as m from '$lib/paraglide/messages.js';
 	import { pb } from '$lib/pocketbase/client';
-	import { SquareArrowOutUpRight, SquareMenu } from 'lucide-svelte';
+	import { Download, SquareArrowOutUpRight, SquareMenu } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { reviewRequests } from './stores';
 	import type { ExpandedApplication } from './types';
@@ -15,6 +16,7 @@
 	export let record: ExpandedApplication;
 	let prevNote = record.adminNote;
 	let addNotesOpen = false;
+	let exportOpen = false;
 
 	const handleChangeStatus = async (status: string) => {
 		try {
@@ -109,7 +111,7 @@
 						{m.edit_status()}
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent class="w-max">
-						{#each Object.entries(statuses) as [key, value]}
+						{#each Object.entries(statuses) as [key]}
 							{#if key !== 'trashed'}
 								<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
 									<Status type={key} />
@@ -118,23 +120,10 @@
 						{/each}
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
-				<DropdownMenu.Sub>
-					<DropdownMenu.SubTrigger>
-						{m.download()}
-					</DropdownMenu.SubTrigger>
-					<DropdownMenu.SubContent>
-						<DropdownMenu.Item
-							href={`${PUBLIC_BASE_PATH}/export/pdfs?ids=${record.id}`}
-							target="_blank">PDF</DropdownMenu.Item
-						>
-						<DropdownMenu.Item
-							href={`${PUBLIC_BASE_PATH}/export/csv?ids=${record.id}`}
-							target="_blank"
-						>
-							CSV
-						</DropdownMenu.Item>
-					</DropdownMenu.SubContent>
-				</DropdownMenu.Sub>
+				<DropdownMenu.Item class="flex items-center gap-2" on:click={() => (exportOpen = true)}>
+					<Download size="16" />
+					{m.export_applications()}
+				</DropdownMenu.Item>
 				<DropdownMenu.Item href={`mailto:${record.expand?.responder.email}`} target="_blank">
 					{m.mail_user()}
 				</DropdownMenu.Item>
@@ -175,3 +164,9 @@
 		</Dialog.Header>
 	</Dialog.Content>
 </Dialog.Root>
+
+<ApplicationExportDialog
+	bind:open={exportOpen}
+	eventId={record.event}
+	applicationIds={[record.id]}
+/>

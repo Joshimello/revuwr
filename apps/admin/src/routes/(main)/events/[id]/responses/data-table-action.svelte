@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { PUBLIC_BASE_PATH } from '$env/static/public';
+	import ApplicationExportDialog from '$lib/components/application-export-dialog.svelte';
 	import { default as Status, statuses } from '$lib/components/status.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -12,7 +13,7 @@
 		ApplicationsResponse,
 		UsersResponse
 	} from '$lib/pocketbase/pocketbase-types';
-	import { SquareArrowOutUpRight, SquareMenu, Trash2 } from 'lucide-svelte';
+	import { Download, SquareArrowOutUpRight, SquareMenu, Trash2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { applications } from './stores';
 
@@ -25,6 +26,7 @@
 	let prevNote = record.adminNote;
 	let addNotesOpen = false;
 	let trashOpen = false;
+	let exportOpen = false;
 
 	const handleChangeStatus = async (status: string) => {
 		try {
@@ -124,49 +126,13 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
+				<DropdownMenu.Item class="flex items-center gap-2" on:click={() => (exportOpen = true)}>
+					<Download size="16" />
+					{m.export_applications()}
+				</DropdownMenu.Item>
 				<DropdownMenu.Item href={`${PUBLIC_BASE_PATH}/response/${record.id}`}>
 					{m.view_response()}
 				</DropdownMenu.Item>
-				<DropdownMenu.Sub>
-					<DropdownMenu.SubTrigger>
-						{m.edit_status()}
-					</DropdownMenu.SubTrigger>
-					<DropdownMenu.SubContent class="w-max">
-						{#each Object.entries(statuses) as [key, value]}
-							{#if key !== 'trashed'}
-								<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
-									<Status type={key} />
-								</DropdownMenu.Item>
-							{/if}
-						{/each}
-					</DropdownMenu.SubContent>
-				</DropdownMenu.Sub>
-				{#if record.status !== 'trashed'}
-					<DropdownMenu.Item
-						class="flex items-center gap-2 text-destructive"
-						on:click={() => (trashOpen = true)}
-					>
-						<Trash2 size="16" />
-						{m.trash_response()}
-					</DropdownMenu.Item>
-				{/if}
-				<DropdownMenu.Sub>
-					<DropdownMenu.SubTrigger>
-						{m.download()}
-					</DropdownMenu.SubTrigger>
-					<DropdownMenu.SubContent>
-						<DropdownMenu.Item
-							href={`${PUBLIC_BASE_PATH}/export/pdfs?ids=${record.id}`}
-							target="_blank">PDF</DropdownMenu.Item
-						>
-						<DropdownMenu.Item
-							href={`${PUBLIC_BASE_PATH}/export/csv?ids=${record.id}`}
-							target="_blank"
-						>
-							CSV
-						</DropdownMenu.Item>
-					</DropdownMenu.SubContent>
-				</DropdownMenu.Sub>
 				{#if record.expand?.responder?.email}
 					<DropdownMenu.Item href={`mailto:${record.expand.responder.email}`} target="_blank">
 						{m.mail_user()}
@@ -190,6 +156,29 @@
 						{/each}
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
+				<DropdownMenu.Sub>
+					<DropdownMenu.SubTrigger>
+						{m.edit_status()}
+					</DropdownMenu.SubTrigger>
+					<DropdownMenu.SubContent class="w-max">
+						{#each Object.entries(statuses) as [key]}
+							{#if key !== 'trashed'}
+								<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
+									<Status type={key} />
+								</DropdownMenu.Item>
+							{/if}
+						{/each}
+					</DropdownMenu.SubContent>
+				</DropdownMenu.Sub>
+				{#if record.status !== 'trashed'}
+					<DropdownMenu.Item
+						class="flex items-center gap-2 text-destructive"
+						on:click={() => (trashOpen = true)}
+					>
+						<Trash2 size="16" />
+						{m.trash_response()}
+					</DropdownMenu.Item>
+				{/if}
 			</DropdownMenu.Group>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Label class="p-0 px-2 font-mono text-xs font-normal text-muted-foreground">
@@ -209,6 +198,12 @@
 		</Dialog.Header>
 	</Dialog.Content>
 </Dialog.Root>
+
+<ApplicationExportDialog
+	bind:open={exportOpen}
+	eventId={record.event}
+	applicationIds={[record.id]}
+/>
 
 <Dialog.Root bind:open={trashOpen}>
 	<Dialog.Content>

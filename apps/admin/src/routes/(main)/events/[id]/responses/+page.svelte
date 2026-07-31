@@ -112,7 +112,7 @@
 		{#if ['draft', 'submitted', 'editsRequested', 'approved', 'rejected'].includes(key)}
 			<div class="flex flex-col items-center justify-center rounded-md border p-4">
 				<div class={`h-4 w-4 rounded-full ${status.classes}`}></div>
-				<div class="mt-2 text-nowrap text-sm font-medium">{status.label}</div>
+				<div class="mt-2 text-nowrap text-sm font-medium">{status.label()}</div>
 				<div class="text-xs text-muted-foreground">
 					{$applications.filter((app) => app.status === key).length}
 				</div>

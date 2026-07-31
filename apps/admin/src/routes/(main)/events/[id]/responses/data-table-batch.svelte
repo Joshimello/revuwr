@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import ApplicationExportDialog from '$lib/components/application-export-dialog.svelte';
 	import { default as Status, statuses } from '$lib/components/status.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -20,8 +21,6 @@
 		Download,
 		FileCheck,
 		FileOutput,
-		FileSpreadsheet,
-		FileText,
 		FileX,
 		Mails,
 		SquarePen,
@@ -79,6 +78,7 @@
 	let batchRequestEditOpen = false;
 	let batchRejectOpen = false;
 	let batchTrashOpen = false;
+	let exportOpen = false;
 	let isMailResponder = false;
 	let mailContent = '';
 
@@ -251,87 +251,10 @@
 				>
 			</Card.Header>
 			<Card.Content class="grid grid-cols-2 gap-2 md:flex">
-				<Button
-					class="flex items-center gap-2 bg-green-500 text-white"
-					on:click={() => handleBatchApprove()}
-				>
-					<FileCheck size="16" strokeWidth="3" />
-					{m.approve()}
+				<Button class="flex items-center gap-2" on:click={() => (exportOpen = true)}>
+					<Download size="16" />
+					{m.export_applications()}
 				</Button>
-
-				<Button
-					class="flex items-center gap-2 bg-amber-500 text-white"
-					on:click={() => handleBatchRequestEdit()}
-				>
-					<FileOutput size="16" strokeWidth="3" />
-					{m.return_for_edits()}
-				</Button>
-
-				<Button
-					class="flex items-center gap-2 bg-red-500 text-white"
-					on:click={() => handleBatchReject()}
-				>
-					<FileX size="16" strokeWidth="3" />
-					{m.reject()}
-				</Button>
-
-				<Button class="flex items-center gap-2" variant="destructive" on:click={handleBatchTrash}>
-					<Trash2 size="16" strokeWidth="3" />
-					{m.trash_selected()}
-				</Button>
-
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<Button class="flex items-center gap-2" builders={[builder]}>
-							<SquarePen size="16" />
-							{m.edit_status()}
-						</Button>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						<DropdownMenu.Group>
-							{#each Object.entries(statuses) as [key, value]}
-								{#if key !== 'trashed'}
-									<DropdownMenu.Item
-										on:click={() => {
-											handleUpdateStatus(key);
-										}}
-									>
-										<Status type={key} />
-									</DropdownMenu.Item>
-								{/if}
-							{/each}
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<Button class="flex items-center gap-2" builders={[builder]}>
-							<Download size="16" />
-							{m.download()}
-						</Button>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						<DropdownMenu.Group>
-							<DropdownMenu.Item
-								class="flex items-center gap-2"
-								target="_blank"
-								href={`${PUBLIC_BASE_PATH}/export/csv?ids=${selectedIds.join(',')}`}
-							>
-								<FileSpreadsheet size="16" />
-								{m.export_as()} CSV
-							</DropdownMenu.Item>
-							<DropdownMenu.Item
-								class="flex items-center gap-2"
-								target="_blank"
-								href={`${PUBLIC_BASE_PATH}/export/pdfs?ids=${selectedIds.join(',')}`}
-							>
-								<FileText size="16" />
-								{m.export_as()} as PDF
-							</DropdownMenu.Item>
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
 
 				<Button
 					class="flex items-center gap-2"
@@ -348,6 +271,62 @@
 				>
 					<UserRoundSearch size="16" />
 					{m.send_for_review()}
+				</Button>
+
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger asChild let:builder>
+						<Button class="flex items-center gap-2" builders={[builder]}>
+							<SquarePen size="16" />
+							{m.edit_status()}
+						</Button>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							{#each Object.entries(statuses) as [key]}
+								{#if key !== 'trashed'}
+									<DropdownMenu.Item
+										on:click={() => {
+											handleUpdateStatus(key);
+										}}
+									>
+										<Status type={key} />
+									</DropdownMenu.Item>
+								{/if}
+							{/each}
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+
+				{#if false}
+					<!-- Temporarily hidden: batch approve, edit-request, and reject actions. -->
+					<Button
+						class="flex items-center gap-2 bg-green-500 text-white"
+						on:click={() => handleBatchApprove()}
+					>
+						<FileCheck size="16" strokeWidth="3" />
+						{m.approve()}
+					</Button>
+
+					<Button
+						class="flex items-center gap-2 bg-amber-500 text-white"
+						on:click={() => handleBatchRequestEdit()}
+					>
+						<FileOutput size="16" strokeWidth="3" />
+						{m.return_for_edits()}
+					</Button>
+
+					<Button
+						class="flex items-center gap-2 bg-red-500 text-white"
+						on:click={() => handleBatchReject()}
+					>
+						<FileX size="16" strokeWidth="3" />
+						{m.reject()}
+					</Button>
+				{/if}
+
+				<Button class="flex items-center gap-2" variant="destructive" on:click={handleBatchTrash}>
+					<Trash2 size="16" strokeWidth="3" />
+					{m.trash_selected()}
 				</Button>
 			</Card.Content>
 		</Card.Root>
@@ -383,6 +362,12 @@
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
+
+<ApplicationExportDialog
+	bind:open={exportOpen}
+	eventId={$page.params.id ?? ''}
+	applicationIds={selectedIds}
+/>
 
 <!-- Batch Request Edits Dialog -->
 <Dialog.Root bind:open={batchRequestEditOpen}>

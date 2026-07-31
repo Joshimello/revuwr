@@ -139,8 +139,7 @@ Readonly store that contains the current breadcrumbs. Subscribe to this in compo
 
 **Export Routes:**
 
-- `/export/csv` - CSV export page
-- `/export/pdfs` - PDF export page
+- `/api/exports/applications` - Server-side application export endpoint for XLSX and PDF
 
 **Special Routes:**
 

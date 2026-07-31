@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
 	import { setBreadcrumbs } from '$lib/breadcrumbs.js';
+	import ApplicationExportDialog from '$lib/components/application-export-dialog.svelte';
 	import Status, { statuses } from '$lib/components/status.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -60,6 +61,7 @@
 	let prevNote: string | null = null;
 	let prevSerial: number | null = null;
 	let searchQuery = '';
+	let exportOpen = false;
 	let responseFilter: 'all' | 'answered' | 'unanswered' | 'missing-required' | 'requested-edits' =
 		'all';
 
@@ -630,28 +632,15 @@
 							<Label class="text-muted-foreground">
 								{m.export_response()}
 							</Label>
-							<div class="grid grid-cols-2 gap-1">
-								<Button
-									variant="secondary"
-									size="sm"
-									class="h-7"
-									href={`${PUBLIC_BASE_PATH}/export/pdfs?ids=${record.id}`}
-									target="_blank"
-								>
-									<Download size="14" class="mr-1" />
-									PDF
-								</Button>
-								<Button
-									variant="secondary"
-									size="sm"
-									class="h-7"
-									href={`${PUBLIC_BASE_PATH}/export/csv?ids=${record.id}`}
-									target="_blank"
-								>
-									<Download size="14" class="mr-1" />
-									CSV
-								</Button>
-							</div>
+							<Button
+								variant="secondary"
+								size="sm"
+								class="h-7"
+								on:click={() => (exportOpen = true)}
+							>
+								<Download size="14" class="mr-1" />
+								{m.export_applications()}
+							</Button>
 						</div>
 					</Card.Content>
 				</Card.Root>
@@ -669,6 +658,8 @@
 			</Dialog.Header>
 		</Dialog.Content>
 	</Dialog.Root>
+
+	<ApplicationExportDialog bind:open={exportOpen} eventId={event.id} applicationIds={[record.id]} />
 
 	<div
 		class="pointer-events-none fixed bottom-2 left-2 right-2 z-40 md:bottom-6 md:left-6 md:right-6"

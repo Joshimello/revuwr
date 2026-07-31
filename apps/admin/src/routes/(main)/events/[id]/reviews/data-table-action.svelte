@@ -7,12 +7,12 @@
 	import { pb } from '$lib/pocketbase/client';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { toast } from 'svelte-sonner';
-	import { PUBLIC_BASE_PATH, PUBLIC_PLATFORM_URL } from '$env/static/public';
+	import { PUBLIC_PLATFORM_URL } from '$env/static/public';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { fromDate } from '@internationalized/date';
-	import * as m from '$lib/paraglide/messages.js'
+	import * as m from '$lib/paraglide/messages.js';
 	import { reviewRequests } from './stores';
 
 	export let record: ReviewsResponse;
@@ -78,44 +78,33 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
-				<DropdownMenu.Item 
-          href={`${PUBLIC_PLATFORM_URL}/review/${record.id}`} 
-          target="_blank">
-          {m.view_review()}
-        </DropdownMenu.Item>
+				<DropdownMenu.Item href={`${PUBLIC_PLATFORM_URL}/review/${record.id}`} target="_blank">
+					{m.view_review()}
+				</DropdownMenu.Item>
 				<DropdownMenu.Item
 					on:click={() => {
 						editDetailsOpen = true;
 						newReviewerEmail = record.reviewerEmail;
 						newReviewEndDate = new Date(record.endDate);
-					}}>
-						{m.edit_details()}
-					</DropdownMenu.Item
+					}}
 				>
+					{m.edit_details()}
+				</DropdownMenu.Item>
 				<DropdownMenu.Sub>
 					<DropdownMenu.SubTrigger>
 						{m.edit_status()}
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent class="w-max">
-						{#each Object.entries(statuses) as [key, value]}
+						{#each Object.entries(statuses) as [key]}
 							<DropdownMenu.Item on:click={() => handleChangeStatus(key)}>
 								<Status type={key} />
 							</DropdownMenu.Item>
 						{/each}
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
-				<DropdownMenu.Sub>
-					<DropdownMenu.SubTrigger>
-						{m.download()}
-					</DropdownMenu.SubTrigger>
-					<DropdownMenu.SubContent>
-						<DropdownMenu.Item disabled>PDF</DropdownMenu.Item>
-						<DropdownMenu.Item disabled>CSV</DropdownMenu.Item>
-					</DropdownMenu.SubContent>
-				</DropdownMenu.Sub>
 			</DropdownMenu.Group>
 			<DropdownMenu.Separator />
-			<DropdownMenu.Label class="text-muted-foreground p-0 px-2 font-mono text-xs font-normal"
+			<DropdownMenu.Label class="p-0 px-2 font-mono text-xs font-normal text-muted-foreground"
 				>{record.id}</DropdownMenu.Label
 			>
 		</DropdownMenu.Content>
