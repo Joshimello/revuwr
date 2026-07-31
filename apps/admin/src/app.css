@@ -97,8 +97,3 @@
     @apply bg-neutral-500 dark:bg-neutral-600;
   }
 }
-
-@font-face {
-  font-family: 'Source Han Sans';
-  src: url(/SourceHanSans-VF.ttf);
-}
