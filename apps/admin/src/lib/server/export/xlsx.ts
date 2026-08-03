@@ -15,6 +15,7 @@ type ExportColumn = {
 	label: string;
 	width: number;
 	date?: boolean;
+	numberFormat?: string;
 	value: (application: NormalizedExportApplication) => ColumnValue;
 };
 
@@ -43,6 +44,9 @@ function setCellValue(cell: ExcelJS.Cell, column: ExportColumn, value: ColumnVal
 			column.key.endsWith('birthday') || column.key.endsWith('.date')
 				? 'yyyy-mm-dd'
 				: 'yyyy-mm-dd hh:mm';
+	}
+	if (column.numberFormat && typeof value === 'number') {
+		cell.numFmt = column.numberFormat;
 	}
 	cell.alignment = { vertical: 'top', wrapText: true };
 }
@@ -103,6 +107,7 @@ function createColumns(
 				key: `question.${question.id}`,
 				label: question.label,
 				width: 24,
+				numberFormat: question.type === 'budget' ? '#,##0.####' : undefined,
 				value: (application) => {
 					const answer = application.answers[question.id];
 					return question.type === 'budget'

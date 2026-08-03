@@ -1,6 +1,7 @@
 import { PUBLIC_PB_URL } from '$env/static/public';
 import type {
 	NormalizedApplicationExport,
+	NormalizedBudgetRow,
 	NormalizedExportAnswer,
 	NormalizedExportApplication,
 	NormalizedExportQuestion,
@@ -14,7 +15,7 @@ import type {
 	UsersResponse
 } from '$lib/pocketbase/pocketbase-types';
 import { getAnswerDisplayState, stripHtml, type ExpandedAnswer } from '$lib/response-display';
-import { getResponseRepresentation } from '$lib/response-repr';
+import { calculateBudgetValues, getResponseRepresentation } from '$lib/response-repr';
 import { getExportLabels } from './labels';
 
 export type ExportQuestion = QuestionsResponse<Record<string, unknown>, Record<string, unknown>>;
@@ -70,28 +71,48 @@ function humanizeKey(value: string): string {
 		.replace(/^./, (character) => character.toUpperCase());
 }
 
-function formatBudget(answer: ExportAnswer, totalLabel: string): { detail: string; total: string } {
+function formatBudget(
+	answer: ExportAnswer,
+	totalLabel: string
+): { detail: string; total: number | 'ERROR'; rows: NormalizedBudgetRow[] } {
 	const rows = Array.isArray(answer.response)
 		? answer.response
 		: isRecord(answer.response)
 			? Object.values(answer.response)
 			: [];
 
-	const detail = rows
+	const calculation = calculateBudgetValues(answer.response);
+	const budgetRows = rows.map((row, index): NormalizedBudgetRow => {
+		if (!isRecord(row)) {
+			return {
+				name: asString(row) || `${index + 1}`,
+				price: 0,
+				quantity: 0,
+				calculated: calculation.items[index] ?? 'ERROR',
+				explanation: ''
+			};
+		}
+		const price = Number(row.defaultPrice || 0);
+		const quantity = Number(row.defaultQuantity || 0);
+		return {
+			name: asString(row.name) || `${index + 1}`,
+			price: Number.isFinite(price) ? price : 0,
+			quantity: Number.isFinite(quantity) ? quantity : 0,
+			calculated: calculation.items[index] ?? 'ERROR',
+			explanation: asString(row.explaination || row.explanation)
+		};
+	});
+	const detail = budgetRows
 		.map((row, index) => {
-			if (!isRecord(row)) return `${index + 1}. ${asString(row)}`;
-			const name = asString(row.name) || `${index + 1}`;
-			const price = Number(row.defaultPrice || 0);
-			const quantity = Number(row.defaultQuantity || 0);
-			const explanation = asString(row.explaination || row.explanation);
-			return `${index + 1}. ${name} | ${price} x ${quantity}${explanation ? ` | ${explanation}` : ''}`;
+			const result = `${index + 1}. ${row.name} | ${row.price} x ${row.quantity} = ${row.calculated}`;
+			return row.explanation ? `${result} | ${row.explanation}` : result;
 		})
 		.join('\n');
 
-	const total = getResponseRepresentation(answer);
 	return {
-		detail: [detail, `${totalLabel}: ${total}`].filter(Boolean).join('\n'),
-		total
+		detail: [detail, `${totalLabel}: ${calculation.total}`].filter(Boolean).join('\n'),
+		total: calculation.total,
+		rows: budgetRows
 	};
 }
 
@@ -146,7 +167,12 @@ function formatAnswer(
 
 	if (question.type === 'budget') {
 		const budget = formatBudget(answer, labels.total);
-		return { value: budget.detail, compactValue: budget.total, files: [] };
+		return {
+			value: budget.detail,
+			compactValue: budget.total,
+			files: [],
+			budgetRows: budget.rows
+		};
 	}
 
 	return { value: getResponseRepresentation(answer), files: [] };

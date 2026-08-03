@@ -6,6 +6,12 @@ type ExportLabels = {
 	statuses: Record<string, string>;
 	memberColumns: Record<string, string>;
 	activityColumns: Record<string, string>;
+	budgetColumns: {
+		item: string;
+		price: string;
+		quantity: string;
+		calculated: string;
+	};
 	activityForms: Record<string, string>;
 	worksheet: string;
 	application: string;
@@ -75,6 +81,12 @@ const en: ExportLabels = {
 		form: 'Format',
 		location: 'Location',
 		note: 'Note'
+	},
+	budgetColumns: {
+		item: 'Item',
+		price: 'Price',
+		quantity: 'Quantity',
+		calculated: 'Calculated'
 	},
 	activityForms: {
 		physical: 'Physical',
@@ -148,6 +160,12 @@ const zhTw: ExportLabels = {
 		form: '形式',
 		location: '地點',
 		note: '備註'
+	},
+	budgetColumns: {
+		item: '項目',
+		price: '單價',
+		quantity: '數量',
+		calculated: '計算結果'
 	},
 	activityForms: {
 		physical: '實體',

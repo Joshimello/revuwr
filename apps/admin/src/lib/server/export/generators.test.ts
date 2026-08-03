@@ -3,6 +3,12 @@ import { readFile } from 'node:fs/promises';
 import ExcelJS from 'exceljs';
 import { describe, expect, it } from 'vitest';
 import { generateApplicationPdf } from './pdf';
+import { calculateBudgetValues } from '../../response-repr';
+import {
+	normalizeApplicationExport,
+	type ExportApplication,
+	type ExportQuestion
+} from './normalize';
 import { applicationExportRequestSchema } from './schema';
 import { generateApplicationWorkbook } from './xlsx';
 
@@ -103,6 +109,123 @@ describe('application exports', () => {
 		).toThrow('Select at least one field');
 	});
 
+	it('calculates default, custom, range, and rounded budget results', () => {
+		const calculation = calculateBudgetValues([
+			{
+				calculationMethod: 'default',
+				defaultPrice: 100,
+				defaultQuantity: 2
+			},
+			{
+				calculationMethod: 'custom',
+				defaultPrice: 0,
+				defaultQuantity: 0,
+				customFormula: '{1T} / 3',
+				roundingMethod: 'round',
+				roundingDecimalPlaces: 2
+			},
+			{
+				calculationMethod: 'range',
+				defaultPrice: 0,
+				defaultQuantity: 0,
+				customFormula: '{1Q}',
+				rangeTable: { input: [0, 2], output: [10, 50] }
+			}
+		]);
+
+		expect(calculation.items).toEqual([200, 66.67, 50]);
+		expect(calculation.total).toBe(316.67);
+	});
+
+	it('normalizes calculated budget rows and the grand total', () => {
+		const question = {
+			id: 'question-budget',
+			title: 'Budget',
+			type: 'budget',
+			page: 1,
+			count: 1,
+			required: true
+		} as unknown as ExportQuestion;
+		const response = [
+			{
+				name: 'Materials',
+				calculationMethod: 'default',
+				defaultPrice: 100,
+				defaultQuantity: 3,
+				explaination: 'Workshop materials'
+			},
+			{
+				name: 'Administration',
+				calculationMethod: 'custom',
+				defaultPrice: 0,
+				defaultQuantity: 0,
+				customFormula: '{1T} * 0.05'
+			}
+		];
+		const application = {
+			id: 'application-1',
+			serial: 1,
+			status: 'submitted',
+			created: '2026-01-01T00:00:00.000Z',
+			submissionTime: '2026-01-02T00:00:00.000Z',
+			updated: '2026-01-03T00:00:00.000Z',
+			adminNote: '',
+			expand: {
+				responder: {
+					id: 'user-1',
+					name: 'Applicant',
+					username: 'A001'
+				},
+				response: [
+					{
+						id: 'answer-1',
+						question: question.id,
+						response,
+						expand: { question }
+					}
+				]
+			}
+		} as unknown as ExportApplication;
+		const normalized = normalizeApplicationExport(
+			{
+				eventId: 'event-1',
+				applicationIds: [application.id],
+				format: 'xlsx',
+				xlsxRepresentation: 'compact',
+				locale: 'en',
+				fields: { application: [], applicant: [], questionIds: [question.id] }
+			},
+			{
+				id: 'event-1',
+				name: 'Example Event',
+				responsePrefix: 'APP'
+			} as unknown as Parameters<typeof normalizeApplicationExport>[1],
+			[question],
+			[application]
+		);
+		const answer = normalized.applications[0].answers[question.id];
+
+		expect(answer.compactValue).toBe(315);
+		expect(answer.budgetRows).toEqual([
+			{
+				name: 'Materials',
+				price: 100,
+				quantity: 3,
+				calculated: 300,
+				explanation: 'Workshop materials'
+			},
+			{
+				name: 'Administration',
+				price: 0,
+				quantity: 0,
+				calculated: 15,
+				explanation: ''
+			}
+		]);
+		expect(answer.value).toContain('100 x 3 = 300');
+		expect(answer.value).toContain('Total: 315');
+	});
+
 	it('creates one worksheet with typed dates and file hyperlinks', async () => {
 		const output = await generateApplicationWorkbook(data, fields);
 		const workbook = new ExcelJS.Workbook();
@@ -177,9 +300,18 @@ describe('application exports', () => {
 							]
 						},
 						'question-budget': {
-							value: '1. Materials | 100 x 3\nTotal: 300',
-							compactValue: '300',
-							files: []
+							value: '1. Materials | 100 x 3 = 300\nTotal: 300',
+							compactValue: 300,
+							files: [],
+							budgetRows: [
+								{
+									name: 'Materials',
+									price: 100,
+									quantity: 3,
+									calculated: 300,
+									explanation: 'Workshop materials'
+								}
+							]
 						}
 					}
 				}
@@ -202,7 +334,8 @@ describe('application exports', () => {
 		expect(worksheet.getCell('K2').value).toBe('Engineering, Science');
 		expect(worksheet.getCell('L2').value).toBe('Malaysia, Taiwan');
 		expect(worksheet.getCell('M1').value).toBe('Question 4 - Budget');
-		expect(worksheet.getCell('M2').value).toBe('300');
+		expect(worksheet.getCell('M2').value).toBe(300);
+		expect(worksheet.getCell('M2').numFmt).toBe('#,##0.####');
 	});
 
 	it('expands member rows and merges scalar cells in the full Excel layout', async () => {
@@ -226,6 +359,15 @@ describe('application exports', () => {
 					type: 'activity',
 					page: 1,
 					count: 4,
+					required: true
+				},
+				{
+					id: 'question-budget',
+					label: 'Question 5 - Budget',
+					title: 'Budget',
+					type: 'budget',
+					page: 1,
+					count: 5,
 					required: true
 				}
 			],
@@ -279,6 +421,20 @@ describe('application exports', () => {
 									note: 'Hands-on'
 								}
 							]
+						},
+						'question-budget': {
+							value: '1. Materials | 100 x 3 = 300\nTotal: 300',
+							compactValue: 300,
+							files: [],
+							budgetRows: [
+								{
+									name: 'Materials',
+									price: 100,
+									quantity: 3,
+									calculated: 300,
+									explanation: 'Workshop materials'
+								}
+							]
 						}
 					}
 				}
@@ -304,12 +460,58 @@ describe('application exports', () => {
 		expect(worksheet.getCell('M3').value).toBeInstanceOf(Date);
 		expect(worksheet.getCell('M3').numFmt).toBe('yyyy-mm-dd');
 		expect(worksheet.getCell('Q4').value).toBe('Online');
+		expect(worksheet.getCell('T3').value).toContain('100 x 3 = 300');
+		expect(worksheet.getCell('T4').master.address).toBe('T3');
 		expect(worksheet.autoFilter).toBeUndefined();
 	});
 
 	it('creates a readable PDF with the bundled multilingual font', async () => {
 		const font = await readFile(new URL('./assets/NotoSansCJKtc-Regular.otf', import.meta.url));
-		const output = await generateApplicationPdf(data, data.applications[0], fields, font);
+		const pdfData: NormalizedApplicationExport = {
+			...data,
+			questions: [
+				...data.questions,
+				{
+					id: 'question-budget',
+					label: 'Question 3 - Budget',
+					title: 'Budget',
+					type: 'budget',
+					page: 1,
+					count: 3,
+					required: true
+				}
+			],
+			applications: [
+				{
+					...data.applications[0],
+					answers: {
+						...data.applications[0].answers,
+						'question-budget': {
+							value: '1. Materials | 100 x 3 = 300\nTotal: 300',
+							compactValue: 300,
+							files: [],
+							budgetRows: [
+								{
+									name: 'Materials',
+									price: 100,
+									quantity: 3,
+									calculated: 300,
+									explanation: 'Workshop materials'
+								},
+								{
+									name: 'Venue',
+									price: 250,
+									quantity: 1,
+									calculated: 250,
+									explanation: ''
+								}
+							]
+						}
+					}
+				}
+			]
+		};
+		const output = await generateApplicationPdf(pdfData, pdfData.applications[0], fields, font);
 
 		expect(output.subarray(0, 5).toString()).toBe('%PDF-');
 		expect(output.length).toBeGreaterThan(10_000);

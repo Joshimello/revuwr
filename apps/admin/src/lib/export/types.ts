@@ -63,6 +63,15 @@ export interface NormalizedExportAnswer {
 	compactValue?: ExportScalar;
 	files: ExportFileLink[];
 	tableRows?: Record<string, ExportScalar>[];
+	budgetRows?: NormalizedBudgetRow[];
+}
+
+export interface NormalizedBudgetRow {
+	name: string;
+	price: number;
+	quantity: number;
+	calculated: number | 'ERROR';
+	explanation: string;
 }
 
 export type ExportScalar = string | number | Date | null;

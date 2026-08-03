@@ -100,8 +100,7 @@ export function getResponseRepresentation(data: ExpandedAnswer | null | undefine
 			return '0';
 
 		case 'budget':
-			// For CSV: calculated total
-			return calculateBudgetTotal(response);
+			return String(calculateBudgetValues(response).total);
 
 		default:
 			// Fallback for unknown types
@@ -111,69 +110,63 @@ export function getResponseRepresentation(data: ExpandedAnswer | null | undefine
 	}
 }
 
-/**
- * Calculate budget total from budget response data
- */
-function calculateBudgetTotal(data: unknown): string {
-	if (!data) return '0';
+type BudgetCalculationItem = {
+	calculationMethod?: string;
+	defaultPrice?: number;
+	defaultQuantity?: number;
+	customFormula?: string;
+	rangeTable?: { input: number[]; output: number[] };
+	roundingMethod?: string;
+	roundingDecimalPlaces?: number;
+};
 
-	const arrayData = Array.isArray(data) ? data : Object.values(data);
-	if (!Array.isArray(arrayData) || arrayData.length === 0) return '0';
+export type BudgetCalculatedValue = number | 'ERROR';
 
-	let total = 0;
-	let hasError = false;
+export function calculateBudgetValues(data: unknown): {
+	items: BudgetCalculatedValue[];
+	total: BudgetCalculatedValue;
+} {
+	if (!data) return { items: [], total: 0 };
 
-	arrayData.forEach(
-		(item: {
-			calculationMethod?: string;
-			defaultPrice?: number;
-			defaultQuantity?: number;
-			customFormula?: string;
-			rangeTable?: { input: number[]; output: number[] };
-			roundingMethod?: string;
-			roundingDecimalPlaces?: number;
-		}) => {
-			let itemValue = 0;
+	const arrayData = (Array.isArray(data) ? data : Object.values(data)) as BudgetCalculationItem[];
+	if (arrayData.length === 0) return { items: [], total: 0 };
 
-			if (item.calculationMethod === 'default' || !item.calculationMethod) {
-				// Simple price * quantity calculation
-				itemValue = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
-			} else if (item.calculationMethod === 'custom') {
-				// For complex calculations, try to parse the formula
-				itemValue = parseCustomFormula(item.customFormula || '', arrayData);
-			} else if (item.calculationMethod === 'range') {
-				// Range table calculation
-				itemValue = parseRangeCalculation(
-					item.customFormula || '',
-					arrayData,
-					item.rangeTable || { input: [], output: [] }
-				);
-			} else {
-				// Fallback to default calculation
-				itemValue = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
-			}
+	const items = arrayData.map((item): BudgetCalculatedValue => {
+		let itemValue = 0;
 
-			// Apply rounding if configured
-			if (typeof itemValue === 'number' && item.roundingMethod && item.roundingMethod !== 'none') {
-				const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
-				if (item.roundingMethod === 'round') {
-					itemValue = Math.round(itemValue * multiplier) / multiplier;
-				} else if (item.roundingMethod === 'floor') {
-					itemValue = Math.floor(itemValue * multiplier) / multiplier;
-				} else if (item.roundingMethod === 'ceil') {
-					itemValue = Math.ceil(itemValue * multiplier) / multiplier;
-				}
-			}
+		if (item.calculationMethod === 'default' || !item.calculationMethod) {
+			itemValue = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
+		} else if (item.calculationMethod === 'custom') {
+			itemValue = parseCustomFormula(item.customFormula || '', arrayData);
+		} else if (item.calculationMethod === 'range') {
+			itemValue = parseRangeCalculation(
+				item.customFormula || '',
+				arrayData,
+				item.rangeTable || { input: [], output: [] }
+			);
+		} else {
+			itemValue = Number(item.defaultPrice || 0) * Number(item.defaultQuantity || 0);
+		}
 
-			if (!isNaN(itemValue) && isFinite(itemValue)) {
-				total += itemValue;
-			} else {
-				hasError = true;
+		if (item.roundingMethod && item.roundingMethod !== 'none') {
+			const multiplier = Math.pow(10, item.roundingDecimalPlaces || 0);
+			if (item.roundingMethod === 'round') {
+				itemValue = Math.round(itemValue * multiplier) / multiplier;
+			} else if (item.roundingMethod === 'floor') {
+				itemValue = Math.floor(itemValue * multiplier) / multiplier;
+			} else if (item.roundingMethod === 'ceil') {
+				itemValue = Math.ceil(itemValue * multiplier) / multiplier;
 			}
 		}
-	);
 
-	return hasError ? 'ERROR' : total.toString();
+		return Number.isFinite(itemValue) ? itemValue : 'ERROR';
+	});
+
+	if (items.some((value) => value === 'ERROR')) return { items, total: 'ERROR' };
+	return {
+		items,
+		total: items.reduce<number>((total, value) => total + Number(value), 0)
+	};
 }
 
 /**
