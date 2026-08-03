@@ -16,6 +16,16 @@ const BUDGET_TABLE_X = MARGIN + 12;
 const BUDGET_TABLE_WIDTH = CONTENT_WIDTH - 12;
 const BUDGET_TABLE_HEADER_HEIGHT = 25;
 const BUDGET_TABLE_COLUMN_WIDTHS = [BUDGET_TABLE_WIDTH - 70 - 60 - 90, 70, 60, 90];
+const ANSWER_TABLE_HEADER_HEIGHT = 30;
+
+type TableAlignment = 'left' | 'center' | 'right';
+
+type AnswerTableColumn = {
+	label: string;
+	width: number;
+	align?: TableAlignment;
+	value: (row: Record<string, ExportScalar>) => string;
+};
 
 function formatScalar(
 	value: ExportScalar,
@@ -88,6 +98,175 @@ function formatBudgetNumber(
 	return new Intl.NumberFormat(locale === 'zh-tw' ? 'zh-TW' : 'en-US', {
 		maximumFractionDigits: 4
 	}).format(value);
+}
+
+function drawAnswerTableHeader(document: PDFKit.PDFDocument, columns: AnswerTableColumn[]): void {
+	const rowY = document.y;
+	let cellX = BUDGET_TABLE_X;
+
+	for (const column of columns) {
+		document
+			.rect(cellX, rowY, column.width, ANSWER_TABLE_HEADER_HEIGHT)
+			.fillAndStroke('#E5E7EB', '#CBD5E1');
+		document
+			.fontSize(7.2)
+			.fillColor('#374151')
+			.text(column.label, cellX + 5, rowY + 7, {
+				width: column.width - 10,
+				height: ANSWER_TABLE_HEADER_HEIGHT - 12,
+				align: column.align || 'left',
+				lineGap: 1
+			});
+		cellX += column.width;
+	}
+	document.y = rowY + ANSWER_TABLE_HEADER_HEIGHT;
+}
+
+function ensureAnswerTableSpace(
+	document: PDFKit.PDFDocument,
+	height: number,
+	columns: AnswerTableColumn[]
+): void {
+	if (document.y + height <= PAGE_HEIGHT - MARGIN - 28) return;
+	document.addPage();
+	drawAnswerTableHeader(document, columns);
+}
+
+function drawAnswerTable(
+	document: PDFKit.PDFDocument,
+	rows: Record<string, ExportScalar>[],
+	columns: AnswerTableColumn[]
+): void {
+	ensureSpace(document, ANSWER_TABLE_HEADER_HEIGHT + 28);
+	drawAnswerTableHeader(document, columns);
+
+	rows.forEach((row, rowIndex) => {
+		document.fontSize(7.5);
+		const values = columns.map((column) => column.value(row));
+		const rowHeight = Math.max(
+			27,
+			...values.map(
+				(value, index) =>
+					document.heightOfString(value || '-', {
+						width: columns[index].width - 10,
+						lineGap: 1
+					}) + 12
+			)
+		);
+		ensureAnswerTableSpace(document, rowHeight, columns);
+
+		const rowY = document.y;
+		let cellX = BUDGET_TABLE_X;
+		for (let index = 0; index < columns.length; index += 1) {
+			const column = columns[index];
+			document
+				.rect(cellX, rowY, column.width, rowHeight)
+				.fillAndStroke(rowIndex % 2 === 0 ? '#FFFFFF' : '#F9FAFB', '#E5E7EB');
+			document
+				.fontSize(7.5)
+				.fillColor('#111827')
+				.text(values[index] || '-', cellX + 5, rowY + 7, {
+					width: column.width - 10,
+					align: column.align || 'left',
+					lineGap: 1
+				});
+			cellX += column.width;
+		}
+		document.y = rowY + rowHeight;
+	});
+
+	document.y += 8;
+}
+
+function drawMemberTable(
+	document: PDFKit.PDFDocument,
+	rows: Record<string, ExportScalar>[],
+	labels: ReturnType<typeof getExportLabels>,
+	locale: NormalizedApplicationExport['locale']
+): void {
+	const columns: AnswerTableColumn[] = [
+		{
+			label: labels.memberColumns.name,
+			width: BUDGET_TABLE_WIDTH - 67 - 104 - 76 - 92 - 74,
+			value: (row) => formatScalar(row.name, locale)
+		},
+		{
+			label: labels.memberColumns.username,
+			width: 67,
+			value: (row) => formatScalar(row.username, locale)
+		},
+		{
+			label: labels.memberColumns.email,
+			width: 104,
+			value: (row) => formatScalar(row.email, locale)
+		},
+		{
+			label: labels.memberColumns.phone,
+			width: 76,
+			value: (row) => formatScalar(row.phone, locale)
+		},
+		{
+			label: labels.memberColumns.department,
+			width: 92,
+			value: (row) => formatScalar(row.department, locale)
+		},
+		{
+			label: labels.memberColumns.country,
+			width: 74,
+			value: (row) => formatScalar(row.country, locale)
+		}
+	];
+	drawAnswerTable(document, rows, columns);
+}
+
+function drawActivityTable(
+	document: PDFKit.PDFDocument,
+	rows: Record<string, ExportScalar>[],
+	labels: ReturnType<typeof getExportLabels>,
+	locale: NormalizedApplicationExport['locale']
+): void {
+	const columns: AnswerTableColumn[] = [
+		{
+			label: labels.activityColumns.date,
+			width: BUDGET_TABLE_WIDTH - 72 - 94 - 55 - 88 - 113,
+			align: 'center',
+			value: (row) => formatScalar(row.date, locale)
+		},
+		{
+			label: labels.activityTime,
+			width: 72,
+			align: 'center',
+			value: (row) =>
+				[formatScalar(row.startTime, locale), formatScalar(row.endTime, locale)]
+					.filter(Boolean)
+					.join(' - ')
+		},
+		{
+			label: labels.activityColumns.topic,
+			width: 94,
+			value: (row) => formatScalar(row.topic, locale)
+		},
+		{
+			label: labels.activityColumns.form,
+			width: 55,
+			align: 'center',
+			value: (row) => {
+				const form = formatScalar(row.form, locale);
+				return labels.activityForms[form] || form;
+			}
+		},
+		{
+			label: labels.activityColumns.location,
+			width: 88,
+			value: (row) => formatScalar(row.location, locale)
+		},
+		{
+			label: labels.activityColumns.note,
+			width: 113,
+			value: (row) => formatScalar(row.note, locale)
+		}
+	];
+	drawAnswerTable(document, rows, columns);
 }
 
 function drawBudgetTableHeader(
@@ -244,6 +423,10 @@ function questionBlock(
 
 	if (question.type === 'budget' && answer?.budgetRows?.length) {
 		drawBudgetTable(document, answer.budgetRows, answer.compactValue, labels, locale);
+	} else if (question.type === 'member' && answer?.tableRows?.length) {
+		drawMemberTable(document, answer.tableRows, labels, locale);
+	} else if (question.type === 'activity' && answer?.tableRows?.length) {
+		drawActivityTable(document, answer.tableRows, labels, locale);
 	} else if (answer?.files.length) {
 		for (const file of answer.files) {
 			ensureSpace(document, 22);

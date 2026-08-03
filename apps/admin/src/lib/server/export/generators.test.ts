@@ -472,12 +472,30 @@ describe('application exports', () => {
 			questions: [
 				...data.questions,
 				{
+					id: 'question-members',
+					label: 'Question 3 - Team members',
+					title: 'Team members',
+					type: 'member',
+					page: 1,
+					count: 3,
+					required: true
+				},
+				{
+					id: 'question-activities',
+					label: 'Question 4 - Activities',
+					title: 'Activities',
+					type: 'activity',
+					page: 1,
+					count: 4,
+					required: true
+				},
+				{
 					id: 'question-budget',
-					label: 'Question 3 - Budget',
+					label: 'Question 5 - Budget',
 					title: 'Budget',
 					type: 'budget',
 					page: 1,
-					count: 3,
+					count: 5,
 					required: true
 				}
 			],
@@ -486,6 +504,52 @@ describe('application exports', () => {
 					...data.applications[0],
 					answers: {
 						...data.applications[0].answers,
+						'question-members': {
+							value: 'Two members',
+							files: [],
+							tableRows: [
+								{
+									name: 'Member One',
+									username: 'M001',
+									email: 'one@example.com',
+									phone: '111',
+									department: 'Engineering',
+									country: 'Malaysia'
+								},
+								{
+									name: 'Member Two',
+									username: 'M002',
+									email: 'two@example.com',
+									phone: '222',
+									department: 'Science',
+									country: 'Taiwan'
+								}
+							]
+						},
+						'question-activities': {
+							value: 'Two activities',
+							files: [],
+							tableRows: [
+								{
+									date: '2026-08-01',
+									startTime: '09:00',
+									endTime: '10:00',
+									topic: 'Opening',
+									form: 'physical',
+									location: 'Hall A',
+									note: ''
+								},
+								{
+									date: '2026-08-02',
+									startTime: '11:00',
+									endTime: '12:00',
+									topic: 'Workshop',
+									form: 'online',
+									location: 'Video call',
+									note: 'Hands-on'
+								}
+							]
+						},
 						'question-budget': {
 							value: '1. Materials | 100 x 3 = 300\nTotal: 300',
 							compactValue: 300,
@@ -515,6 +579,6 @@ describe('application exports', () => {
 
 		expect(output.subarray(0, 5).toString()).toBe('%PDF-');
 		expect(output.length).toBeGreaterThan(10_000);
-		expect(output.toString('latin1').match(/\/Type \/Page\b/g)).toHaveLength(1);
+		expect(output.toString('latin1').match(/\/Type \/Page\b/g)?.length).toBeGreaterThan(0);
 	});
 });

@@ -6,6 +6,7 @@ type ExportLabels = {
 	statuses: Record<string, string>;
 	memberColumns: Record<string, string>;
 	activityColumns: Record<string, string>;
+	activityTime: string;
 	budgetColumns: {
 		item: string;
 		price: string;
@@ -82,6 +83,7 @@ const en: ExportLabels = {
 		location: 'Location',
 		note: 'Note'
 	},
+	activityTime: 'Time',
 	budgetColumns: {
 		item: 'Item',
 		price: 'Price',
@@ -161,6 +163,7 @@ const zhTw: ExportLabels = {
 		location: '地點',
 		note: '備註'
 	},
+	activityTime: '時間',
 	budgetColumns: {
 		item: '項目',
 		price: '單價',
