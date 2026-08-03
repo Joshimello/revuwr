@@ -26,11 +26,7 @@ type FullExportColumn = ExportColumn & {
 	value: (application: NormalizedExportApplication, rowIndex?: number) => ColumnValue;
 };
 
-function setCellValue(
-	cell: ExcelJS.Cell,
-	column: ExportColumn,
-	value: ColumnValue
-): void {
+function setCellValue(cell: ExcelJS.Cell, column: ExportColumn, value: ColumnValue): void {
 	if (value && typeof value === 'object' && 'url' in value) {
 		cell.value = {
 			text: value.name,
@@ -87,12 +83,32 @@ function createColumns(
 	}
 
 	for (const question of data.questions) {
+		if (question.type === 'member') {
+			for (const [tableKey, label] of Object.entries(labels.memberColumns)) {
+				columns.push({
+					key: `question.${question.id}.${tableKey}`,
+					label: `${question.label} - ${label}`,
+					width: ['email', 'department'].includes(tableKey) ? 24 : 18,
+					value: (application) =>
+						(application.answers[question.id]?.tableRows || [])
+							.map((row) => String(row[tableKey] ?? ''))
+							.join(', ')
+				});
+			}
+			continue;
+		}
+
 		if (question.type !== 'file') {
 			columns.push({
 				key: `question.${question.id}`,
 				label: question.label,
 				width: 24,
-				value: (application) => application.answers[question.id]?.value || ''
+				value: (application) => {
+					const answer = application.answers[question.id];
+					return question.type === 'budget'
+						? (answer?.compactValue ?? answer?.value ?? '')
+						: answer?.value || '';
+				}
 			});
 			continue;
 		}
@@ -156,8 +172,7 @@ function createFullColumns(
 					tableQuestionId: question.id,
 					tableKey,
 					value: (application, rowIndex: number = 0) => {
-						const value =
-							application.answers[question.id]?.tableRows?.[rowIndex]?.[tableKey] ?? '';
+						const value = application.answers[question.id]?.tableRows?.[rowIndex]?.[tableKey] ?? '';
 						if (question.type === 'activity' && tableKey === 'form') {
 							return labels.activityForms[String(value)] || value;
 						}
@@ -184,9 +199,7 @@ function createFullColumns(
 
 		const maximumFiles = Math.max(
 			1,
-			...data.applications.map(
-				(application) => application.answers[question.id]?.files.length || 0
-			)
+			...data.applications.map((application) => application.answers[question.id]?.files.length || 0)
 		);
 		for (let index = 0; index < maximumFiles; index += 1) {
 			columns.push({
@@ -384,10 +397,7 @@ async function generateFullWorkbook(
 				const cell = row.getCell(index + 1);
 				setCellValue(cell, column, value);
 				if (!column.tableQuestionId && rowIndex === 0) {
-					maximumLines = Math.max(
-						maximumLines,
-						String(cell.text || '').split('\n').length
-					);
+					maximumLines = Math.max(maximumLines, String(cell.text || '').split('\n').length);
 				}
 				cell.border = {
 					right: { style: 'thin', color: { argb: 'FFE5E7EB' } },
@@ -409,10 +419,7 @@ async function generateFullWorkbook(
 			});
 		}
 
-		const desiredBlockHeight = Math.min(
-			90,
-			Math.max(blockHeight * 18, maximumLines * 15)
-		);
+		const desiredBlockHeight = Math.min(90, Math.max(blockHeight * 18, maximumLines * 15));
 		const rowHeight = Math.max(18, desiredBlockHeight / blockHeight);
 		for (let rowNumber = blockStartRow; rowNumber <= blockEndRow; rowNumber += 1) {
 			worksheet.getRow(rowNumber).height = rowHeight;

@@ -1,7 +1,4 @@
-import type {
-	ApplicationExportRequest,
-	NormalizedApplicationExport
-} from '$lib/export/types';
+import type { ApplicationExportRequest, NormalizedApplicationExport } from '$lib/export/types';
 import { readFile } from 'node:fs/promises';
 import ExcelJS from 'exceljs';
 import { describe, expect, it } from 'vitest';
@@ -126,6 +123,86 @@ describe('application exports', () => {
 			text: 'portfolio.pdf',
 			hyperlink: 'https://files.example.com/portfolio.pdf'
 		});
+	});
+
+	it('splits compact member responses into columns with comma-separated members', async () => {
+		const compactData: NormalizedApplicationExport = {
+			...data,
+			questions: [
+				...data.questions,
+				{
+					id: 'question-members',
+					label: 'Question 3 - Team members',
+					title: 'Team members',
+					type: 'member',
+					page: 1,
+					count: 3,
+					required: true
+				},
+				{
+					id: 'question-budget',
+					label: 'Question 4 - Budget',
+					title: 'Budget',
+					type: 'budget',
+					page: 1,
+					count: 4,
+					required: true
+				}
+			],
+			applications: [
+				{
+					...data.applications[0],
+					answers: {
+						...data.applications[0].answers,
+						'question-members': {
+							value: 'Two members',
+							files: [],
+							tableRows: [
+								{
+									name: 'Member One',
+									username: 'M001',
+									email: 'one@example.com',
+									phone: '111',
+									department: 'Engineering',
+									country: 'Malaysia'
+								},
+								{
+									name: 'Member Two',
+									username: 'M002',
+									email: 'two@example.com',
+									phone: '222',
+									department: 'Science',
+									country: 'Taiwan'
+								}
+							]
+						},
+						'question-budget': {
+							value: '1. Materials | 100 x 3\nTotal: 300',
+							compactValue: '300',
+							files: []
+						}
+					}
+				}
+			]
+		};
+		const output = await generateApplicationWorkbook(compactData, fields, 'compact');
+		const workbook = new ExcelJS.Workbook();
+		const arrayBuffer = output.buffer.slice(
+			output.byteOffset,
+			output.byteOffset + output.byteLength
+		) as ArrayBuffer;
+		await workbook.xlsx.load(arrayBuffer);
+
+		const worksheet = workbook.getWorksheet('Applications')!;
+		expect(worksheet.getCell('G1').value).toBe('Question 3 - Team members - Name');
+		expect(worksheet.getCell('G2').value).toBe('Member One, Member Two');
+		expect(worksheet.getCell('H2').value).toBe('M001, M002');
+		expect(worksheet.getCell('I2').value).toBe('one@example.com, two@example.com');
+		expect(worksheet.getCell('J2').value).toBe('111, 222');
+		expect(worksheet.getCell('K2').value).toBe('Engineering, Science');
+		expect(worksheet.getCell('L2').value).toBe('Malaysia, Taiwan');
+		expect(worksheet.getCell('M1').value).toBe('Question 4 - Budget');
+		expect(worksheet.getCell('M2').value).toBe('300');
 	});
 
 	it('expands member rows and merges scalar cells in the full Excel layout', async () => {

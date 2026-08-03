@@ -55,10 +55,7 @@ function formatObjectRows(value: unknown): string {
 		.join('\n');
 }
 
-function getTableRows(
-	value: unknown,
-	keys: string[]
-): Record<string, string>[] {
+function getTableRows(value: unknown, keys: string[]): Record<string, string>[] {
 	if (!Array.isArray(value)) return [];
 
 	return value
@@ -73,7 +70,7 @@ function humanizeKey(value: string): string {
 		.replace(/^./, (character) => character.toUpperCase());
 }
 
-function formatBudget(answer: ExportAnswer, totalLabel: string): string {
+function formatBudget(answer: ExportAnswer, totalLabel: string): { detail: string; total: string } {
 	const rows = Array.isArray(answer.response)
 		? answer.response
 		: isRecord(answer.response)
@@ -92,7 +89,10 @@ function formatBudget(answer: ExportAnswer, totalLabel: string): string {
 		.join('\n');
 
 	const total = getResponseRepresentation(answer);
-	return [detail, `${totalLabel}: ${total}`].filter(Boolean).join('\n');
+	return {
+		detail: [detail, `${totalLabel}: ${total}`].filter(Boolean).join('\n'),
+		total
+	};
 }
 
 function getFileLinks(response: unknown): { name: string; url: string }[] {
@@ -145,7 +145,8 @@ function formatAnswer(
 	}
 
 	if (question.type === 'budget') {
-		return { value: formatBudget(answer, labels.total), files: [] };
+		const budget = formatBudget(answer, labels.total);
+		return { value: budget.detail, compactValue: budget.total, files: [] };
 	}
 
 	return { value: getResponseRepresentation(answer), files: [] };

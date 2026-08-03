@@ -60,6 +60,7 @@ export interface NormalizedExportQuestion {
 
 export interface NormalizedExportAnswer {
 	value: string;
+	compactValue?: ExportScalar;
 	files: ExportFileLink[];
 	tableRows?: Record<string, ExportScalar>[];
 }
